@@ -11,6 +11,7 @@ import (
 
 // Response TODOC
 type Response interface {
+	IncludeError(err error)
 	ToString() string
 	ToMessage() json.Marshaler
 }
@@ -19,14 +20,34 @@ type Response interface {
 type SimpleResponse struct {
 	To      string
 	Content string
+
+	errors []error
+}
+
+// IncludeError TODOC
+func (r *SimpleResponse) IncludeError(err error) {
+	if err == nil {
+		return
+	}
+
+	r.errors = append(r.errors, err)
 }
 
 // ToString TODOC
 func (r *SimpleResponse) ToString() string {
-	return fmt.Sprintf(`%s
+	s := fmt.Sprintf(`%s
 
 %s
 `, r.To, r.Content)
+
+	if len(r.errors) > 0 {
+		for _, err := range r.errors {
+			s += fmt.Sprintf("\nError: %v", err)
+		}
+		s += "\n"
+	}
+
+	return s
 }
 
 // ToMessage TODOC
@@ -51,6 +72,17 @@ type EmbedResponse struct {
 	Color       int
 	Fields      []EmbedField
 	FooterText  string
+
+	errors []error
+}
+
+// IncludeError TODOC
+func (r *EmbedResponse) IncludeError(err error) {
+	if err == nil {
+		return
+	}
+
+	r.errors = append(r.errors, err)
 }
 
 // ToString TODOC
@@ -73,6 +105,13 @@ func (r *EmbedResponse) ToString() string {
 
 	if r.FooterText != "" {
 		_, _ = b.WriteString(fmt.Sprintf("%s\n", r.FooterText))
+	}
+
+	if len(r.errors) > 0 {
+		for _, err := range r.errors {
+			_, _ = b.WriteString(fmt.Sprintf("\nError: %v", err))
+		}
+		_, _ = b.WriteString("\n")
 	}
 
 	return b.String()
@@ -110,6 +149,13 @@ func (r *EmbedResponse) ToMessage() json.Marshaler {
 			Name:  ef.Name,
 			Value: ef.Val,
 		})
+	}
+
+	if len(r.errors) > 0 {
+		for _, err := range r.errors {
+			m.Content += fmt.Sprintf("\nError: %v", err)
+		}
+		m.Content += "\n"
 	}
 
 	return m
