@@ -156,9 +156,9 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 		ip := payloads.IdentifyPayload{
 			Token: c.bot.config.BotToken,
 			Properties: payloads.IdentifyPayloadProperties{
-				OS:      "linux",
-				Browser: "eso-have-want-bot#0286",
-				Device:  "eso-have-want-bot#0286",
+				OS:      c.bot.config.OS,
+				Browser: c.bot.config.BotName,
+				Device:  c.bot.config.BotName,
 			},
 			LargeThreshold: 250,
 			Shard: payloads.IdentifyPayloadShard{
@@ -167,7 +167,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 			},
 			Presence: payloads.IdentifyPayloadPresence{
 				Game: payloads.IdentifyPayloadGame{
-					Name: "List Manager 2018",
+					Name: c.bot.config.BotPresence,
 					Type: 0,
 				},
 				Status: "online",

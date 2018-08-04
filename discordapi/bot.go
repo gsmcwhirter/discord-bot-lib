@@ -3,6 +3,7 @@ package discordapi
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -44,7 +45,7 @@ type DiscordBot interface {
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
 	GuildOfChannel(snowflake.Snowflake) (snowflake.Snowflake, bool)
 	IsGuildAdmin(snowflake.Snowflake, snowflake.Snowflake) bool
-	SendMessage(context.Context, snowflake.Snowflake, jsonapi.Message) (*http.Response, []byte, error)
+	SendMessage(context.Context, snowflake.Snowflake, json.Marshaler) (*http.Response, []byte, error)
 }
 
 // BotConfig TODOC
@@ -54,6 +55,10 @@ type BotConfig struct {
 	BotToken     string
 	APIURL       string
 	NumWorkers   int
+
+	OS          string
+	BotName     string
+	BotPresence string
 }
 
 type hbReconfig struct {
@@ -177,7 +182,7 @@ func (d *discordBot) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowfla
 	return g.IsAdmin(uid)
 }
 
-func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m jsonapi.Message) (resp *http.Response, body []byte, err error) {
+func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m json.Marshaler) (resp *http.Response, body []byte, err error) {
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	_ = level.Info(logger).Log("message", "sending message to channel")
