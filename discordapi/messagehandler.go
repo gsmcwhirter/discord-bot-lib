@@ -20,7 +20,7 @@ type discordMessageHandler struct {
 	bot            *discordBot
 	opCodeDispatch map[constants.OpCode]DiscordMessageHandlerFunc
 
-	dispatcherLock sync.Mutex
+	dispatcherLock *sync.Mutex
 	eventDispatch  map[string][]DiscordMessageHandlerFunc
 }
 
@@ -30,7 +30,8 @@ func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMess
 // NewDiscordMessageHandler TODOC
 func newDiscordMessageHandler(bot *discordBot) *discordMessageHandler {
 	c := discordMessageHandler{
-		bot: bot,
+		bot:            bot,
+		dispatcherLock: &sync.Mutex{},
 	}
 
 	c.opCodeDispatch = map[constants.OpCode]DiscordMessageHandlerFunc{
@@ -254,6 +255,7 @@ func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_CREATE")
 	err := c.bot.session.UpsertGuildFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild create", "err", err)

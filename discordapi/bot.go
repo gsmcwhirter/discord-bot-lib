@@ -66,12 +66,12 @@ type discordBot struct {
 	deps           dependencies
 	messageHandler *discordMessageHandler
 
-	session Session
+	session *Session
 
 	heartbeat  *time.Ticker
 	heartbeats chan hbReconfig
 
-	seqLock      sync.Mutex
+	seqLock      *sync.Mutex
 	lastSequence int
 }
 
@@ -84,6 +84,7 @@ func NewDiscordBot(deps dependencies, conf BotConfig) DiscordBot {
 		session:    NewSession(),
 		heartbeats: make(chan hbReconfig),
 
+		seqLock:      &sync.Mutex{},
 		lastSequence: -1,
 	}
 

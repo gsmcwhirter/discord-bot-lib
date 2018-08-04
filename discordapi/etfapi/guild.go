@@ -1,6 +1,8 @@
 package etfapi
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -25,6 +27,7 @@ func (g *Guild) ID() snowflake.Snowflake {
 
 // OwnsChannel TODOC
 func (g *Guild) OwnsChannel(cid snowflake.Snowflake) bool {
+	fmt.Printf("*** %v -> %+v\n", g.id, g.channels)
 	_, ok := g.channels[cid]
 	return ok
 }
@@ -148,20 +151,30 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
-// GuildFromElement TODOC
-func GuildFromElement(e Element) (g Guild, err error) {
-	var eMap map[string]Element
+// GuildFromElementMap TODOC
+func GuildFromElementMap(eMap map[string]Element) (g Guild, err error) {
 	g.channels = map[snowflake.Snowflake]Channel{}
 	g.members = map[snowflake.Snowflake]GuildMember{}
 	g.roles = map[snowflake.Snowflake]Role{}
 
-	eMap, g.id, err = MapAndIDFromElement(e)
-	if err != nil {
-		return
-	}
+	g.id, err = SnowflakeFromElement(eMap["id"])
+	err = errors.Wrap(err, "could not get guild id")
 
 	err = g.UpdateFromElementMap(eMap)
 	err = errors.Wrap(err, "could not create a guild")
+	return
+}
 
+// GuildFromElement TODOC
+func GuildFromElement(e Element) (g Guild, err error) {
+	var eMap map[string]Element
+
+	eMap, _, err = MapAndIDFromElement(e)
+	if err != nil {
+		err = errors.Wrap(err, "could not create guild map")
+		return
+	}
+
+	g, err = GuildFromElementMap(eMap)
 	return
 }

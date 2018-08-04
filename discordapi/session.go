@@ -10,14 +10,15 @@ import (
 
 // Session TODOC
 type Session struct {
-	lock      sync.RWMutex
+	lock      *sync.RWMutex
 	sessionID string
-	state     etfapi.State
+	state     *etfapi.State
 }
 
 // NewSession TODOC
-func NewSession() Session {
-	return Session{
+func NewSession() *Session {
+	return &Session{
+		lock:  &sync.RWMutex{},
 		state: etfapi.NewState(),
 	}
 }
@@ -69,7 +70,6 @@ func (s *Session) UpsertGuildFromElementMap(eMap map[string]etfapi.Element) (err
 
 // UpsertChannelFromElement TODOC
 func (s *Session) UpsertChannelFromElement(e etfapi.Element) (err error) {
-
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

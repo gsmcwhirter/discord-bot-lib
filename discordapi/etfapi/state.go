@@ -1,6 +1,8 @@
 package etfapi
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -14,8 +16,8 @@ type State struct {
 }
 
 // NewState TODOC
-func NewState() State {
-	return State{
+func NewState() *State {
+	return &State{
 		guilds:          map[snowflake.Snowflake]Guild{},
 		privateChannels: map[snowflake.Snowflake]Channel{},
 	}
@@ -85,7 +87,7 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 func (s *State) UpsertGuildFromElement(e Element) (err error) {
 	eMap, id, err := MapAndIDFromElement(e)
 	if err != nil {
-		err = errors.Wrap(err, "could not inflate element to find guild")
+		err = errors.Wrap(err, "UpsertGuildFromElement could not inflate element to find guild")
 		return
 	}
 
@@ -93,7 +95,7 @@ func (s *State) UpsertGuildFromElement(e Element) (err error) {
 	if !ok {
 		s.guilds[id], err = GuildFromElement(e)
 		if err != nil {
-			err = errors.Wrap(err, "could not insert guild into the session")
+			err = errors.Wrap(err, "UpsertGuildFromElement could not insert guild into the session")
 			return
 		}
 		return
@@ -101,7 +103,7 @@ func (s *State) UpsertGuildFromElement(e Element) (err error) {
 
 	err = g.UpdateFromElementMap(eMap)
 	if err != nil {
-		err = errors.Wrap(err, "could not update guild into the session")
+		err = errors.Wrap(err, "UpsertGuildFromElement could not update guild into the session")
 		return
 	}
 	s.guilds[id] = g
@@ -111,26 +113,33 @@ func (s *State) UpsertGuildFromElement(e Element) (err error) {
 
 // UpsertGuildFromElementMap TODOC
 func (s *State) UpsertGuildFromElementMap(eMap map[string]Element) (err error) {
-	e := eMap["id"]
+	defer fmt.Printf("$$$ GUILD_CREATE %+v\n", s.guilds)
+	e, ok := eMap["id"]
+	if !ok {
+		err = errors.Wrap(ErrBadElementData, "UpsertGuildFromElementMap could not find guild id map element")
+		return
+	}
+
 	id, err := SnowflakeFromElement(e)
 	if err != nil {
-		err = errors.Wrap(err, "could not find guild id")
+		err = errors.Wrap(err, "UpsertGuildFromElementMap could not find guild id")
 		return
 	}
 
 	g, ok := s.guilds[id]
 	if !ok {
-		s.guilds[id], err = GuildFromElement(e)
+		g, err = GuildFromElementMap(eMap)
 		if err != nil {
-			err = errors.Wrap(err, "could not insert guild into the session")
-			return
+			err = errors.Wrap(err, "UpsertGuildFromElementMap could not insert guild into the session")
+		} else {
+			s.guilds[id] = g
 		}
 		return
 	}
 
 	err = g.UpdateFromElementMap(eMap)
 	if err != nil {
-		err = errors.Wrap(err, "could not update guild into the session")
+		err = errors.Wrap(err, "UpsertGuildFromElementMap could not update guild into the session")
 		return
 	}
 	s.guilds[id] = g

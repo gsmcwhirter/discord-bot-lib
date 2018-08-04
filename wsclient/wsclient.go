@@ -45,7 +45,7 @@ type wsClient struct {
 	pool       *sync.WaitGroup
 	poolTokens chan struct{}
 
-	closeLock sync.Mutex
+	closeLock *sync.Mutex
 	isClosed  bool
 }
 
@@ -61,6 +61,7 @@ func NewWSClient(deps dependencies, options Options) WSClient {
 	c := &wsClient{
 		deps:       deps,
 		gatewayURL: options.GatewayURL,
+		closeLock:  &sync.Mutex{},
 	}
 
 	if options.Dialer != nil {

@@ -11,6 +11,8 @@ var sensitiveHeaders = map[string]bool{
 
 // NonSensitiveHeaders TODOC
 func NonSensitiveHeaders(h http.Header) (h2 http.Header) {
+	h2 = http.Header{}
+
 	for k, vs := range h {
 		if sensitiveHeaders[strings.ToLower(k)] {
 			h2.Set(k, "<redacted>")
