@@ -1,8 +1,6 @@
 package etfapi
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -30,6 +28,8 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 	var e2 Element
 	var c Channel
 	var g Guild
+	var gMap map[string]Element
+	var gid snowflake.Snowflake
 
 	e, ok = p.Data["user"]
 	if !ok {
@@ -42,7 +42,6 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 		return
 	}
 
-	s.privateChannels = map[snowflake.Snowflake]Channel{}
 	e, ok = p.Data["private_channels"]
 	if !ok {
 		err = errors.Wrap(ErrMissingData, "missing private_channels")
@@ -61,7 +60,6 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 		s.privateChannels[c.id] = c
 	}
 
-	s.guilds = map[snowflake.Snowflake]Guild{}
 	e, ok = p.Data["guilds"]
 	if !ok {
 		err = errors.Wrap(ErrMissingData, "missing guilds")
@@ -72,12 +70,23 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 		return
 	}
 	for _, e2 = range e.Vals {
-		g, err = GuildFromElement(e2)
+		gMap, gid, err = MapAndIDFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not inflate session guild")
+			err = errors.Wrap(err, "could not inflate session guild to map")
 			return
 		}
-		s.guilds[g.id] = g
+
+		g, ok = s.guilds[gid]
+		if !ok {
+			g, err = GuildFromElementMap(gMap)
+			if err != nil {
+				err = errors.Wrap(err, "could not inflate session guild map to guild")
+				return
+			}
+		} else {
+			g.UpdateFromElementMap(gMap)
+		}
+		s.guilds[gid] = g
 	}
 
 	return
@@ -113,14 +122,15 @@ func (s *State) UpsertGuildFromElement(e Element) (err error) {
 
 // UpsertGuildFromElementMap TODOC
 func (s *State) UpsertGuildFromElementMap(eMap map[string]Element) (err error) {
-	defer fmt.Printf("$$$ GUILD_CREATE %+v\n", s.guilds)
+	var id snowflake.Snowflake
+
 	e, ok := eMap["id"]
 	if !ok {
 		err = errors.Wrap(ErrBadElementData, "UpsertGuildFromElementMap could not find guild id map element")
 		return
 	}
 
-	id, err := SnowflakeFromElement(e)
+	id, err = SnowflakeFromElement(e)
 	if err != nil {
 		err = errors.Wrap(err, "UpsertGuildFromElementMap could not find guild id")
 		return

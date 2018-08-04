@@ -1,8 +1,6 @@
 package etfapi
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -27,7 +25,6 @@ func (g *Guild) ID() snowflake.Snowflake {
 
 // OwnsChannel TODOC
 func (g *Guild) OwnsChannel(cid snowflake.Snowflake) bool {
-	fmt.Printf("*** %v -> %+v\n", g.id, g.channels)
 	_, ok := g.channels[cid]
 	return ok
 }
@@ -92,23 +89,25 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 		}
 	}
 
-	e2, ok = eMap["unavailable"]
-	if ok {
-		var uavStr string
-		uavStr, err = e2.ToString()
-		if err != nil {
-			err = errors.Wrap(err, "could not get unavailable status")
-			return
-		}
+	if !g.available {
+		e2, ok = eMap["unavailable"]
+		if ok {
+			var uavStr string
+			uavStr, err = e2.ToString()
+			if err != nil {
+				err = errors.Wrap(err, "could not get unavailable status")
+				return
+			}
 
-		switch uavStr {
-		case "true":
-			g.available = false
-		case "false":
-			g.available = true
-		default:
-			err = errors.Wrap(ErrBadData, "did not get true or false availability")
-			return
+			switch uavStr {
+			case "true":
+				g.available = false
+			case "false":
+				g.available = true
+			default:
+				err = errors.Wrap(ErrBadData, "did not get true or false availability")
+				return
+			}
 		}
 	}
 
