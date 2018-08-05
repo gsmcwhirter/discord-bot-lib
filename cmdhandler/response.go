@@ -11,6 +11,7 @@ import (
 
 // Response TODOC
 type Response interface {
+	SetColor(int)
 	IncludeError(err error)
 	ToString() string
 	ToMessage() json.Marshaler
@@ -23,6 +24,9 @@ type SimpleResponse struct {
 
 	errors []error
 }
+
+// SetColor TODOC
+func (r *SimpleResponse) SetColor(color int) {}
 
 // IncludeError TODOC
 func (r *SimpleResponse) IncludeError(err error) {
@@ -74,6 +78,11 @@ type EmbedResponse struct {
 	FooterText  string
 
 	errors []error
+}
+
+// SetColor TODOC
+func (r *EmbedResponse) SetColor(color int) {
+	r.Color = color
 }
 
 // IncludeError TODOC

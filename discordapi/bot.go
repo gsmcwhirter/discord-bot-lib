@@ -191,6 +191,7 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 	if err != nil {
 		return
 	}
+	_ = level.Info(logger).Log("message", "sending message", "payload", string(b))
 	r := bytes.NewReader(b)
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
