@@ -62,6 +62,91 @@ func (r *SimpleResponse) ToMessage() json.Marshaler {
 	}
 }
 
+// SimpleEmbedResponse TODOC
+type SimpleEmbedResponse struct {
+	To          string
+	Title       string
+	Description string
+	Color       int
+	FooterText  string
+
+	errors []error
+}
+
+// SetColor TODOC
+func (r *SimpleEmbedResponse) SetColor(color int) {
+	r.Color = color
+}
+
+// IncludeError TODOC
+func (r *SimpleEmbedResponse) IncludeError(err error) {
+	if err == nil {
+		return
+	}
+
+	r.errors = append(r.errors, err)
+}
+
+// ToString TODOC
+func (r *SimpleEmbedResponse) ToString() string {
+	b := strings.Builder{}
+
+	_, _ = b.WriteString(fmt.Sprintf("%s\n\n", r.To))
+
+	if r.Title != "" {
+		_, _ = b.WriteString(fmt.Sprintf("__**%s**__\n", r.Title))
+	}
+
+	if r.Description != "" {
+		_, _ = b.WriteString(fmt.Sprintf("%s\n", r.Description))
+	}
+
+	if len(r.errors) > 0 {
+		for _, err := range r.errors {
+			_, _ = b.WriteString(fmt.Sprintf("\nError: %v", err))
+		}
+		_, _ = b.WriteString("\n")
+	}
+
+	return b.String()
+}
+
+// ToMessage TODOC
+func (r *SimpleEmbedResponse) ToMessage() json.Marshaler {
+	m := jsonapi.MessageWithEmbed{
+		Content: fmt.Sprintf("%s\n", r.To),
+		Tts:     false,
+		Embed: jsonapi.Embed{
+			Timestamp: time.Now().Format(time.RFC3339),
+		},
+	}
+
+	if r.Title != "" {
+		m.Embed.Title = r.Title
+	}
+
+	if r.Description != "" {
+		m.Embed.Description = r.Description
+	}
+
+	if r.Color != 0 {
+		m.Embed.Color = r.Color
+	}
+
+	if r.FooterText != "" {
+		m.Embed.Footer.Text = r.FooterText
+	}
+
+	if len(r.errors) > 0 {
+		for _, err := range r.errors {
+			m.Embed.Description += fmt.Sprintf("\nError: %v", err)
+		}
+		m.Embed.Description += "\n"
+	}
+
+	return m
+}
+
 // EmbedField TODOC
 type EmbedField struct {
 	Name string
@@ -162,9 +247,9 @@ func (r *EmbedResponse) ToMessage() json.Marshaler {
 
 	if len(r.errors) > 0 {
 		for _, err := range r.errors {
-			m.Content += fmt.Sprintf("\nError: %v", err)
+			m.Embed.Description += fmt.Sprintf("\nError: %v", err)
 		}
-		m.Content += "\n"
+		m.Embed.Description += "\n"
 	}
 
 	return m
