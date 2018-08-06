@@ -99,3 +99,11 @@ func (s *Session) UpdateFromReady(p *etfapi.Payload) (err error) {
 
 	return
 }
+
+// ChannelName TODOC
+func (s *Session) ChannelName(cid snowflake.Snowflake) (string, bool) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return s.state.ChannelName(cid)
+}

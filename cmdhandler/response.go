@@ -13,6 +13,7 @@ import (
 type Response interface {
 	SetColor(int)
 	IncludeError(err error)
+	HasErrors() bool
 	ToString() string
 	ToMessage() json.Marshaler
 }
@@ -35,6 +36,11 @@ func (r *SimpleResponse) IncludeError(err error) {
 	}
 
 	r.errors = append(r.errors, err)
+}
+
+// HasErrors TODOC
+func (r *SimpleResponse) HasErrors() bool {
+	return len(r.errors) > 0
 }
 
 // ToString TODOC
@@ -85,6 +91,11 @@ func (r *SimpleEmbedResponse) IncludeError(err error) {
 	}
 
 	r.errors = append(r.errors, err)
+}
+
+// HasErrors TODOC
+func (r *SimpleEmbedResponse) HasErrors() bool {
+	return len(r.errors) > 0
 }
 
 // ToString TODOC
@@ -179,6 +190,11 @@ func (r *EmbedResponse) IncludeError(err error) {
 	r.errors = append(r.errors, err)
 }
 
+// HasErrors TODOC
+func (r *EmbedResponse) HasErrors() bool {
+	return len(r.errors) > 0
+}
+
 // ToString TODOC
 func (r *EmbedResponse) ToString() string {
 	b := strings.Builder{}
@@ -194,7 +210,7 @@ func (r *EmbedResponse) ToString() string {
 	}
 
 	for _, ef := range r.Fields {
-		_, _ = b.WriteString(fmt.Sprintf("%s:\n```\n%s\n```\n", ef.Name, ef.Val))
+		_, _ = b.WriteString(fmt.Sprintf("%s:\n%s\n", ef.Name, ef.Val))
 	}
 
 	if r.FooterText != "" {

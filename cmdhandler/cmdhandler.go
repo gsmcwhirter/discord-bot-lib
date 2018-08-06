@@ -3,6 +3,7 @@ package cmdhandler
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -14,24 +15,28 @@ var ErrMissingHandler = errors.New("missing handler for command")
 
 // Options TODOC
 type Options struct {
-	Placeholder string
-	PreCommand  string
+	Placeholder             string
+	PreCommand              string
+	NoHelpOnUnknownCommands bool
+	HelpOnEmptyCommands     bool
 }
 
 // CommandHandler TODOC
 type CommandHandler struct {
-	parser      parser.Parser
-	commands    map[string]LineHandler
-	helpCmd     string
-	placeholder string
-	preCommand  string
+	parser                parser.Parser
+	commands              map[string]LineHandler
+	helpCmd               string
+	placeholder           string
+	preCommand            string
+	helpOnUnknownCommands bool
 }
 
 // NewCommandHandler TODOC
 func NewCommandHandler(parser parser.Parser, opts Options) *CommandHandler {
 	ch := CommandHandler{
-		commands:   map[string]LineHandler{},
-		preCommand: opts.PreCommand,
+		commands:              map[string]LineHandler{},
+		preCommand:            opts.PreCommand,
+		helpOnUnknownCommands: !opts.NoHelpOnUnknownCommands,
 	}
 	ch.SetParser(parser)
 
@@ -41,7 +46,9 @@ func NewCommandHandler(parser parser.Parser, opts Options) *CommandHandler {
 		ch.placeholder = "command"
 	}
 
-	ch.SetHandler("", NewLineHandler(ch.showHelp))
+	if opts.HelpOnEmptyCommands {
+		ch.SetHandler("", NewLineHandler(ch.showHelp))
+	}
 	ch.SetHandler("help", NewLineHandler(ch.showHelp))
 	return &ch
 }
@@ -65,28 +72,31 @@ func (ch *CommandHandler) calculateHelpCmd() {
 }
 
 func (ch *CommandHandler) showHelp(user, guild string, line string) (Response, error) {
-	var helpStr string
-	if ch.preCommand != "" {
-		helpStr = fmt.Sprintf("Usage: %s [%s]\n\n", ch.preCommand, ch.placeholder)
+	r := &EmbedResponse{
+		To: user,
 	}
 
-	helpStr += fmt.Sprintf("Available %ss:\n", ch.placeholder)
+	if ch.preCommand != "" {
+		r.Description = fmt.Sprintf("Usage: %s [%s]\n\n", ch.preCommand, ch.placeholder)
+	}
+
 	cNames := make([]string, 0, len(ch.commands))
 	for cmd := range ch.commands {
+		if cmd == "" {
+			continue
+		}
 		cNames = append(cNames, cmd)
 	}
 	sort.Strings(cNames)
 
-	for _, cmd := range cNames {
-		if cmd != "" {
-			helpStr += fmt.Sprintf("  %s\n", cmd)
-		}
+	r.Fields = []EmbedField{
+		{
+			Name: "*Available Commands*",
+			Val:  fmt.Sprintf("```\n%s\n```\n", strings.Join(cNames, "\n")),
+		},
 	}
 
-	return &SimpleResponse{
-		To:      user,
-		Content: helpStr,
-	}, nil
+	return r, nil
 }
 
 // SetHandler TODOC
@@ -97,43 +107,46 @@ func (ch *CommandHandler) SetHandler(cmd string, handler LineHandler) {
 
 // HandleLine TODOC
 func (ch *CommandHandler) HandleLine(user, guild string, line string) (Response, error) {
-	r := &SimpleResponse{
+	r := &SimpleEmbedResponse{
 		To: user,
 	}
 
 	cmd, rest, err := ch.parser.ParseCommand(line)
+	if err == parser.ErrUnknownCommand {
+		if ch.helpOnUnknownCommands {
+			cmd2, rest, err2 := ch.parser.ParseCommand(ch.helpCmd)
+			if err2 != nil {
+				r.Description = fmt.Sprintf("Unknown command '%s'", cmd)
+				return r, err2
+			}
 
-	subHandler, cmdExists := ch.commands[cmd]
-	if err == parser.ErrNotACommand && cmd != "" && !cmdExists {
+			subHandler, cmdExists := ch.commands[cmd2]
+			if !cmdExists {
+				return r, ErrMissingHandler
+			}
+
+			s, err2 := subHandler.HandleLine(user, guild, rest)
+			s.IncludeError(parser.ErrUnknownCommand)
+			return s, err2
+		}
+
 		return r, err
 	}
 
-	if err == parser.ErrUnknownCommand {
-		var cmd2 string
-		cmd2, rest, err = ch.parser.ParseCommand(ch.helpCmd)
+	subHandler, cmdExists := ch.commands[cmd]
 
-		subHandler, cmdExists = ch.commands[cmd2]
-		if !cmdExists {
-			return r, ErrMissingHandler
-		}
-
-		if err != nil {
-			r.Content = fmt.Sprintf("Unknown command '%s'", cmd)
-			return r, err
-		}
-
-		s, sherr := subHandler.HandleLine(user, guild, rest)
-		if sherr == nil {
-			sherr = parser.ErrUnknownCommand
-		}
-		return s, sherr
+	if (err == nil || err == parser.ErrNotACommand) && cmd == "" && cmdExists {
+		return subHandler.HandleLine(user, guild, rest)
 	}
 
-	if err != nil && err != parser.ErrNotACommand {
+	if err != nil {
 		return r, err
 	}
 
 	if !cmdExists {
+		if cmd == "" {
+			return r, parser.ErrNotACommand
+		}
 		return r, ErrMissingHandler
 	}
 

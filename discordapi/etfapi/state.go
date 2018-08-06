@@ -209,3 +209,16 @@ func (s *State) Guild(gid snowflake.Snowflake) (g Guild, err error) {
 
 	return
 }
+
+// ChannelName TODOC
+func (s *State) ChannelName(cid snowflake.Snowflake) (string, bool) {
+	for _, g := range s.guilds {
+		c, ok := g.channels[cid]
+		if !ok {
+			continue
+		}
+
+		return c.name, true
+	}
+	return "", false
+}

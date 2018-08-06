@@ -43,9 +43,12 @@ type DiscordBot interface {
 	Disconnect() error
 	Run(context.Context) error
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
+	SendMessage(context.Context, snowflake.Snowflake, json.Marshaler) (*http.Response, []byte, error)
+
 	GuildOfChannel(snowflake.Snowflake) (snowflake.Snowflake, bool)
 	IsGuildAdmin(snowflake.Snowflake, snowflake.Snowflake) bool
-	SendMessage(context.Context, snowflake.Snowflake, json.Marshaler) (*http.Response, []byte, error)
+
+	ChannelName(snowflake.Snowflake) (string, bool)
 }
 
 // BotConfig TODOC
@@ -167,19 +170,6 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, botPermissions)
 
 	return nil
-}
-
-func (d *discordBot) GuildOfChannel(cid snowflake.Snowflake) (snowflake.Snowflake, bool) {
-	return d.session.GuildOfChannel(cid)
-}
-
-func (d *discordBot) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowflake) bool {
-	g, err := d.session.Guild(gid)
-	if err != nil {
-		return false
-	}
-
-	return g.IsAdmin(uid)
 }
 
 func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m json.Marshaler) (resp *http.Response, body []byte, err error) {
@@ -325,4 +315,21 @@ func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
 	d.deps.WSClient().SendMessage(m)
 
 	return nil
+}
+
+func (d *discordBot) GuildOfChannel(cid snowflake.Snowflake) (snowflake.Snowflake, bool) {
+	return d.session.GuildOfChannel(cid)
+}
+
+func (d *discordBot) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowflake) bool {
+	g, err := d.session.Guild(gid)
+	if err != nil {
+		return false
+	}
+
+	return g.IsAdmin(uid)
+}
+
+func (d *discordBot) ChannelName(cid snowflake.Snowflake) (string, bool) {
+	return d.session.ChannelName(cid)
 }
