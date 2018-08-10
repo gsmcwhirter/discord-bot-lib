@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
 // Response TODOC
@@ -16,18 +17,25 @@ type Response interface {
 	HasErrors() bool
 	ToString() string
 	ToMessage() json.Marshaler
+	Channel() snowflake.Snowflake
 }
 
 // SimpleResponse TODOC
 type SimpleResponse struct {
-	To      string
-	Content string
+	To        string
+	Content   string
+	ToChannel snowflake.Snowflake
 
 	errors []error
 }
 
 // SetColor TODOC
 func (r *SimpleResponse) SetColor(color int) {}
+
+// Channel TODOC
+func (r *SimpleResponse) Channel() snowflake.Snowflake {
+	return r.ToChannel
+}
 
 // IncludeError TODOC
 func (r *SimpleResponse) IncludeError(err error) {
@@ -75,6 +83,7 @@ type SimpleEmbedResponse struct {
 	Description string
 	Color       int
 	FooterText  string
+	ToChannel   snowflake.Snowflake
 
 	errors []error
 }
@@ -82,6 +91,11 @@ type SimpleEmbedResponse struct {
 // SetColor TODOC
 func (r *SimpleEmbedResponse) SetColor(color int) {
 	r.Color = color
+}
+
+// Channel TODOC
+func (r *SimpleEmbedResponse) Channel() snowflake.Snowflake {
+	return r.ToChannel
 }
 
 // IncludeError TODOC
@@ -172,6 +186,7 @@ type EmbedResponse struct {
 	Color       int
 	Fields      []EmbedField
 	FooterText  string
+	ToChannel   snowflake.Snowflake
 
 	errors []error
 }
@@ -179,6 +194,11 @@ type EmbedResponse struct {
 // SetColor TODOC
 func (r *EmbedResponse) SetColor(color int) {
 	r.Color = color
+}
+
+// Channel TODOC
+func (r *EmbedResponse) Channel() snowflake.Snowflake {
+	return r.ToChannel
 }
 
 // IncludeError TODOC

@@ -29,6 +29,17 @@ func (g *Guild) OwnsChannel(cid snowflake.Snowflake) bool {
 	return ok
 }
 
+// ChannelWithName TODOC
+func (g *Guild) ChannelWithName(name string) (snowflake.Snowflake, bool) {
+	for _, c := range g.channels {
+		if c.name == name {
+			return c.id, true
+		}
+	}
+
+	return 0, false
+}
+
 // IsAdmin TODOC
 func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
 	if g.ownerID != 0 && uid == g.ownerID {

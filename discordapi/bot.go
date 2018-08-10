@@ -17,8 +17,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi/payloads"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi/session"
 	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -35,6 +37,18 @@ type dependencies interface {
 	WSClient() wsclient.WSClient
 	MessageRateLimiter() *rate.Limiter
 	ConnectRateLimiter() *rate.Limiter
+	BotSession() *session.Session
+	DiscordMessageHandler() DiscordMessageHandler
+}
+
+// DiscordMessageHandlerFunc TODOC
+type DiscordMessageHandlerFunc func(*etfapi.Payload, wsclient.WSMessage, chan<- wsclient.WSMessage)
+
+// DiscordMessageHandler TODOC
+type DiscordMessageHandler interface {
+	ConnectToBot(DiscordBot)
+	AddHandler(string, DiscordMessageHandlerFunc)
+	HandleRequest(wsclient.WSMessage, chan<- wsclient.WSMessage)
 }
 
 // DiscordBot TODOC
@@ -44,11 +58,10 @@ type DiscordBot interface {
 	Run(context.Context) error
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
 	SendMessage(context.Context, snowflake.Snowflake, json.Marshaler) (*http.Response, []byte, error)
-
-	GuildOfChannel(snowflake.Snowflake) (snowflake.Snowflake, bool)
-	IsGuildAdmin(snowflake.Snowflake, snowflake.Snowflake) bool
-
-	ChannelName(snowflake.Snowflake) (string, bool)
+	UpdateSequence(int) bool
+	ReconfigureHeartbeat(context.Context, int)
+	LastSequence() int
+	Config() BotConfig
 }
 
 // BotConfig TODOC
@@ -64,17 +77,15 @@ type BotConfig struct {
 	BotPresence string
 }
 
+// HBReconfig
 type hbReconfig struct {
 	ctx      context.Context
 	interval int
 }
 
 type discordBot struct {
-	config         BotConfig
-	deps           dependencies
-	messageHandler *discordMessageHandler
-
-	session *Session
+	config BotConfig
+	deps   dependencies
 
 	heartbeat  *time.Ticker
 	heartbeats chan hbReconfig
@@ -89,20 +100,19 @@ func NewDiscordBot(deps dependencies, conf BotConfig) DiscordBot {
 		config: conf,
 		deps:   deps,
 
-		session:    NewSession(),
 		heartbeats: make(chan hbReconfig),
 
 		seqLock:      &sync.Mutex{},
 		lastSequence: -1,
 	}
 
-	d.messageHandler = newDiscordMessageHandler(d)
+	d.deps.DiscordMessageHandler().ConnectToBot(d)
 
 	return d
 }
 
 func (d *discordBot) AddMessageHandler(event string, handler DiscordMessageHandlerFunc) {
-	d.messageHandler.addHandler(event, handler)
+	d.deps.DiscordMessageHandler().AddHandler(event, handler)
 }
 
 func (d *discordBot) AuthenticateAndConnect() error {
@@ -155,7 +165,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	)
 
 	d.deps.WSClient().SetGateway(connectURL.String())
-	d.deps.WSClient().SetHandler(d.messageHandler)
+	d.deps.WSClient().SetHandler(d.deps.DiscordMessageHandler())
 
 	err = d.deps.WSClient().Connect(d.config.BotToken)
 	if err != nil {
@@ -166,10 +176,25 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	botPermissions := 0x00000040 // add reactions
 	botPermissions |= 0x00000400 // view channel (including read messages)
 	botPermissions |= 0x00000800 // send messages
+	botPermissions |= 0x00002000 // manage messages
+	botPermissions |= 0x00010000 // read message history
+	botPermissions |= 0x00020000 // mention everyone
+	botPermissions |= 0x04000000 // change own nickname
 
 	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, botPermissions)
 
 	return nil
+}
+
+func (d *discordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
+	d.heartbeats <- hbReconfig{
+		ctx:      ctx,
+		interval: interval,
+	}
+}
+
+func (d *discordBot) Config() BotConfig {
+	return d.config
 }
 
 func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m json.Marshaler) (resp *http.Response, body []byte, err error) {
@@ -232,7 +257,7 @@ func (d *discordBot) LastSequence() int {
 	return d.lastSequence
 }
 
-func (d *discordBot) updateSequence(seq int) bool {
+func (d *discordBot) UpdateSequence(seq int) bool {
 	d.seqLock.Lock()
 	defer d.seqLock.Unlock()
 
@@ -315,21 +340,4 @@ func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
 	d.deps.WSClient().SendMessage(m)
 
 	return nil
-}
-
-func (d *discordBot) GuildOfChannel(cid snowflake.Snowflake) (snowflake.Snowflake, bool) {
-	return d.session.GuildOfChannel(cid)
-}
-
-func (d *discordBot) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowflake) bool {
-	g, err := d.session.Guild(gid)
-	if err != nil {
-		return false
-	}
-
-	return g.IsAdmin(uid)
-}
-
-func (d *discordBot) ChannelName(cid snowflake.Snowflake) (string, bool) {
-	return d.session.ChannelName(cid)
 }

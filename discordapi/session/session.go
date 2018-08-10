@@ -1,4 +1,4 @@
-package discordapi
+package session
 
 import (
 	"sync"
@@ -106,4 +106,22 @@ func (s *Session) ChannelName(cid snowflake.Snowflake) (string, bool) {
 	defer s.lock.RUnlock()
 
 	return s.state.ChannelName(cid)
+}
+
+// IsGuildAdmin TODOC
+func (s *Session) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowflake) bool {
+	g, err := s.Guild(gid)
+	if err != nil {
+		return false
+	}
+
+	return g.IsAdmin(uid)
+}
+
+// EveryoneRoleID TODOC
+func (s *Session) EveryoneRoleID(gid snowflake.Snowflake) (snowflake.Snowflake, bool) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return s.state.EveryoneRoleID(gid)
 }

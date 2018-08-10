@@ -222,3 +222,21 @@ func (s *State) ChannelName(cid snowflake.Snowflake) (string, bool) {
 	}
 	return "", false
 }
+
+// EveryoneRoleID TODOC
+func (s *State) EveryoneRoleID(gid snowflake.Snowflake) (rid snowflake.Snowflake, ok bool) {
+	g, ok := s.guilds[gid]
+	if !ok {
+		return
+	}
+
+	for _, r := range g.roles {
+		if r.name == "everyone" {
+			rid = r.id
+			return
+		}
+	}
+
+	ok = false
+	return
+}

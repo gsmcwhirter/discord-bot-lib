@@ -5,9 +5,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gsmcwhirter/go-util/parser"
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/go-util/parser"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
 )
 
 // ErrMissingHandler TODOC
@@ -24,17 +25,18 @@ type Options struct {
 // CommandHandler TODOC
 type CommandHandler struct {
 	parser                parser.Parser
-	commands              map[string]LineHandler
+	commands              map[string]MessageHandler
 	helpCmd               string
 	placeholder           string
 	preCommand            string
 	helpOnUnknownCommands bool
+	bot                   discordapi.DiscordBot
 }
 
 // NewCommandHandler TODOC
 func NewCommandHandler(parser parser.Parser, opts Options) *CommandHandler {
 	ch := CommandHandler{
-		commands:              map[string]LineHandler{},
+		commands:              map[string]MessageHandler{},
 		preCommand:            opts.PreCommand,
 		helpOnUnknownCommands: !opts.NoHelpOnUnknownCommands,
 	}
@@ -47,10 +49,20 @@ func NewCommandHandler(parser parser.Parser, opts Options) *CommandHandler {
 	}
 
 	if opts.HelpOnEmptyCommands {
-		ch.SetHandler("", NewLineHandler(ch.showHelp))
+		ch.SetHandler("", NewMessageHandler(ch.showHelp))
 	}
-	ch.SetHandler("help", NewLineHandler(ch.showHelp))
+	ch.SetHandler("help", NewMessageHandler(ch.showHelp))
 	return &ch
+}
+
+// ConnectToBot TODOC
+func (ch *CommandHandler) ConnectToBot(b discordapi.DiscordBot) {
+	ch.bot = b
+}
+
+// DiscordBot TODOC
+func (ch *CommandHandler) DiscordBot() discordapi.DiscordBot {
+	return ch.bot
 }
 
 // CommandIndicator TODOC
@@ -71,9 +83,9 @@ func (ch *CommandHandler) calculateHelpCmd() {
 	ch.helpCmd = ch.parser.LeadChar() + "help"
 }
 
-func (ch *CommandHandler) showHelp(user, guild string, line string) (Response, error) {
+func (ch *CommandHandler) showHelp(msg Message) (Response, error) {
 	r := &EmbedResponse{
-		To: user,
+		To: UserMentionString(msg.UserID()),
 	}
 
 	if ch.preCommand != "" {
@@ -100,18 +112,18 @@ func (ch *CommandHandler) showHelp(user, guild string, line string) (Response, e
 }
 
 // SetHandler TODOC
-func (ch *CommandHandler) SetHandler(cmd string, handler LineHandler) {
+func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
 	ch.parser.LearnCommand(cmd)
 	ch.commands[cmd] = handler
 }
 
 // HandleLine TODOC
-func (ch *CommandHandler) HandleLine(user, guild string, line string) (Response, error) {
+func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 	r := &SimpleEmbedResponse{
-		To: user,
+		To: UserMentionString(msg.UserID()),
 	}
 
-	cmd, rest, err := ch.parser.ParseCommand(line)
+	cmd, rest, err := ch.parser.ParseCommand(msg.Contents())
 	if err == parser.ErrUnknownCommand {
 		if ch.helpOnUnknownCommands {
 			cmd2, rest, err2 := ch.parser.ParseCommand(ch.helpCmd)
@@ -125,7 +137,7 @@ func (ch *CommandHandler) HandleLine(user, guild string, line string) (Response,
 				return r, ErrMissingHandler
 			}
 
-			s, err2 := subHandler.HandleLine(user, guild, rest)
+			s, err2 := subHandler.HandleLine(NewWithContents(msg, rest))
 			s.IncludeError(parser.ErrUnknownCommand)
 			return s, err2
 		}
@@ -136,7 +148,7 @@ func (ch *CommandHandler) HandleLine(user, guild string, line string) (Response,
 	subHandler, cmdExists := ch.commands[cmd]
 
 	if (err == nil || err == parser.ErrNotACommand) && cmd == "" && cmdExists {
-		return subHandler.HandleLine(user, guild, rest)
+		return subHandler.HandleLine(NewWithContents(msg, rest))
 	}
 
 	if err != nil {
@@ -150,5 +162,5 @@ func (ch *CommandHandler) HandleLine(user, guild string, line string) (Response,
 		return r, ErrMissingHandler
 	}
 
-	return subHandler.HandleLine(user, guild, rest)
+	return subHandler.HandleLine(NewWithContents(msg, rest))
 }

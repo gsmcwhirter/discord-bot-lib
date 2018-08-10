@@ -1,40 +1,50 @@
-package discordapi
+package messagehandler
 
 import (
 	"fmt"
 	"sync"
 
+	"golang.org/x/time/rate"
+
+	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi/session"
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 )
 
-// DiscordMessageHandlerFunc TODOC
-type DiscordMessageHandlerFunc func(*etfapi.Payload, wsclient.WSMessage, chan<- wsclient.WSMessage)
+type dependencies interface {
+	Logger() log.Logger
+	BotSession() *session.Session
+	MessageRateLimiter() *rate.Limiter
+}
 
+// DiscordMessageHandler TODOC
 type discordMessageHandler struct {
-	bot            *discordBot
-	opCodeDispatch map[constants.OpCode]DiscordMessageHandlerFunc
+	deps           dependencies
+	bot            discordapi.DiscordBot
+	opCodeDispatch map[constants.OpCode]discordapi.DiscordMessageHandlerFunc
 
 	dispatcherLock *sync.Mutex
-	eventDispatch  map[string][]DiscordMessageHandlerFunc
+	eventDispatch  map[string][]discordapi.DiscordMessageHandlerFunc
 }
 
 func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
 }
 
 // NewDiscordMessageHandler TODOC
-func newDiscordMessageHandler(bot *discordBot) *discordMessageHandler {
+func NewDiscordMessageHandler(deps dependencies) discordapi.DiscordMessageHandler {
 	c := discordMessageHandler{
-		bot:            bot,
+		deps:           deps,
 		dispatcherLock: &sync.Mutex{},
 	}
 
-	c.opCodeDispatch = map[constants.OpCode]DiscordMessageHandlerFunc{
+	c.opCodeDispatch = map[constants.OpCode]discordapi.DiscordMessageHandlerFunc{
 		constants.Hello:           c.handleHello,
 		constants.Heartbeat:       c.handleHeartbeat,
 		constants.HeartbeatAck:    noop,
@@ -44,15 +54,21 @@ func newDiscordMessageHandler(bot *discordBot) *discordMessageHandler {
 		constants.Dispatch:        c.handleDispatch,
 	}
 
-	c.eventDispatch = map[string][]DiscordMessageHandlerFunc{
-		"READY":        []DiscordMessageHandlerFunc{c.handleReady},
-		"GUILD_CREATE": []DiscordMessageHandlerFunc{c.handleGuildCreate},
+	c.eventDispatch = map[string][]discordapi.DiscordMessageHandlerFunc{
+		"READY":        []discordapi.DiscordMessageHandlerFunc{c.handleReady},
+		"GUILD_CREATE": []discordapi.DiscordMessageHandlerFunc{c.handleGuildCreate},
 	}
 
 	return &c
 }
 
-func (c *discordMessageHandler) addHandler(event string, handler DiscordMessageHandlerFunc) {
+// ConnectToBot TODOC
+func (c *discordMessageHandler) ConnectToBot(bot discordapi.DiscordBot) {
+	c.bot = bot
+}
+
+// AddHandler TODOC
+func (c *discordMessageHandler) AddHandler(event string, handler discordapi.DiscordMessageHandlerFunc) {
 	c.dispatcherLock.Lock()
 	defer c.dispatcherLock.Unlock()
 
@@ -60,8 +76,9 @@ func (c *discordMessageHandler) addHandler(event string, handler DiscordMessageH
 	c.eventDispatch[event] = append(handlers, handler)
 }
 
+// HandleRequest
 func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	_ = level.Debug(logger).Log("message", "discordapi dispatching request")
 
 	select {
@@ -80,7 +97,7 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	}
 
 	if p.SeqNum != nil {
-		c.bot.updateSequence(*p.SeqNum)
+		c.bot.UpdateSequence(*p.SeqNum)
 	}
 
 	_ = level.Info(logger).Log("message", "received payload", "payload", p)
@@ -106,7 +123,7 @@ func (c *discordMessageHandler) handleError(req wsclient.WSMessage, resp chan<- 
 	default:
 	}
 
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	_ = level.Error(logger).Log("message", "error code received from websocket", "ws_msg", req)
 }
 
@@ -117,7 +134,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 	default:
 	}
 
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	rawInterval, ok := p.Data["heartbeat_interval"]
 
 	if ok {
@@ -129,23 +146,19 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 		}
 
 		_ = level.Info(logger).Log("message", "configuring heartbeat", "interval", interval)
-		c.bot.heartbeats <- hbReconfig{
-			ctx:      req.Ctx,
-			interval: interval,
-		}
+		c.bot.ReconfigureHeartbeat(req.Ctx, interval)
 		_ = level.Debug(logger).Log("message", "configuring heartbeat done")
-
 	}
 
 	// send identify
 	var m wsclient.WSMessage
 	var err error
 
-	sessID := c.bot.session.ID()
+	sessID := c.deps.BotSession().ID()
 	if sessID != "" {
 		_ = level.Info(logger).Log("message", "generating resume payload")
 		rp := payloads.ResumePayload{
-			Token:     c.bot.config.BotToken,
+			Token:     c.bot.Config().BotToken,
 			SessionID: sessID,
 			SeqNum:    c.bot.LastSequence(),
 		}
@@ -154,11 +167,11 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 	} else {
 		_ = level.Info(logger).Log("message", "generating identify payload")
 		ip := payloads.IdentifyPayload{
-			Token: c.bot.config.BotToken,
+			Token: c.bot.Config().BotToken,
 			Properties: payloads.IdentifyPayloadProperties{
-				OS:      c.bot.config.OS,
-				Browser: c.bot.config.BotName,
-				Device:  c.bot.config.BotName,
+				OS:      c.bot.Config().OS,
+				Browser: c.bot.Config().BotName,
+				Device:  c.bot.Config().BotName,
 			},
 			LargeThreshold: 250,
 			Shard: payloads.IdentifyPayloadShard{
@@ -167,7 +180,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 			},
 			Presence: payloads.IdentifyPayloadPresence{
 				Game: payloads.IdentifyPayloadGame{
-					Name: c.bot.config.BotPresence,
+					Name: c.bot.Config().BotPresence,
 					Type: 0,
 				},
 				Status: "online",
@@ -184,7 +197,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 		return
 	}
 
-	err = c.bot.deps.MessageRateLimiter().Wait(req.Ctx)
+	err = c.deps.MessageRateLimiter().Wait(req.Ctx)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error ratelimiting", "err", err)
 		return
@@ -202,11 +215,9 @@ func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.
 	default:
 	}
 
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	_ = level.Info(logger).Log("message", "requesting manual heartbeat")
-	c.bot.heartbeats <- hbReconfig{
-		ctx: req.Ctx,
-	}
+	c.bot.ReconfigureHeartbeat(req.Ctx, 0)
 	_ = level.Debug(logger).Log("message", "manual heartbeat done")
 }
 
@@ -217,7 +228,7 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 	default:
 	}
 
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
 	c.dispatcherLock.Lock()
 	eventHandlers, ok := c.eventDispatch[p.EventName]
@@ -238,9 +249,9 @@ func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMe
 	default:
 	}
 
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
-	err := c.bot.session.UpdateFromReady(p)
+	err := c.deps.BotSession().UpdateFromReady(p)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error setting up session", "err", err)
 		return
@@ -254,9 +265,9 @@ func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclien
 	default:
 	}
 
-	logger := logging.WithContext(req.Ctx, c.bot.deps.Logger())
+	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_CREATE")
-	err := c.bot.session.UpsertGuildFromElementMap(p.Data)
+	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild create", "err", err)
 		return
