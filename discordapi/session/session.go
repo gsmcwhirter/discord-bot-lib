@@ -68,12 +68,40 @@ func (s *Session) UpsertGuildFromElementMap(eMap map[string]etfapi.Element) (err
 	return
 }
 
+// UpsertGuildMemberFromElementMap TODOC
+func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]etfapi.Element) (err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	err = s.state.UpsertGuildMemberFromElementMap(eMap)
+	return
+}
+
+// UpsertGuildRoleFromElementMap TODOC
+func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]etfapi.Element) (err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	err = s.state.UpsertGuildRoleFromElementMap(eMap)
+	return
+}
+
 // UpsertChannelFromElement TODOC
 func (s *Session) UpsertChannelFromElement(e etfapi.Element) (err error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	err = s.state.UpsertChannelFromElement(e)
+
+	return
+}
+
+// UpsertChannelFromElementMap TODOC
+func (s *Session) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	err = s.state.UpsertChannelFromElementMap(eMap)
 
 	return
 }

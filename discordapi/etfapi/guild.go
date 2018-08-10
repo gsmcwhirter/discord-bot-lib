@@ -161,6 +161,42 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
+// UpsertMemberFromElementMap TODOC
+func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (m GuildMember, err error) {
+	mid, err := SnowflakeFromElement(eMap["id"])
+	if err != nil {
+		err = errors.Wrap(err, "could not get member id")
+		return
+	}
+
+	m, ok := g.members[mid]
+	if !ok {
+		m.id = mid
+	}
+	m.UpdateFromElementMap(eMap)
+	g.members[mid] = m
+
+	return
+}
+
+// UpsertRoleFromElementMap TODOC
+func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (r Role, err error) {
+	rid, err := SnowflakeFromElement(eMap["id"])
+	if err != nil {
+		err = errors.Wrap(err, "could not get role id")
+		return
+	}
+
+	r, ok := g.roles[rid]
+	if !ok {
+		r.id = rid
+	}
+	r.UpdateFromElementMap(eMap)
+	g.roles[rid] = r
+
+	return
+}
+
 // GuildFromElementMap TODOC
 func GuildFromElementMap(eMap map[string]Element) (g Guild, err error) {
 	g.channels = map[snowflake.Snowflake]Channel{}
