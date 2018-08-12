@@ -7,7 +7,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-var userMentionRe = regexp.MustCompile(`^<@![0-9]+>$`)
+var userMentionRe = regexp.MustCompile(`^<@[!]?[0-9]+>$`)
 var channelMentionRe = regexp.MustCompile(`^<#[0-9]+>$`)
 var roleMentionRe = regexp.MustCompile(`^<@&[0-9]+>|@everyone|@here$`)
 

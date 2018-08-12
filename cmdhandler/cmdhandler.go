@@ -7,8 +7,6 @@ import (
 
 	"github.com/gsmcwhirter/go-util/parser"
 	"github.com/pkg/errors"
-
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
 )
 
 // ErrMissingHandler TODOC
@@ -20,6 +18,7 @@ type Options struct {
 	PreCommand              string
 	NoHelpOnUnknownCommands bool
 	HelpOnEmptyCommands     bool
+	CaseSensitive           bool
 }
 
 // CommandHandler TODOC
@@ -30,17 +29,22 @@ type CommandHandler struct {
 	placeholder           string
 	preCommand            string
 	helpOnUnknownCommands bool
-	bot                   discordapi.DiscordBot
+	caseSensitive         bool
 }
 
 // NewCommandHandler TODOC
-func NewCommandHandler(parser parser.Parser, opts Options) *CommandHandler {
+func NewCommandHandler(parser parser.Parser, opts Options) (*CommandHandler, error) {
 	ch := CommandHandler{
 		commands:              map[string]MessageHandler{},
 		preCommand:            opts.PreCommand,
 		helpOnUnknownCommands: !opts.NoHelpOnUnknownCommands,
+		caseSensitive:         opts.CaseSensitive,
 	}
-	ch.SetParser(parser)
+
+	err := ch.SetParser(parser)
+	if err != nil {
+		return nil, err
+	}
 
 	if opts.Placeholder != "" {
 		ch.placeholder = opts.Placeholder
@@ -52,17 +56,7 @@ func NewCommandHandler(parser parser.Parser, opts Options) *CommandHandler {
 		ch.SetHandler("", NewMessageHandler(ch.showHelp))
 	}
 	ch.SetHandler("help", NewMessageHandler(ch.showHelp))
-	return &ch
-}
-
-// ConnectToBot TODOC
-func (ch *CommandHandler) ConnectToBot(b discordapi.DiscordBot) {
-	ch.bot = b
-}
-
-// DiscordBot TODOC
-func (ch *CommandHandler) DiscordBot() discordapi.DiscordBot {
-	return ch.bot
+	return &ch, nil
 }
 
 // CommandIndicator TODOC
@@ -71,12 +65,18 @@ func (ch *CommandHandler) CommandIndicator() string {
 }
 
 // SetParser sets the parser for the command handler
-func (ch *CommandHandler) SetParser(p parser.Parser) {
+func (ch *CommandHandler) SetParser(p parser.Parser) error {
+	if p.IsCaseSensitive() != ch.caseSensitive {
+		return errors.New("case sensitive mismatch")
+	}
+
 	ch.parser = p
 	ch.calculateHelpCmd()
 	for cmd := range ch.commands {
 		ch.parser.LearnCommand(cmd)
 	}
+
+	return nil
 }
 
 func (ch *CommandHandler) calculateHelpCmd() {
@@ -114,7 +114,21 @@ func (ch *CommandHandler) showHelp(msg Message) (Response, error) {
 // SetHandler TODOC
 func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
 	ch.parser.LearnCommand(cmd)
-	ch.commands[cmd] = handler
+
+	if ch.caseSensitive {
+		ch.commands[cmd] = handler
+	}
+	ch.commands[strings.ToLower(cmd)] = handler
+}
+
+func (ch *CommandHandler) getHandler(cmd string) (h MessageHandler, ok bool) {
+	if ch.caseSensitive {
+		h, ok = ch.commands[cmd]
+		return
+	}
+
+	h, ok = ch.commands[strings.ToLower(cmd)]
+	return
 }
 
 // HandleLine TODOC
@@ -132,7 +146,7 @@ func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 				return r, err2
 			}
 
-			subHandler, cmdExists := ch.commands[cmd2]
+			subHandler, cmdExists := ch.getHandler(cmd2)
 			if !cmdExists {
 				return r, ErrMissingHandler
 			}
@@ -145,7 +159,7 @@ func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 		return r, err
 	}
 
-	subHandler, cmdExists := ch.commands[cmd]
+	subHandler, cmdExists := ch.getHandler(cmd)
 
 	if (err == nil || err == parser.ErrNotACommand) && cmd == "" && cmdExists {
 		return subHandler.HandleLine(NewWithContents(msg, rest))
