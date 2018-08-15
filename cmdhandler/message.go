@@ -1,9 +1,14 @@
 package cmdhandler
 
-import "github.com/gsmcwhirter/discord-bot-lib/snowflake"
+import (
+	"context"
+
+	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+)
 
 // Message TODOC
 type Message interface {
+	Context() context.Context
 	UserID() snowflake.Snowflake
 	GuildID() snowflake.Snowflake
 	ChannelID() snowflake.Snowflake
@@ -13,6 +18,7 @@ type Message interface {
 
 // SimpleMessage TODOC
 type SimpleMessage struct {
+	ctx       context.Context
 	userID    snowflake.Snowflake
 	guildID   snowflake.Snowflake
 	channelID snowflake.Snowflake
@@ -21,8 +27,9 @@ type SimpleMessage struct {
 }
 
 // NewSimpleMessage TODOC
-func NewSimpleMessage(userID, guildID, channelID, messageID snowflake.Snowflake, contents string) *SimpleMessage {
+func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) *SimpleMessage {
 	return &SimpleMessage{
+		ctx:       ctx,
 		userID:    userID,
 		guildID:   guildID,
 		channelID: channelID,
@@ -34,12 +41,18 @@ func NewSimpleMessage(userID, guildID, channelID, messageID snowflake.Snowflake,
 // NewWithContents TODOC
 func NewWithContents(m Message, contents string) *SimpleMessage {
 	return &SimpleMessage{
+		ctx:       m.Context(),
 		userID:    m.UserID(),
 		guildID:   m.GuildID(),
 		channelID: m.ChannelID(),
 		messageID: m.MessageID(),
 		contents:  contents,
 	}
+}
+
+// Context TODOC
+func (m *SimpleMessage) Context() context.Context {
+	return m.ctx
 }
 
 // UserID TODOC

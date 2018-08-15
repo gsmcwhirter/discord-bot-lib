@@ -16,5 +16,4 @@ func WithContext(ctx context.Context, logger log.Logger) log.Logger {
 	}
 
 	return log.With(logger, "request_id", rid)
-
 }

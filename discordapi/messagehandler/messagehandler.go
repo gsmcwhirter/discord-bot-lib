@@ -62,9 +62,9 @@ func NewDiscordMessageHandler(deps dependencies) discordapi.DiscordMessageHandle
 		"CHANNEL_CREATE":       []discordapi.DiscordMessageHandlerFunc{c.handleChannelCreate},
 		"CHANNEL_UPDATE":       []discordapi.DiscordMessageHandlerFunc{c.handleChannelUpdate},
 		"CHANNEL_DELETE":       []discordapi.DiscordMessageHandlerFunc{c.handleChannelDelete},
-		"GUILD_MEMBER_CREATE":  []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
+		"GUILD_MEMBER_ADD":     []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
 		"GUILD_MEMEBER_UPDATE": []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberUpdate},
-		"GUILD_MEMBER_DELETE":  []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
+		"GUILD_MEMBER_REMOVE":  []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
 		"GUILD_ROLE_CREATE":    []discordapi.DiscordMessageHandlerFunc{c.handleGuildRoleCreate},
 		"GUILD_ROLE_UPDATE":    []discordapi.DiscordMessageHandlerFunc{c.handleGuildRoleUpdate},
 		"GUILD_ROLE_DELETE":    []discordapi.DiscordMessageHandlerFunc{c.handleGuildRoleDelete},
@@ -111,7 +111,7 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 		c.bot.UpdateSequence(*p.SeqNum)
 	}
 
-	_ = level.Info(logger).Log("message", "received payload", "payload", p)
+	_ = level.Debug(logger).Log("message", "received payload", "payload", p)
 
 	opHandler, ok := c.opCodeDispatch[p.OpCode]
 	if !ok {
@@ -241,6 +241,8 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
+	_ = level.Info(logger).Log("message", "looking up event dispatch handler", "event_name", p.EventName)
+
 	c.dispatcherLock.Lock()
 	eventHandlers, ok := c.eventDispatch[p.EventName]
 	c.dispatcherLock.Unlock()
@@ -277,7 +279,7 @@ func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_CREATE")
+	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_CREATE")
 	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild create", "err", err)
@@ -293,7 +295,7 @@ func (c *discordMessageHandler) handleGuildUpdate(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_UPDATE")
+	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_UPDATE")
 	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild update", "err", err)
@@ -309,7 +311,7 @@ func (c *discordMessageHandler) handleGuildDelete(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_DELETE")
+	_ = level.Info(logger).Log("message", "upserting guild", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_DELETE")
 	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild delete", "err", err)
@@ -325,7 +327,7 @@ func (c *discordMessageHandler) handleChannelCreate(p *etfapi.Payload, req wscli
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting channel", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "CHANNEL_CREATE")
+	_ = level.Info(logger).Log("message", "upserting channel", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_CREATE")
 	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing channel create", "err", err)
@@ -341,7 +343,7 @@ func (c *discordMessageHandler) handleChannelUpdate(p *etfapi.Payload, req wscli
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting channel", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "CHANNEL_UPDATE")
+	_ = level.Info(logger).Log("message", "upserting channel", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_UPDATE")
 	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing channel update", "err", err)
@@ -357,7 +359,7 @@ func (c *discordMessageHandler) handleChannelDelete(p *etfapi.Payload, req wscli
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting channel", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "CHANNEL_DELETE")
+	_ = level.Info(logger).Log("message", "upserting channel", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_DELETE")
 	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing channel delete", "err", err)
@@ -373,7 +375,7 @@ func (c *discordMessageHandler) handleGuildMemberCreate(p *etfapi.Payload, req w
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild member", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_MEMBER_CREATE")
+	_ = level.Info(logger).Log("message", "upserting guild member", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_CREATE")
 	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild member create", "err", err)
@@ -389,7 +391,7 @@ func (c *discordMessageHandler) handleGuildMemberUpdate(p *etfapi.Payload, req w
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild member", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_MEMBER_UPDATE")
+	_ = level.Info(logger).Log("message", "upserting guild member", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_UPDATE")
 	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild member update", "err", err)
@@ -405,7 +407,7 @@ func (c *discordMessageHandler) handleGuildMemberDelete(p *etfapi.Payload, req w
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild member", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_MEMBER_DELETE")
+	_ = level.Info(logger).Log("message", "upserting guild member", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_DELETE")
 	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild member delete", "err", err)
@@ -421,7 +423,7 @@ func (c *discordMessageHandler) handleGuildRoleCreate(p *etfapi.Payload, req wsc
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild role", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_ROLE_CREATE")
+	_ = level.Info(logger).Log("message", "upserting guild role", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_CREATE")
 	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild role create", "err", err)
@@ -437,7 +439,7 @@ func (c *discordMessageHandler) handleGuildRoleUpdate(p *etfapi.Payload, req wsc
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild role", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_ROLE_UPDATE")
+	_ = level.Info(logger).Log("message", "upserting guild role", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_UPDATE")
 	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild role update", "err", err)
@@ -453,7 +455,7 @@ func (c *discordMessageHandler) handleGuildRoleDelete(p *etfapi.Payload, req wsc
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild role", "pdata", fmt.Sprintf("%+v", p.Data), "tag", "GUILD_ROLE_DELETE")
+	_ = level.Info(logger).Log("message", "upserting guild role", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_DELETE")
 	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
 	if err != nil {
 		_ = level.Error(logger).Log("message", "error processing guild role delete", "err", err)
