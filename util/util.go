@@ -2,71 +2,25 @@ package util
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"os"
 
 	"github.com/rs/xid"
 )
 
-// ReadBody TODOC
-func ReadBody(resp io.Reader, estSize int) (bytesRead int, data []byte, err error) {
-	data = make([]byte, estSize)
-	buffer := make([]byte, estSize)
-	var readSize int
-	for err == nil {
-		readSize, err = resp.Read(buffer)
-
-		if readSize+bytesRead > estSize {
-			newData := make([]byte, len(data)*2)
-			for i := 0; i < len(data); i++ {
-				newData[i] = data[i]
-			}
-			data = newData
-		}
-
-		for i := 0; i < readSize; i++ {
-			data[bytesRead+i] = buffer[i]
-		}
-		bytesRead += readSize
-
-		if err != nil {
-			break
-		}
-	}
-
-	if err == io.EOF {
-		err = nil
-	}
-
-	data = data[:bytesRead]
-
-	return
-}
-
-// CheckDefer TODOC
-func CheckDefer(fs ...func() error) {
-	for i := len(fs) - 1; i >= 0; i-- {
-		if err := fs[i](); err != nil {
-			fmt.Fprintf(os.Stderr, "Error in defer: %s\n", err) // nolint: errcheck,gas
-		}
-	}
-}
-
-// ContextKey TODOC
+// ContextKey is a wrapper type for our keys attached to a context
 type ContextKey string
 
-// NewRequestContext TODOC
+// NewRequestContext creates a new request context from context.Background()
 func NewRequestContext() context.Context {
 	return NewRequestContextFrom(context.Background())
 }
 
-// NewRequestContextFrom TODOC
+// NewRequestContextFrom creates a new request context from an existing context
+// regenerating a request_id value
 func NewRequestContextFrom(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ContextKey("request_id"), GenerateRequestID())
 }
 
-// GenerateRequestID TODOC
+// GenerateRequestID generates a new random-enough request id for a request context
 func GenerateRequestID() string {
 	return xid.New().String()
 }

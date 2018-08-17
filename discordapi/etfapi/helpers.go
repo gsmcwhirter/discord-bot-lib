@@ -13,7 +13,7 @@ import (
 
 func writeAtom(b io.Writer, val []byte) error {
 	// assumes the Atom identifier byte has already been written
-	size, err := IntToInt16Slice(len(val))
+	size, err := intToInt16Slice(len(val))
 	if err != nil {
 		return errors.Wrap(err, "couldn't marshal size")
 	}
@@ -32,7 +32,7 @@ func writeAtom(b io.Writer, val []byte) error {
 }
 
 func writeLength32(b io.Writer, n int) error {
-	size, err := IntToInt32Slice(n)
+	size, err := intToInt32Slice(n)
 	if err != nil {
 		return errors.Wrap(err, "could not marshal length")
 	}
@@ -180,7 +180,7 @@ func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
 		idx++
 		switch e[i].Code {
 		case Map:
-			size, err = Int32SliceToInt(raw[idx : idx+4])
+			size, err = int32SliceToInt(raw[idx : idx+4])
 			if err != nil {
 				return 0, nil, errors.Wrap(err, "could not read map length")
 			}
@@ -194,7 +194,7 @@ func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
 		case String:
 			fallthrough
 		case Atom:
-			size, err = Int16SliceToInt(raw[idx : idx+2])
+			size, err = int16SliceToInt(raw[idx : idx+2])
 			if err != nil {
 				return 0, nil, errors.Wrap(err, "could not read atom/string length")
 			}
@@ -202,7 +202,7 @@ func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
 			e[i].Val = raw[idx : idx+uint32(size)]
 			idx += uint32(size)
 		case List:
-			size, err = Int32SliceToInt(raw[idx : idx+4])
+			size, err = int32SliceToInt(raw[idx : idx+4])
 			if err != nil {
 				return 0, nil, errors.Wrap(err, "coult not read list length")
 			}
@@ -218,7 +218,7 @@ func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
 			}
 			idx++
 		case Binary:
-			size, err = Int32SliceToInt(raw[idx : idx+4])
+			size, err = int32SliceToInt(raw[idx : idx+4])
 			if err != nil {
 				return 0, nil, errors.Wrap(err, "could not read binary length")
 			}
@@ -254,8 +254,7 @@ func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
 	return idx, e, nil
 }
 
-// IntToInt8Slice TODOC
-func IntToInt8Slice(v int) ([]byte, error) {
+func intToInt8Slice(v int) ([]byte, error) {
 	if v < 0 || v > 255 {
 		return nil, ErrOutOfBounds
 	}
@@ -263,8 +262,7 @@ func IntToInt8Slice(v int) ([]byte, error) {
 	return []byte{byte(v)}, nil
 }
 
-// Int8SliceToInt TODOC
-func Int8SliceToInt(v []byte) (int, error) {
+func int8SliceToInt(v []byte) (int, error) {
 	if len(v) != 1 {
 		return 0, ErrOutOfBounds
 	}
@@ -272,8 +270,7 @@ func Int8SliceToInt(v []byte) (int, error) {
 	return int(v[0]), nil
 }
 
-// IntToInt16Slice TODOC
-func IntToInt16Slice(v int) ([]byte, error) {
+func intToInt16Slice(v int) ([]byte, error) {
 	if v < 0 || v >= (1<<16) {
 		return nil, ErrOutOfBounds
 	}
@@ -284,8 +281,7 @@ func IntToInt16Slice(v int) ([]byte, error) {
 	return size, nil
 }
 
-// Int16SliceToInt TODOC
-func Int16SliceToInt(v []byte) (int, error) {
+func int16SliceToInt(v []byte) (int, error) {
 	if len(v) != 2 {
 		return 0, ErrOutOfBounds
 	}
@@ -293,8 +289,7 @@ func Int16SliceToInt(v []byte) (int, error) {
 	return int(binary.BigEndian.Uint16(v)), nil
 }
 
-// IntToInt32Slice TODOC
-func IntToInt32Slice(v int) ([]byte, error) {
+func intToInt32Slice(v int) ([]byte, error) {
 	if v < 0 || v >= (1<<32) {
 		return nil, ErrOutOfBounds
 	}
@@ -305,8 +300,7 @@ func IntToInt32Slice(v int) ([]byte, error) {
 	return size, nil
 }
 
-// Int32SliceToInt TODOC
-func Int32SliceToInt(v []byte) (int, error) {
+func int32SliceToInt(v []byte) (int, error) {
 	if len(v) != 4 {
 		return 0, ErrOutOfBounds
 	}
@@ -314,8 +308,7 @@ func Int32SliceToInt(v []byte) (int, error) {
 	return int(binary.BigEndian.Uint32(v)), nil
 }
 
-// IntNSliceToInt64 TODOC
-func IntNSliceToInt64(v []byte) (int64, error) {
+func intNSliceToInt64(v []byte) (int64, error) {
 	var newV []byte
 
 	if len(v) > 8 {
@@ -332,7 +325,7 @@ func IntNSliceToInt64(v []byte) (int64, error) {
 	return int64(binary.LittleEndian.Uint64(newV)), nil
 }
 
-// ElementMapToElementSlice TODOC
+// ElementMapToElementSlice converts an string->Element map into a slice of Elements (kv pairs)
 func ElementMapToElementSlice(m map[string]Element) ([]Element, error) {
 	e := make([]Element, 0, len(m)*2)
 	for k, v := range m {
@@ -348,7 +341,8 @@ func ElementMapToElementSlice(m map[string]Element) ([]Element, error) {
 	return e, nil
 }
 
-// MapAndIDFromElement TODOC
+// MapAndIDFromElement converts a Map element into a string->Element map and attempts to extract
+// an id Snowflake from the "id" field
 func MapAndIDFromElement(e Element) (eMap map[string]Element, id snowflake.Snowflake, err error) {
 	eMap, err = e.ToMap()
 	if err != nil {
@@ -361,7 +355,7 @@ func MapAndIDFromElement(e Element) (eMap map[string]Element, id snowflake.Snowf
 	return
 }
 
-// SnowflakeFromElement TODOC
+// SnowflakeFromElement converts a number-like Element into a Snowflake
 func SnowflakeFromElement(e Element) (s snowflake.Snowflake, err error) {
 	temp, err := e.ToInt64()
 	if err != nil {

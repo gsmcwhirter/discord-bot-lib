@@ -64,7 +64,7 @@ func NewBoolElement(val bool) (e Element, err error) {
 // NewInt8Element TODOC
 func NewInt8Element(val int) (e Element, err error) {
 	var v []byte
-	v, err = IntToInt8Slice(val)
+	v, err = intToInt8Slice(val)
 	if err != nil {
 		err = errors.Wrap(err, "could not convert to int8 slice")
 		return
@@ -78,7 +78,7 @@ func NewInt8Element(val int) (e Element, err error) {
 // NewInt32Element TODOC
 func NewInt32Element(val int) (e Element, err error) {
 	var v []byte
-	v, err = IntToInt32Slice(val)
+	v, err = intToInt32Slice(val)
 	if err != nil {
 		err = errors.Wrap(err, "could not convert to int32 slice")
 		return
@@ -196,9 +196,9 @@ func (e *Element) ToBytes() ([]byte, error) {
 func (e *Element) ToInt() (int, error) {
 	switch e.Code {
 	case Int8:
-		return Int8SliceToInt(e.Val)
+		return int8SliceToInt(e.Val)
 	case Int32:
-		return Int32SliceToInt(e.Val)
+		return int32SliceToInt(e.Val)
 	default:
 		return 0, errors.Wrap(ErrBadTarget, "cannot convert to int")
 	}
@@ -208,15 +208,15 @@ func (e *Element) ToInt() (int, error) {
 func (e *Element) ToInt64() (int64, error) {
 	switch e.Code {
 	case Int8:
-		v, err := Int8SliceToInt(e.Val)
+		v, err := int8SliceToInt(e.Val)
 		return int64(v), err
 	case Int32:
-		v, err := Int32SliceToInt(e.Val)
+		v, err := int32SliceToInt(e.Val)
 		return int64(v), err
 	case SmallBig:
 		fallthrough
 	case LargeBig:
-		v, err := IntNSliceToInt64(e.Val[1:])
+		v, err := intNSliceToInt64(e.Val[1:])
 		if e.Val[0] == 1 {
 			v *= -1
 		}

@@ -18,7 +18,8 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/util"
 )
 
-// WSClient TODOC
+// WSClient is the api for a client that maintains an active websocket connection and hands
+// off messages to be processed.
 type WSClient interface {
 	SetGateway(string)
 	SetHandler(MessageHandler)
@@ -49,14 +50,14 @@ type wsClient struct {
 	isClosed  bool
 }
 
-// Options TODOC
+// Options enables setting up a WSClient with the desired connection settings
 type Options struct {
 	GatewayURL            string
 	Dialer                *websocket.Dialer
 	MaxConcurrentHandlers int
 }
 
-// NewWSClient TODOC
+// NewWSClient creates a new WSClient
 func NewWSClient(deps dependencies, options Options) WSClient {
 	c := &wsClient{
 		deps:       deps,
@@ -268,8 +269,10 @@ func (c *wsClient) processResponse(resp WSMessage) {
 	}
 }
 
-func (c *wsClient) handleResponses(ctx context.Context) error { //nolint: gocyclo
-	defer level.Info(c.deps.Logger()).Log("message", "handleResponses shutdown complete") //nolint: errcheck
+func (c *wsClient) handleResponses(ctx context.Context) error {
+	defer func() {
+		_ = level.Info(c.deps.Logger()).Log("message", "handleResponses shutdown complete")
+	}()
 
 	for {
 		select {

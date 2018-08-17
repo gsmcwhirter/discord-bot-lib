@@ -76,7 +76,7 @@ func (p *Payload) Marshal() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to write 'op' key")
 	}
-	data, err = IntToInt8Slice(int(p.OpCode))
+	data, err = intToInt8Slice(int(p.OpCode))
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to convert 'op' value to byte slice")
 	}
@@ -111,7 +111,7 @@ func (p *Payload) Marshal() ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to write 's' key")
 		}
-		data, err = IntToInt32Slice(*p.SeqNum)
+		data, err = intToInt32Slice(*p.SeqNum)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to convert 's' value to byte slice")
 		}

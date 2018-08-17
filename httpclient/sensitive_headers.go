@@ -9,7 +9,7 @@ var sensitiveHeaders = map[string]bool{
 	"authorization": true,
 }
 
-// NonSensitiveHeaders TODOC
+// NonSensitiveHeaders is a helper to strip out sensitive data from headers when logging
 func NonSensitiveHeaders(h http.Header) (h2 http.Header) {
 	h2 = http.Header{}
 

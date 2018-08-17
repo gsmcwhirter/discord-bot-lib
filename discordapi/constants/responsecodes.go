@@ -2,7 +2,7 @@ package constants
 
 import "fmt"
 
-// ResponseCode TODOC
+// ResponseCode is a type alias for websocket error codes
 type ResponseCode int
 
 // ResponseCode names

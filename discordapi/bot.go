@@ -28,7 +28,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 )
 
-// ErrResponse TODOC
+// ErrResponse is the error that is wrapped and returned when there is a non-200 api response
 var ErrResponse = errors.New("error response")
 
 type dependencies interface {
@@ -41,17 +41,17 @@ type dependencies interface {
 	DiscordMessageHandler() DiscordMessageHandler
 }
 
-// DiscordMessageHandlerFunc TODOC
+// DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
 type DiscordMessageHandlerFunc func(*etfapi.Payload, wsclient.WSMessage, chan<- wsclient.WSMessage)
 
-// DiscordMessageHandler TODOC
+// DiscordMessageHandler is the api that a bot expects a handler manager to have
 type DiscordMessageHandler interface {
 	ConnectToBot(DiscordBot)
 	AddHandler(string, DiscordMessageHandlerFunc)
 	HandleRequest(wsclient.WSMessage, chan<- wsclient.WSMessage)
 }
 
-// DiscordBot TODOC
+// DiscordBot is the api for a discord bot object
 type DiscordBot interface {
 	AuthenticateAndConnect() error
 	Disconnect() error
@@ -64,7 +64,7 @@ type DiscordBot interface {
 	Config() BotConfig
 }
 
-// BotConfig TODOC
+// BotConfig is the set of configuration options for creating a DiscordBot with NewDiscordBot
 type BotConfig struct {
 	ClientID     string
 	ClientSecret string
@@ -94,7 +94,7 @@ type discordBot struct {
 	lastSequence int
 }
 
-// NewDiscordBot TODOC
+// NewDiscordBot creates a new DiscordBot
 func NewDiscordBot(deps dependencies, conf BotConfig) DiscordBot {
 	d := &discordBot{
 		config: conf,

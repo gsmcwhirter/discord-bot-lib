@@ -2,12 +2,12 @@ package etfapi
 
 import "fmt"
 
-// ETFCode TODOC
+// ETFCode is a type alias for representing ETF type codes
 type ETFCode int
 
 // See https://github.com/discordapp/erlpack/blob/master/cpp/constants.h
 
-// TODOC
+// These are the ETF type codes that this library knows about
 const (
 	Map       ETFCode = 116
 	Atom              = 100
@@ -51,22 +51,22 @@ func (c ETFCode) String() string {
 	}
 }
 
-// IsNumeric TODOC
+// IsNumeric determines if an ETFCode is number-like
 func (c ETFCode) IsNumeric() bool {
 	return c == Int8 || c == Int32 || c == Float || c == SmallBig || c == LargeBig
 }
 
-// IsCollection TODOC
+// IsCollection determines if an ETFCode is a collection of other elements
 func (c ETFCode) IsCollection() bool {
 	return c == Map || c == List || c == EmptyList
 }
 
-// IsStringish TODOC
+// IsStringish determines if an ETFCode is string-like
 func (c ETFCode) IsStringish() bool {
 	return c == Atom || c == String || c == Binary
 }
 
-// IsList TODOC
+// IsList determines if an ETFCode is a list
 func (c ETFCode) IsList() bool {
 	return c == List || c == EmptyList
 }

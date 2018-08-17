@@ -6,14 +6,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ResumePayload TODOC
+// ResumePayload is the specialized payload for sending "Resume" events to the discord gateway websocket
 type ResumePayload struct {
 	Token     string
 	SessionID string
 	SeqNum    int
 }
 
-// Payload TODOC
+// Payload converts the specialized payload to a generic etfapi.Payload
 func (rp ResumePayload) Payload() (p etfapi.Payload, err error) {
 	p.OpCode = constants.Resume
 	p.Data = map[string]etfapi.Element{}

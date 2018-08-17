@@ -74,7 +74,10 @@ func GuildMemberFromElement(e Element) (m GuildMember, err error) {
 		return
 	}
 
-	m.UpdateFromElementMap(eMap)
+	err = m.UpdateFromElementMap(eMap)
+	if err != nil {
+		return
+	}
 
 	m.user, err = UserFromElement(eMap["user"])
 	if err != nil {

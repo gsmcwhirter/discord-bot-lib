@@ -2,7 +2,8 @@ package wsclient
 
 import "fmt"
 
-// MessageType TODOC
+// MessageType represents the type of data being sent or received over a websocket
+// connection
 type MessageType int
 
 // Websocket Message types

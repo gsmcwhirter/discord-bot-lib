@@ -84,7 +84,11 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 				return
 			}
 		} else {
-			g.UpdateFromElementMap(gMap)
+			err = g.UpdateFromElementMap(gMap)
+			if err != nil {
+				err = errors.Wrap(err, "could not update guild from guild map")
+				return
+			}
 		}
 		s.guilds[gid] = g
 	}

@@ -9,10 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ErrMissingHandler TODOC
+// ErrMissingHandler is the error thrown when an event handler cannot be found
 var ErrMissingHandler = errors.New("missing handler for command")
 
-// Options TODOC
+// Options provides a way to specify configurable values when creating a CommandHandler
+//
+// - Placeholder is the string to be used to represent the "command"
+// - PreCommand is a string representing the state of commands prior to this one
+// - NoHelpOnUnknownCommands can be set to true to NOT display a help message when a command isn't known
+// - HelpOnEmptyCommands can be set to true to display a help message when no command is provided
+// - CaseSensitive can se set to true to make command recognition case-sensitive
 type Options struct {
 	Placeholder             string
 	PreCommand              string
@@ -21,7 +27,7 @@ type Options struct {
 	CaseSensitive           bool
 }
 
-// CommandHandler TODOC
+// CommandHandler is a dispatcher for commands
 type CommandHandler struct {
 	parser                parser.Parser
 	commands              map[string]MessageHandler
@@ -32,7 +38,9 @@ type CommandHandler struct {
 	caseSensitive         bool
 }
 
-// NewCommandHandler TODOC
+// NewCommandHandler creates a new CommandHandler from the given parser
+//
+// NOTE: the parser's settings must match the Options.CaseSensitive value
 func NewCommandHandler(parser parser.Parser, opts Options) (*CommandHandler, error) {
 	ch := CommandHandler{
 		commands:              map[string]MessageHandler{},
@@ -59,7 +67,7 @@ func NewCommandHandler(parser parser.Parser, opts Options) (*CommandHandler, err
 	return &ch, nil
 }
 
-// CommandIndicator TODOC
+// CommandIndicator returns the string prefix required for commands
 func (ch *CommandHandler) CommandIndicator() string {
 	return ch.parser.LeadChar()
 }
@@ -111,7 +119,8 @@ func (ch *CommandHandler) showHelp(msg Message) (Response, error) {
 	return r, nil
 }
 
-// SetHandler TODOC
+// SetHandler adds a handler function for the given command, overwriting any
+// previously set ones
 func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
 	ch.parser.LearnCommand(cmd)
 
@@ -131,8 +140,8 @@ func (ch *CommandHandler) getHandler(cmd string) (h MessageHandler, ok bool) {
 	return
 }
 
-// HandleLine TODOC
-func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
+// HandleMessage dispatches a Message to the relevant handler
+func (ch *CommandHandler) HandleMessage(msg Message) (Response, error) {
 	r := &SimpleEmbedResponse{
 		To: UserMentionString(msg.UserID()),
 	}
@@ -140,10 +149,11 @@ func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 	cmd, rest, err := ch.parser.ParseCommand(msg.Contents())
 	if err == parser.ErrUnknownCommand {
 		if ch.helpOnUnknownCommands {
-			cmd2, rest, err2 := ch.parser.ParseCommand(ch.helpCmd)
-			if err2 != nil {
+			var cmd2 string
+			cmd2, rest, err = ch.parser.ParseCommand(ch.helpCmd)
+			if err != nil {
 				r.Description = fmt.Sprintf("Unknown command '%s'", cmd)
-				return r, err2
+				return r, err
 			}
 
 			subHandler, cmdExists := ch.getHandler(cmd2)
@@ -151,9 +161,10 @@ func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 				return r, ErrMissingHandler
 			}
 
-			s, err2 := subHandler.HandleLine(NewWithContents(msg, rest))
+			var s Response
+			s, err = subHandler.HandleMessage(NewWithContents(msg, rest))
 			s.IncludeError(parser.ErrUnknownCommand)
-			return s, err2
+			return s, err
 		}
 
 		return r, err
@@ -162,7 +173,7 @@ func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 	subHandler, cmdExists := ch.getHandler(cmd)
 
 	if (err == nil || err == parser.ErrNotACommand) && cmd == "" && cmdExists {
-		return subHandler.HandleLine(NewWithContents(msg, rest))
+		return subHandler.HandleMessage(NewWithContents(msg, rest))
 	}
 
 	if err != nil {
@@ -176,5 +187,5 @@ func (ch *CommandHandler) HandleLine(msg Message) (Response, error) {
 		return r, ErrMissingHandler
 	}
 
-	return subHandler.HandleLine(NewWithContents(msg, rest))
+	return subHandler.HandleMessage(NewWithContents(msg, rest))
 }

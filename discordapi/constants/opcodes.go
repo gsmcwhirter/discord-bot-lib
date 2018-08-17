@@ -2,7 +2,7 @@ package constants
 
 import "fmt"
 
-// OpCode TODOC
+// OpCode is a type alias for discord OpCode values
 type OpCode int
 
 // OpCode names

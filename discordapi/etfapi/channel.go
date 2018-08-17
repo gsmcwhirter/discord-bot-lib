@@ -173,7 +173,10 @@ func ChannelFromElement(e Element) (c Channel, err error) {
 // ChannelFromElementMap TODOC
 func ChannelFromElementMap(eMap map[string]Element) (c Channel, err error) {
 	c.id, err = SnowflakeFromElement(eMap["id"])
-	err = errors.Wrap(err, "could not get channel id")
+	if err != nil {
+		err = errors.Wrap(err, "could not get channel id")
+		return
+	}
 
 	err = c.UpdateFromElementMap(eMap)
 	err = errors.Wrap(err, "could not create a channel")

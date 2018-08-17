@@ -173,7 +173,10 @@ func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (m GuildMemb
 	if !ok {
 		m.id = mid
 	}
-	m.UpdateFromElementMap(eMap)
+	err = m.UpdateFromElementMap(eMap)
+	if err != nil {
+		return
+	}
 	g.members[mid] = m
 
 	return
@@ -191,7 +194,11 @@ func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (r Role, err e
 	if !ok {
 		r.id = rid
 	}
-	r.UpdateFromElementMap(eMap)
+	err = r.UpdateFromElementMap(eMap)
+	if err != nil {
+		return
+	}
+
 	g.roles[rid] = r
 
 	return
@@ -204,7 +211,10 @@ func GuildFromElementMap(eMap map[string]Element) (g Guild, err error) {
 	g.roles = map[snowflake.Snowflake]Role{}
 
 	g.id, err = SnowflakeFromElement(eMap["id"])
-	err = errors.Wrap(err, "could not get guild id")
+	if err != nil {
+		err = errors.Wrap(err, "could not get guild id")
+		return
+	}
 
 	err = g.UpdateFromElementMap(eMap)
 	err = errors.Wrap(err, "could not create a guild")

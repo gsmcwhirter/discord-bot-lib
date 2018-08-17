@@ -8,12 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ETFPayload TODOC
+// ETFPayload is the interface that a specialized etf api payload conforms to
 type ETFPayload interface {
 	Payload() (etfapi.Payload, error)
 }
 
-// ETFPayloadToMessage TODOC
+// ETFPayloadToMessage converts a specialized etf payload to a websocket message
 func ETFPayloadToMessage(ctx context.Context, ep ETFPayload) (m wsclient.WSMessage, err error) {
 	var p etfapi.Payload
 

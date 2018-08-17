@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// WSMessage TODOC
+// WSMessage is a  struct that wraps a message received or to be sent over a websocket connection
 type WSMessage struct {
 	Ctx             context.Context
 	MessageType     MessageType

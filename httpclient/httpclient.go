@@ -14,7 +14,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 )
 
-// HTTPClient TODOC
+// HTTPClient is the interface of an http client
 type HTTPClient interface {
 	SetHeaders(http.Header)
 	Get(context.Context, string, *http.Header) (*http.Response, error)
@@ -33,7 +33,7 @@ type httpClient struct {
 	headers http.Header
 }
 
-// NewHTTPClient TODOC
+// NewHTTPClient creates a new http client
 func NewHTTPClient(deps dependencies) HTTPClient {
 	return &httpClient{
 		deps:    deps,
@@ -55,7 +55,6 @@ func (c *httpClient) SetHeaders(h http.Header) {
 	addHeaders(&c.headers, h)
 }
 
-// Get TODOC
 func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) (resp *http.Response, err error) {
 	logger := logging.WithContext(ctx, c.deps.Logger())
 

@@ -24,7 +24,6 @@ type dependencies interface {
 	MessageRateLimiter() *rate.Limiter
 }
 
-// DiscordMessageHandler TODOC
 type discordMessageHandler struct {
 	deps           dependencies
 	bot            discordapi.DiscordBot
@@ -37,7 +36,8 @@ type discordMessageHandler struct {
 func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
 }
 
-// NewDiscordMessageHandler TODOC
+// NewDiscordMessageHandler creates a new DiscordMessageHandler object with default state and
+// session management handlers installed
 func NewDiscordMessageHandler(deps dependencies) discordapi.DiscordMessageHandler {
 	c := discordMessageHandler{
 		deps:           deps,
@@ -73,12 +73,10 @@ func NewDiscordMessageHandler(deps dependencies) discordapi.DiscordMessageHandle
 	return &c
 }
 
-// ConnectToBot TODOC
 func (c *discordMessageHandler) ConnectToBot(bot discordapi.DiscordBot) {
 	c.bot = bot
 }
 
-// AddHandler TODOC
 func (c *discordMessageHandler) AddHandler(event string, handler discordapi.DiscordMessageHandlerFunc) {
 	c.dispatcherLock.Lock()
 	defer c.dispatcherLock.Unlock()
@@ -125,17 +123,6 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	}
 
 	opHandler(p, req, resp)
-}
-
-func (c *discordMessageHandler) handleError(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
-	select {
-	case <-req.Ctx.Done():
-		return
-	default:
-	}
-
-	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Error(logger).Log("message", "error code received from websocket", "ws_msg", req)
 }
 
 func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
