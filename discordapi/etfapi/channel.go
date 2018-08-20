@@ -8,10 +8,10 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// ChannelType TODOC
+// ChannelType represents the type of a discord channel
 type ChannelType int
 
-// TODOC
+// These are the known discord channel types
 const (
 	GuildTextChannel     ChannelType = 0
 	DMChannel                        = 1
@@ -20,7 +20,7 @@ const (
 	GuildCategoryChannel             = 4
 )
 
-// ChannelTypeFromElement TODOC
+// ChannelTypeFromElement extracts the channel type from a etf Element
 func ChannelTypeFromElement(e Element) (t ChannelType, err error) {
 	temp, err := e.ToInt()
 	if err != nil {
@@ -30,7 +30,6 @@ func ChannelTypeFromElement(e Element) (t ChannelType, err error) {
 	return
 }
 
-// String TODOC
 func (t ChannelType) String() string {
 	switch t {
 	case GuildTextChannel:
@@ -48,7 +47,7 @@ func (t ChannelType) String() string {
 	}
 }
 
-// Channel TODOC
+// Channel represents known information about a discord channel
 type Channel struct {
 	id            snowflake.Snowflake
 	guildID       snowflake.Snowflake
@@ -62,12 +61,13 @@ type Channel struct {
 	recipients    []User
 }
 
-// ID TODOC
+// ID returns the channel's ID
 func (c *Channel) ID() snowflake.Snowflake {
 	return c.id
 }
 
-// UpdateFromElementMap TODOC
+// UpdateFromElementMap updates information about the channel
+// This will not remove known data, only replace it
 func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	var ok bool
 	var e2 Element
@@ -158,7 +158,8 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
-// ChannelFromElement TODOC
+// ChannelFromElement creates a new Channel object from the given etf Element.
+// The element should be a Map-type Element
 func ChannelFromElement(e Element) (c Channel, err error) {
 	var eMap map[string]Element
 	eMap, c.id, err = MapAndIDFromElement(e)
@@ -170,7 +171,7 @@ func ChannelFromElement(e Element) (c Channel, err error) {
 	return
 }
 
-// ChannelFromElementMap TODOC
+// ChannelFromElementMap creates a new Channel object from the given data map.
 func ChannelFromElementMap(eMap map[string]Element) (c Channel, err error) {
 	c.id, err = SnowflakeFromElement(eMap["id"])
 	if err != nil {

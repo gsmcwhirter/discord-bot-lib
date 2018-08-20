@@ -6,23 +6,26 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// State TODOC
-type State struct {
+// state represents the state of a current bot session
+//
+// This object is not concurrency safe; it should be accessed through a Session
+// object which handles appropriate locking
+type state struct {
 	user            User
 	guilds          map[snowflake.Snowflake]Guild
 	privateChannels map[snowflake.Snowflake]Channel
 }
 
-// NewState TODOC
-func NewState() *State {
-	return &State{
+// newState constructs a new, empty state
+func newState() *state {
+	return &state{
 		guilds:          map[snowflake.Snowflake]Guild{},
 		privateChannels: map[snowflake.Snowflake]Channel{},
 	}
 }
 
-// UpdateFromReady TODOC
-func (s *State) UpdateFromReady(p *Payload) (err error) {
+// UpdateFromReady updates the session state from the given "ready" payload
+func (s *state) UpdateFromReady(p *Payload) (err error) {
 	var ok bool
 	var e Element
 	var e2 Element
@@ -96,8 +99,8 @@ func (s *State) UpdateFromReady(p *Payload) (err error) {
 	return
 }
 
-// UpsertGuildFromElement TODOC
-func (s *State) UpsertGuildFromElement(e Element) (err error) {
+// UpsertGuildFromElement updates data in the session state for a guild based on the given Element
+func (s *state) UpsertGuildFromElement(e Element) (err error) {
 	eMap, id, err := MapAndIDFromElement(e)
 	if err != nil {
 		err = errors.Wrap(err, "UpsertGuildFromElement could not inflate element to find guild")
@@ -124,13 +127,13 @@ func (s *State) UpsertGuildFromElement(e Element) (err error) {
 	return
 }
 
-// UpsertGuildFromElementMap TODOC
-func (s *State) UpsertGuildFromElementMap(eMap map[string]Element) (err error) {
+// UpsertGuildFromElementMap updates data in the session state for a guild based on the given data
+func (s *state) UpsertGuildFromElementMap(eMap map[string]Element) (err error) {
 	var id snowflake.Snowflake
 
 	e, ok := eMap["id"]
 	if !ok {
-		err = errors.Wrap(ErrBadElementData, "UpsertGuildFromElementMap could not find guild id map element")
+		err = errors.Wrap(ErrMissingData, "UpsertGuildFromElementMap could not find guild id map element")
 		return
 	}
 
@@ -161,13 +164,13 @@ func (s *State) UpsertGuildFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
-// UpsertGuildMemberFromElementMap TODOC
-func (s *State) UpsertGuildMemberFromElementMap(eMap map[string]Element) (err error) {
+// UpsertGuildMemberFromElementMap updates data in the session state for a guild member based on the given data
+func (s *state) UpsertGuildMemberFromElementMap(eMap map[string]Element) (err error) {
 	var id snowflake.Snowflake
 
 	e, ok := eMap["guild_id"]
 	if !ok {
-		err = errors.Wrap(ErrBadElementData, "UpsertGuildMemberFromElementMap could not find guild id map element")
+		err = errors.Wrap(ErrMissingData, "UpsertGuildMemberFromElementMap could not find guild id map element")
 		return
 	}
 
@@ -179,7 +182,7 @@ func (s *State) UpsertGuildMemberFromElementMap(eMap map[string]Element) (err er
 
 	g, ok := s.guilds[id]
 	if !ok {
-		err = errors.Wrap(ErrBadElementData, "UpsertGuildMemberFromElementMap could not find the guild to add a member to")
+		err = errors.Wrap(ErrNotFound, "UpsertGuildMemberFromElementMap could not find the guild to add a member to")
 		return
 	}
 
@@ -192,13 +195,13 @@ func (s *State) UpsertGuildMemberFromElementMap(eMap map[string]Element) (err er
 	return
 }
 
-// UpsertGuildRoleFromElementMap TODOC
-func (s *State) UpsertGuildRoleFromElementMap(eMap map[string]Element) (err error) {
+// UpsertGuildRoleFromElementMap updates data in the session state for a guild role based on the given data
+func (s *state) UpsertGuildRoleFromElementMap(eMap map[string]Element) (err error) {
 	var id snowflake.Snowflake
 
 	e, ok := eMap["guild_id"]
 	if !ok {
-		err = errors.Wrap(ErrBadElementData, "UpsertGuildRoleFromElementMap could not find guild id map element")
+		err = errors.Wrap(ErrMissingData, "UpsertGuildRoleFromElementMap could not find guild id map element")
 		return
 	}
 
@@ -210,7 +213,7 @@ func (s *State) UpsertGuildRoleFromElementMap(eMap map[string]Element) (err erro
 
 	g, ok := s.guilds[id]
 	if !ok {
-		err = errors.Wrap(ErrBadElementData, "UpsertGuildRoleFromElementMap could not find the guild to add a role to")
+		err = errors.Wrap(ErrNotFound, "UpsertGuildRoleFromElementMap could not find the guild to add a role to")
 		return
 	}
 
@@ -223,8 +226,8 @@ func (s *State) UpsertGuildRoleFromElementMap(eMap map[string]Element) (err erro
 	return
 }
 
-// UpsertChannelFromElement TODOC
-func (s *State) UpsertChannelFromElement(e Element) (err error) {
+// UpsertChannelFromElement updates data in the session state for a channel based on the given Element
+func (s *state) UpsertChannelFromElement(e Element) (err error) {
 	eMap, id, err := MapAndIDFromElement(e)
 	if err != nil {
 		err = errors.Wrap(err, "could not inflate element to find channel")
@@ -251,13 +254,13 @@ func (s *State) UpsertChannelFromElement(e Element) (err error) {
 	return
 }
 
-// UpsertChannelFromElementMap TODOC
-func (s *State) UpsertChannelFromElementMap(eMap map[string]Element) (err error) {
+// UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
+func (s *state) UpsertChannelFromElementMap(eMap map[string]Element) (err error) {
 	var id snowflake.Snowflake
 
 	e, ok := eMap["id"]
 	if !ok {
-		err = errors.Wrap(ErrBadElementData, "UpsertChannelFromElementMap could not find channel id map element")
+		err = errors.Wrap(ErrMissingData, "UpsertChannelFromElementMap could not find channel id map element")
 		return
 	}
 
@@ -287,8 +290,10 @@ func (s *State) UpsertChannelFromElementMap(eMap map[string]Element) (err error)
 	return
 }
 
-// GuildOfChannel TODOC
-func (s *State) GuildOfChannel(cid snowflake.Snowflake) (gid snowflake.Snowflake, ok bool) {
+// GuildOfChannel returns the id of the guild that owns the channel with the provided id, if one is known
+//
+// The second return value will be false if no such guild was found
+func (s *state) GuildOfChannel(cid snowflake.Snowflake) (gid snowflake.Snowflake, ok bool) {
 	for _, g := range s.guilds {
 		if g.OwnsChannel(cid) {
 			gid = g.id
@@ -300,20 +305,19 @@ func (s *State) GuildOfChannel(cid snowflake.Snowflake) (gid snowflake.Snowflake
 	return
 }
 
-// Guild TODOC
-func (s *State) Guild(gid snowflake.Snowflake) (g Guild, err error) {
-	var ok bool
+// Guild finds a guild with the given ID in the current session state, if it exists
+//
+// The second return value will be false if no such guild was found
+func (s *state) Guild(gid snowflake.Snowflake) (g Guild, ok bool) {
 	g, ok = s.guilds[gid]
-	if !ok {
-		err = ErrNotFound
-		return
-	}
 
 	return
 }
 
-// ChannelName TODOC
-func (s *State) ChannelName(cid snowflake.Snowflake) (string, bool) {
+// ChannelName returns the name of the channel with the provided id, if one is known
+//
+// The second return value will be alse if not such channel was found
+func (s *state) ChannelName(cid snowflake.Snowflake) (string, bool) {
 	for _, g := range s.guilds {
 		c, ok := g.channels[cid]
 		if !ok {
@@ -323,22 +327,4 @@ func (s *State) ChannelName(cid snowflake.Snowflake) (string, bool) {
 		return c.name, true
 	}
 	return "", false
-}
-
-// EveryoneRoleID TODOC
-func (s *State) EveryoneRoleID(gid snowflake.Snowflake) (rid snowflake.Snowflake, ok bool) {
-	g, ok := s.guilds[gid]
-	if !ok {
-		return
-	}
-
-	for _, r := range g.roles {
-		if r.name == "everyone" {
-			rid = r.id
-			return
-		}
-	}
-
-	ok = false
-	return
 }

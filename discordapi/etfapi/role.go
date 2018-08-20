@@ -10,19 +10,21 @@ const (
 	administrator = 0x00000008
 )
 
-// Role TODOC
+// Role represents a discord guild role
 type Role struct {
 	id          snowflake.Snowflake
 	name        string
 	permissions int64
 }
 
-// IsAdmin TODOC
+// IsAdmin determines if a role is a server admin
 func (r *Role) IsAdmin() bool {
 	return r.permissions&administrator == administrator
 }
 
-// UpdateFromElementMap TODOC
+// UpdateFromElementMap updates the data in a role from the given information
+//
+// This will not remove data, only change and add data
 func (r *Role) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	var ok bool
 	var e2 Element
@@ -48,7 +50,7 @@ func (r *Role) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
-// RoleFromElement TODOC
+// RoleFromElement generates a new Role object from the given Element
 func RoleFromElement(e Element) (r Role, err error) {
 	var eMap map[string]Element
 

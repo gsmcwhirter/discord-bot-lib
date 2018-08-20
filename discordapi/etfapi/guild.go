@@ -6,7 +6,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// Guild TODOC
+// Guild represents the known data about a discord guild
 type Guild struct {
 	id            snowflake.Snowflake
 	ownerID       snowflake.Snowflake
@@ -18,18 +18,18 @@ type Guild struct {
 	roles         map[snowflake.Snowflake]Role
 }
 
-// ID TODOC
+// ID returns the guild ID
 func (g *Guild) ID() snowflake.Snowflake {
 	return g.id
 }
 
-// OwnsChannel TODOC
+// OwnsChannel determines if this guild owns a channel with the provided id
 func (g *Guild) OwnsChannel(cid snowflake.Snowflake) bool {
 	_, ok := g.channels[cid]
 	return ok
 }
 
-// ChannelWithName TODOC
+// ChannelWithName finds the channel id for the channel with the provided name
 func (g *Guild) ChannelWithName(name string) (snowflake.Snowflake, bool) {
 	for _, c := range g.channels {
 		if c.name == name {
@@ -40,7 +40,8 @@ func (g *Guild) ChannelWithName(name string) (snowflake.Snowflake, bool) {
 	return 0, false
 }
 
-// IsAdmin TODOC
+// IsAdmin determines if the user with the provided ID has administrator powers
+// in the guild
 func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
 	if g.ownerID != 0 && uid == g.ownerID {
 		return true
@@ -65,7 +66,9 @@ func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
 	return false
 }
 
-// UpdateFromElementMap TODOC
+// UpdateFromElementMap updates information about the guild from the provided data
+//
+// This will not delete data; it will only add and change data
 func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	var ok bool
 	var e2 Element
@@ -161,7 +164,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
-// UpsertMemberFromElementMap TODOC
+// UpsertMemberFromElementMap upserts a GuildMemeber in the guild from the given data
 func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (m GuildMember, err error) {
 	mid, err := SnowflakeFromElement(eMap["id"])
 	if err != nil {
@@ -182,7 +185,7 @@ func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (m GuildMemb
 	return
 }
 
-// UpsertRoleFromElementMap TODOC
+// UpsertRoleFromElementMap upserts a Role in the guild from the given data
 func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (r Role, err error) {
 	rid, err := SnowflakeFromElement(eMap["id"])
 	if err != nil {
@@ -204,7 +207,7 @@ func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (r Role, err e
 	return
 }
 
-// GuildFromElementMap TODOC
+// GuildFromElementMap creates a new Guild object from the given data
 func GuildFromElementMap(eMap map[string]Element) (g Guild, err error) {
 	g.channels = map[snowflake.Snowflake]Channel{}
 	g.members = map[snowflake.Snowflake]GuildMember{}
@@ -221,7 +224,7 @@ func GuildFromElementMap(eMap map[string]Element) (g Guild, err error) {
 	return
 }
 
-// GuildFromElement TODOC
+// GuildFromElement creates a new Guild object from the given Element
 func GuildFromElement(e Element) (g Guild, err error) {
 	var eMap map[string]Element
 

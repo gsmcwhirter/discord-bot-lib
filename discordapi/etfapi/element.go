@@ -8,14 +8,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Element TODOC
+// Element is a container for arbitrary etf-formatted data
 type Element struct {
 	Code ETFCode
 	Val  []byte
 	Vals []Element
 }
 
-// NewElement TODOC
+// NewElement generates a new Element to hold data.
+//
+// If the code is a collection-type (determined by code.IsCollection), then
+// val should be a []Elelemt. Otherwise, val should be a []byte
 func NewElement(code ETFCode, val interface{}) (e Element, err error) {
 	e.Code = code
 
@@ -42,14 +45,14 @@ func NewElement(code ETFCode, val interface{}) (e Element, err error) {
 	return
 }
 
-// NewNilElement TODOC
+// NewNilElement generates a new Element representing "nil"
 func NewNilElement() (e Element, err error) {
 	e, err = NewAtomElement("nil")
 	err = errors.Wrap(err, "could not create Nil Element")
 	return
 }
 
-// NewBoolElement TODOC
+// NewBoolElement generates a new Element representing a boolean value
 func NewBoolElement(val bool) (e Element, err error) {
 	if val {
 		e, err = NewAtomElement("true")
@@ -61,7 +64,8 @@ func NewBoolElement(val bool) (e Element, err error) {
 	return
 }
 
-// NewInt8Element TODOC
+// NewInt8Element generates a new Element representing an 8-bit unsigned integer value;
+// Bounds checking will happen inside the function.
 func NewInt8Element(val int) (e Element, err error) {
 	var v []byte
 	v, err = intToInt8Slice(val)
@@ -75,7 +79,8 @@ func NewInt8Element(val int) (e Element, err error) {
 	return
 }
 
-// NewInt32Element TODOC
+// NewInt32Element generates a new Element representing a 32-bit unsigned integer value;
+// Bounds checking will happen inside the function
 func NewInt32Element(val int) (e Element, err error) {
 	var v []byte
 	v, err = intToInt32Slice(val)
@@ -89,28 +94,30 @@ func NewInt32Element(val int) (e Element, err error) {
 	return
 }
 
-// NewBinaryElement TODOC
+// NewBinaryElement generates a new Element representing Binary data
 func NewBinaryElement(val []byte) (e Element, err error) {
 	e, err = NewElement(Binary, val)
 	err = errors.Wrap(err, "could not create binary Element")
 	return
 }
 
-// NewAtomElement TODOC
+// NewAtomElement generates a new Element representing an Atom value
 func NewAtomElement(val string) (e Element, err error) {
 	e, err = NewElement(Atom, []byte(val))
 	err = errors.Wrap(err, "could not create atom Element")
 	return
 }
 
-// NewStringElement TODOC
+// NewStringElement generates a new Element representing a String value
 func NewStringElement(val string) (e Element, err error) {
 	e, err = NewElement(Binary, []byte(val))
 	err = errors.Wrap(err, "could not create string Element")
 	return
 }
 
-// NewMapElement TODOC
+// NewMapElement generates a new Element representing a Map
+//
+// Keys are encoded as Binary type elements
 func NewMapElement(val map[string]Element) (e Element, err error) {
 	e2, err := ElementMapToElementSlice(val)
 	if err != nil {
@@ -123,26 +130,26 @@ func NewMapElement(val map[string]Element) (e Element, err error) {
 	return
 }
 
-// NewListElement TODOC
+// NewListElement generates a new Element representing a List
+//
+// NOTE: empty lists are likely not handled well
 func NewListElement(val []Element) (e Element, err error) {
 	e, err = NewElement(List, val)
 	err = errors.Wrap(err, "could not create list Element")
 	return
 }
 
-// String TODOC
 func (e Element) String() string {
 	switch e.Code {
-	case Map:
-		fallthrough
-	case List:
+	case Map, List:
 		return fmt.Sprintf("Element{Code: %v, Vals: %v}", e.Code, e.Vals)
 	default:
 		return fmt.Sprintf("Element{Code: %v, Val: %v}", e.Code, e.Val)
 	}
 }
 
-// WriteTo TODOC
+// WriteTo formats the data represented by the element as a []byte and
+// writes it to the given writer
 func (e *Element) WriteTo(b io.Writer) (int64, error) {
 	var tmp interface{}
 	if e.Val != nil {
@@ -162,28 +169,20 @@ func (e *Element) WriteTo(b io.Writer) (int64, error) {
 	return int64(n), err
 }
 
-// ToString TODOC
+// ToString converts a string-like element to a real string, if possible
 func (e *Element) ToString() (string, error) {
 	switch e.Code {
-	case Atom:
-		fallthrough
-	case String:
-		fallthrough
-	case Binary:
+	case Atom, String, Binary:
 		return string(e.Val), nil
 	default:
 		return "", errors.Wrap(ErrBadTarget, "cannot convert to string")
 	}
 }
 
-// ToBytes TODOC
+// ToBytes converts a string-like Element to a []byte, if possible
 func (e *Element) ToBytes() ([]byte, error) {
 	switch e.Code {
-	case Atom:
-		fallthrough
-	case String:
-		fallthrough
-	case Binary:
+	case Atom, String, Binary:
 		b := make([]byte, len(e.Val))
 		copy(b, e.Val)
 		return b, nil
@@ -192,7 +191,7 @@ func (e *Element) ToBytes() ([]byte, error) {
 	}
 }
 
-// ToInt TODOC
+// ToInt converts an int-like Element to an int, if possible
 func (e *Element) ToInt() (int, error) {
 	switch e.Code {
 	case Int8:
@@ -204,7 +203,7 @@ func (e *Element) ToInt() (int, error) {
 	}
 }
 
-// ToInt64 TODOC
+// ToInt64 converts an int-like Element to an int64, if possible
 func (e *Element) ToInt64() (int64, error) {
 	switch e.Code {
 	case Int8:
@@ -213,9 +212,7 @@ func (e *Element) ToInt64() (int64, error) {
 	case Int32:
 		v, err := int32SliceToInt(e.Val)
 		return int64(v), err
-	case SmallBig:
-		fallthrough
-	case LargeBig:
+	case SmallBig, LargeBig:
 		v, err := intNSliceToInt64(e.Val[1:])
 		if e.Val[0] == 1 {
 			v *= -1
@@ -227,7 +224,7 @@ func (e *Element) ToInt64() (int64, error) {
 	}
 }
 
-// ToMap TODOC
+// ToMap converts a map Element to a map
 func (e *Element) ToMap() (map[string]Element, error) {
 	switch e.Code {
 	case Map:
@@ -251,7 +248,7 @@ func (e *Element) ToMap() (map[string]Element, error) {
 	}
 }
 
-// ToList TODOC
+// ToList converts a list Element to a list
 func (e *Element) ToList() ([]Element, error) {
 	if !e.IsList() {
 		return nil, errors.Wrap(ErrBadTarget, "cannot convert to list")
@@ -260,42 +257,42 @@ func (e *Element) ToList() ([]Element, error) {
 	return e.Vals, nil
 }
 
-// IsNumeric TODOC
+// IsNumeric determines if an element is number-like
 func (e *Element) IsNumeric() bool {
 	return e.Code.IsNumeric()
 }
 
-// IsCollection TODOC
+// IsCollection determines if an element is a collection (map or list)
 func (e *Element) IsCollection() bool {
 	return e.Code.IsCollection()
 }
 
-// IsStringish TODOC
+// IsStringish determines if an element is string-like
 func (e *Element) IsStringish() bool {
 	return e.Code.IsStringish()
 }
 
-// IsList TODOC
+// IsList determines if an element is a list (with or without members)
 func (e *Element) IsList() bool {
 	return e.Code.IsList()
 }
 
-// IsNil TODOC
+// IsNil determines if an element represents a "nil" value
 func (e *Element) IsNil() bool {
 	return e.Code == Atom && string(e.Val) == "nil"
 }
 
-// IsTrue TODOC
+// IsTrue determines if an element represents a "true" value
 func (e *Element) IsTrue() bool {
 	return e.Code == Atom && string(e.Val) == "true"
 }
 
-// IsFalse TODOC
+// IsFalse determines if an element represents a "false" value
 func (e *Element) IsFalse() bool {
 	return e.Code == Atom && string(e.Val) == "false"
 }
 
-// PrettyString TODOC
+// PrettyString generates a pretty, human-readable representation of an Element
 func (e *Element) PrettyString(indent string, skipFirstIndent bool) string {
 	b := bytes.Buffer{}
 

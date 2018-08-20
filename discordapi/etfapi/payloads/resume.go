@@ -14,7 +14,7 @@ type ResumePayload struct {
 }
 
 // Payload converts the specialized payload to a generic etfapi.Payload
-func (rp ResumePayload) Payload() (p etfapi.Payload, err error) {
+func (rp *ResumePayload) Payload() (p etfapi.Payload, err error) {
 	p.OpCode = constants.Resume
 	p.Data = map[string]etfapi.Element{}
 

@@ -6,7 +6,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// Message TODOC
+// Message is the api for a message that a command handler will respond to
 type Message interface {
 	Context() context.Context
 	UserID() snowflake.Snowflake
@@ -16,8 +16,7 @@ type Message interface {
 	Contents() string
 }
 
-// SimpleMessage TODOC
-type SimpleMessage struct {
+type simpleMessage struct {
 	ctx       context.Context
 	userID    snowflake.Snowflake
 	guildID   snowflake.Snowflake
@@ -26,9 +25,9 @@ type SimpleMessage struct {
 	contents  string
 }
 
-// NewSimpleMessage TODOC
-func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) *SimpleMessage {
-	return &SimpleMessage{
+// NewSimpleMessage creates a new Message object
+func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) Message {
+	return &simpleMessage{
 		ctx:       ctx,
 		userID:    userID,
 		guildID:   guildID,
@@ -38,9 +37,9 @@ func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID
 	}
 }
 
-// NewWithContents TODOC
-func NewWithContents(m Message, contents string) *SimpleMessage {
-	return &SimpleMessage{
+// NewWithContents clones a given message object but substitutes the Contents() with the provided string
+func NewWithContents(m Message, contents string) Message {
+	return &simpleMessage{
 		ctx:       m.Context(),
 		userID:    m.UserID(),
 		guildID:   m.GuildID(),
@@ -50,32 +49,26 @@ func NewWithContents(m Message, contents string) *SimpleMessage {
 	}
 }
 
-// Context TODOC
-func (m *SimpleMessage) Context() context.Context {
+func (m *simpleMessage) Context() context.Context {
 	return m.ctx
 }
 
-// UserID TODOC
-func (m *SimpleMessage) UserID() snowflake.Snowflake {
+func (m *simpleMessage) UserID() snowflake.Snowflake {
 	return m.userID
 }
 
-// GuildID TODOC
-func (m *SimpleMessage) GuildID() snowflake.Snowflake {
+func (m *simpleMessage) GuildID() snowflake.Snowflake {
 	return m.guildID
 }
 
-// ChannelID TODOC
-func (m *SimpleMessage) ChannelID() snowflake.Snowflake {
+func (m *simpleMessage) ChannelID() snowflake.Snowflake {
 	return m.channelID
 }
 
-// MessageID TODO
-func (m *SimpleMessage) MessageID() snowflake.Snowflake {
+func (m *simpleMessage) MessageID() snowflake.Snowflake {
 	return m.messageID
 }
 
-// Contents TODOC
-func (m *SimpleMessage) Contents() string {
+func (m *simpleMessage) Contents() string {
 	return m.contents
 }

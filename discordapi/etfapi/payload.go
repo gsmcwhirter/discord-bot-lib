@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Payload TODOC
+// Payload represents the data in a etf api payload (both for sending and receiving)
 type Payload struct {
 	OpCode    constants.OpCode
 	SeqNum    *int
@@ -48,9 +48,8 @@ func init() {
 	}
 }
 
-// Marshal code
-
-// Marshal TODOC
+// Marshal converts a payload into a properly formatted []byte that can be sent over
+// a websocket connection
 func (p *Payload) Marshal() ([]byte, error) {
 	var data []byte
 	var err error
@@ -128,7 +127,6 @@ func (p *Payload) Marshal() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// UnMarshal code
 func (p *Payload) unmarshal(key string, val Element) error {
 
 	switch key {
@@ -183,9 +181,7 @@ func (p *Payload) unmarshal(key string, val Element) error {
 			if !val.IsNil() {
 				return errors.Wrap(ErrBadPayload, "'d' was not a map or list")
 			}
-		case EmptyList:
-			fallthrough
-		case List:
+		case List, EmptyList:
 			p.DataList = val.Vals
 		default:
 			return errors.Wrap(ErrBadPayload, "'d' was not map or list")
@@ -197,7 +193,7 @@ func (p *Payload) unmarshal(key string, val Element) error {
 	return nil
 }
 
-// Unmarshal TODOC
+// Unmarshal creates a new Payload from the raw etf data in the []byte
 func Unmarshal(raw []byte) (*Payload, error) {
 	if len(raw) < 2 {
 		return nil, ErrBadPayload
@@ -232,7 +228,7 @@ func Unmarshal(raw []byte) (*Payload, error) {
 	return &p, nil
 }
 
-// PrettyString TODOC
+// PrettyString generates a pretty, multi-line, human-readable representation of a Payload
 func (p *Payload) PrettyString(indent string, skipFirstIndent bool) string {
 	b := bytes.Buffer{}
 	if skipFirstIndent {

@@ -1,14 +1,12 @@
 package etfapi
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// User TODOC
+// User represents the data about a discord user
 type User struct {
 	id            snowflake.Snowflake
 	username      string
@@ -16,12 +14,9 @@ type User struct {
 	avatar        string
 }
 
-// IDString TODOC
-func (u *User) IDString() string {
-	return fmt.Sprintf("<@!%s>", u.id.ToString())
-}
-
-// UpdateFromElementMap TODOC
+// UpdateFromElementMap updates the information about a user from the given data
+//
+// This will not remove information, only change and add information
 func (u *User) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	var e2 Element
 	var ok bool
@@ -53,7 +48,7 @@ func (u *User) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	return
 }
 
-// UserFromElement TODOC
+// UserFromElement generates a new User object from the given Element
 func UserFromElement(e Element) (u User, err error) {
 	var eMap map[string]Element
 	eMap, u.id, err = MapAndIDFromElement(e)

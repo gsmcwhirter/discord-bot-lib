@@ -20,7 +20,6 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi/payloads"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/session"
 	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -37,7 +36,7 @@ type dependencies interface {
 	WSClient() wsclient.WSClient
 	MessageRateLimiter() *rate.Limiter
 	ConnectRateLimiter() *rate.Limiter
-	BotSession() *session.Session
+	BotSession() *etfapi.Session
 	DiscordMessageHandler() DiscordMessageHandler
 }
 
@@ -324,7 +323,7 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 }
 
 func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
-	m, err := payloads.ETFPayloadToMessage(reqCtx, payloads.HeartbeatPayload{
+	m, err := payloads.ETFPayloadToMessage(reqCtx, &payloads.HeartbeatPayload{
 		Sequence: d.lastSequence,
 	})
 	if err != nil {

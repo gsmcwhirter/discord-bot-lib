@@ -10,7 +10,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// Response TODOC
+// Response is the interface that should be returned from a command handler
 type Response interface {
 	SetColor(int)
 	IncludeError(err error)
@@ -20,7 +20,7 @@ type Response interface {
 	Channel() snowflake.Snowflake
 }
 
-// SimpleResponse TODOC
+// SimpleResponse is a Response that is intended to present plain text
 type SimpleResponse struct {
 	To        string
 	Content   string
@@ -29,15 +29,15 @@ type SimpleResponse struct {
 	errors []error
 }
 
-// SetColor TODOC
+// SetColor is included for the Response API but is a no-op
 func (r *SimpleResponse) SetColor(color int) {}
 
-// Channel TODOC
+// Channel returns the ToChannel value
 func (r *SimpleResponse) Channel() snowflake.Snowflake {
 	return r.ToChannel
 }
 
-// IncludeError TODOC
+// IncludeError adds an error into the response
 func (r *SimpleResponse) IncludeError(err error) {
 	if err == nil {
 		return
@@ -46,12 +46,12 @@ func (r *SimpleResponse) IncludeError(err error) {
 	r.errors = append(r.errors, err)
 }
 
-// HasErrors TODOC
+// HasErrors returns whether or not the response includes errors
 func (r *SimpleResponse) HasErrors() bool {
 	return len(r.errors) > 0
 }
 
-// ToString TODOC
+// ToString generates a plain-text representation of the response
 func (r *SimpleResponse) ToString() string {
 	s := fmt.Sprintf(`%s
 
@@ -68,7 +68,8 @@ func (r *SimpleResponse) ToString() string {
 	return s
 }
 
-// ToMessage TODOC
+// ToMessage generates an object that can be marshaled as json and sent to
+// the discord http API
 func (r *SimpleResponse) ToMessage() json.Marshaler {
 	return jsonapi.Message{
 		Content: r.ToString(),
@@ -76,7 +77,8 @@ func (r *SimpleResponse) ToMessage() json.Marshaler {
 	}
 }
 
-// SimpleEmbedResponse TODOC
+// SimpleEmbedResponse is a Response that is intended to present
+// text in an discord embed box but not include any embed fields
 type SimpleEmbedResponse struct {
 	To          string
 	Title       string
@@ -88,17 +90,17 @@ type SimpleEmbedResponse struct {
 	errors []error
 }
 
-// SetColor TODOC
+// SetColor sets the side color of the embed box
 func (r *SimpleEmbedResponse) SetColor(color int) {
 	r.Color = color
 }
 
-// Channel TODOC
+// Channel returns the ToChannel value
 func (r *SimpleEmbedResponse) Channel() snowflake.Snowflake {
 	return r.ToChannel
 }
 
-// IncludeError TODOC
+// IncludeError adds an error into the response
 func (r *SimpleEmbedResponse) IncludeError(err error) {
 	if err == nil {
 		return
@@ -107,12 +109,12 @@ func (r *SimpleEmbedResponse) IncludeError(err error) {
 	r.errors = append(r.errors, err)
 }
 
-// HasErrors TODOC
+// HasErrors returns whether or not the response already includes errors
 func (r *SimpleEmbedResponse) HasErrors() bool {
 	return len(r.errors) > 0
 }
 
-// ToString TODOC
+// ToString generates a plain-text representation of the response
 func (r *SimpleEmbedResponse) ToString() string {
 	b := strings.Builder{}
 
@@ -136,7 +138,8 @@ func (r *SimpleEmbedResponse) ToString() string {
 	return b.String()
 }
 
-// ToMessage TODOC
+// ToMessage generates an object that can be marshaled as json and sent to
+// the discord http API
 func (r *SimpleEmbedResponse) ToMessage() json.Marshaler {
 	m := jsonapi.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
@@ -172,13 +175,15 @@ func (r *SimpleEmbedResponse) ToMessage() json.Marshaler {
 	return m
 }
 
-// EmbedField TODOC
+// EmbedField is part of an EmbedResponse that represents
+// an embed field
 type EmbedField struct {
 	Name string
 	Val  string
 }
 
-// EmbedResponse TODOC
+// EmbedResponse is a Response that is intended to present
+// text in an discord embed box, including embed fields
 type EmbedResponse struct {
 	To          string
 	Title       string
@@ -191,17 +196,17 @@ type EmbedResponse struct {
 	errors []error
 }
 
-// SetColor TODOC
+// SetColor sets the side color of the embed box
 func (r *EmbedResponse) SetColor(color int) {
 	r.Color = color
 }
 
-// Channel TODOC
+// Channel returns the ToChannel value
 func (r *EmbedResponse) Channel() snowflake.Snowflake {
 	return r.ToChannel
 }
 
-// IncludeError TODOC
+// IncludeError adds an error into the response
 func (r *EmbedResponse) IncludeError(err error) {
 	if err == nil {
 		return
@@ -210,12 +215,12 @@ func (r *EmbedResponse) IncludeError(err error) {
 	r.errors = append(r.errors, err)
 }
 
-// HasErrors TODOC
+// HasErrors returns whether or not the response already includes errors
 func (r *EmbedResponse) HasErrors() bool {
 	return len(r.errors) > 0
 }
 
-// ToString TODOC
+// ToString generates a plain-text representation of the response
 func (r *EmbedResponse) ToString() string {
 	b := strings.Builder{}
 
@@ -247,7 +252,8 @@ func (r *EmbedResponse) ToString() string {
 	return b.String()
 }
 
-// ToMessage TODOC
+// ToMessage generates an object that can be marshaled as json and sent to
+// the discord http API
 func (r *EmbedResponse) ToMessage() json.Marshaler {
 	m := jsonapi.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),

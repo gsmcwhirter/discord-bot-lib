@@ -6,26 +6,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-// IdentifyPayloadProperties TODOC
+// IdentifyPayloadProperties holds the data about the os, etc. of the bot when identifying
 type IdentifyPayloadProperties struct {
 	OS      string
 	Browser string
 	Device  string
 }
 
-// IdentifyPayloadShard TODOC
+// IdentifyPayloadShard holds the data about the shards being identified for
 type IdentifyPayloadShard struct {
 	ID    int
 	MaxID int
 }
 
-// IdentifyPayloadGame TODOC
+// IdentifyPayloadGame holds the data about the "game" portion of the presence
 type IdentifyPayloadGame struct {
 	Name string
 	Type int
 }
 
-// IdentifyPayloadPresence TODOC
+// IdentifyPayloadPresence holds the data about the "presence" portion of the identify payload
 type IdentifyPayloadPresence struct {
 	Game   IdentifyPayloadGame
 	Status string
@@ -33,7 +33,7 @@ type IdentifyPayloadPresence struct {
 	AFK    bool
 }
 
-// IdentifyPayload TODOC
+// IdentifyPayload is the specialized payload for sending "Identify" events to the discord gateway websocket
 type IdentifyPayload struct {
 	Token          string
 	Properties     IdentifyPayloadProperties
@@ -42,8 +42,8 @@ type IdentifyPayload struct {
 	Presence       IdentifyPayloadPresence
 }
 
-// Payload TODOC
-func (ip IdentifyPayload) Payload() (p etfapi.Payload, err error) {
+// Payload converts the specialized payload to a generic etfapi.Payload
+func (ip *IdentifyPayload) Payload() (p etfapi.Payload, err error) {
 	p.OpCode = constants.Identify
 	p.Data = map[string]etfapi.Element{}
 
@@ -74,18 +74,6 @@ func (ip IdentifyPayload) Payload() (p etfapi.Payload, err error) {
 		err = errors.Wrap(err, "could not create Element for Properties Device")
 		return
 	}
-
-	// propMap["$referrer"], err = etfapi.NewStringElement("")
-	// if err != nil {
-	// 	err = errors.Wrap(err, "could not create Element for Properties Referrer")
-	// 	return
-	// }
-
-	// propMap["$referring_domain"], err = etfapi.NewStringElement("")
-	// if err != nil {
-	// 	err = errors.Wrap(err, "could not create Element for Properties Referring Domain")
-	// 	return
-	// }
 
 	p.Data["properties"], err = etfapi.NewMapElement(propMap)
 	if err != nil {

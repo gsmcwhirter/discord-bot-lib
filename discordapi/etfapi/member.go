@@ -6,14 +6,16 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// GuildMember TODOC
+// GuildMember represents the information about a known guild membership
 type GuildMember struct {
 	id    snowflake.Snowflake
 	user  User
 	roles []snowflake.Snowflake
 }
 
-// UpdateFromElementMap TODOC
+// UpdateFromElementMap updates the information from the given data
+//
+// This will not remove data; it will only add and change data
 func (m *GuildMember) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	var eMap2 map[string]Element
 	var rEList []Element
@@ -63,7 +65,7 @@ func (m *GuildMember) UpdateFromElementMap(eMap map[string]Element) (err error) 
 	return
 }
 
-// GuildMemberFromElement TODOC
+// GuildMemberFromElement generates a new GuildMember object from the given Element
 func GuildMemberFromElement(e Element) (m GuildMember, err error) {
 	var rEList []Element
 	var roleID snowflake.Snowflake

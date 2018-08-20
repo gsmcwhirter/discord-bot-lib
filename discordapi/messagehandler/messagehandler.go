@@ -13,14 +13,13 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/session"
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 )
 
 type dependencies interface {
 	Logger() log.Logger
-	BotSession() *session.Session
+	BotSession() *etfapi.Session
 	MessageRateLimiter() *rate.Limiter
 }
 
@@ -85,7 +84,6 @@ func (c *discordMessageHandler) AddHandler(event string, handler discordapi.Disc
 	c.eventDispatch[event] = append(handlers, handler)
 }
 
-// HandleRequest
 func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	_ = level.Debug(logger).Log("message", "discordapi dispatching request")
@@ -155,7 +153,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 	sessID := c.deps.BotSession().ID()
 	if sessID != "" {
 		_ = level.Info(logger).Log("message", "generating resume payload")
-		rp := payloads.ResumePayload{
+		rp := &payloads.ResumePayload{
 			Token:     c.bot.Config().BotToken,
 			SessionID: sessID,
 			SeqNum:    c.bot.LastSequence(),
@@ -164,7 +162,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 		m, err = payloads.ETFPayloadToMessage(req.Ctx, rp)
 	} else {
 		_ = level.Info(logger).Log("message", "generating identify payload")
-		ip := payloads.IdentifyPayload{
+		ip := &payloads.IdentifyPayload{
 			Token: c.bot.Config().BotToken,
 			Properties: payloads.IdentifyPayloadProperties{
 				OS:      c.bot.Config().OS,

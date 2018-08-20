@@ -118,9 +118,7 @@ func marshalInterface(code ETFCode, val interface{}) ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "couldn't marshal binary value")
 		}
-	case String:
-		fallthrough
-	case Atom:
+	case Atom, String:
 		v, ok := val.([]byte)
 		if !ok {
 			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
@@ -191,9 +189,7 @@ func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
 				return 0, nil, errors.Wrap(err, "could not unmarshal map")
 			}
 			idx += deltaIdx
-		case String:
-			fallthrough
-		case Atom:
+		case Atom, String:
 			size, err = int16SliceToInt(raw[idx : idx+2])
 			if err != nil {
 				return 0, nil, errors.Wrap(err, "could not read atom/string length")

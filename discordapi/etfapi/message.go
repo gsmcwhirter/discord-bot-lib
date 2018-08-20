@@ -8,10 +8,10 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-// MessageType TODOC
+// MessageType represents the type of message received in a discord channel
 type MessageType int
 
-// TODOC
+// These are the known message types
 const (
 	DefaultMessage              MessageType = 0
 	RecipientAddMessage                     = 1
@@ -23,7 +23,8 @@ const (
 	GuildMemberJoinMessage                  = 7
 )
 
-// MessageTypeFromElement TODOC
+// MessageTypeFromElement generates a MessageType representation from the given
+// message-type Element
 func MessageTypeFromElement(e Element) (t MessageType, err error) {
 	temp, err := e.ToInt()
 	if err != nil {
@@ -33,7 +34,6 @@ func MessageTypeFromElement(e Element) (t MessageType, err error) {
 	return
 }
 
-// String TODOC
 func (t MessageType) String() string {
 	switch t {
 	case DefaultMessage:
@@ -57,7 +57,7 @@ func (t MessageType) String() string {
 	}
 }
 
-// Message TODOC
+// Message represents the data about a message in a discord channel
 type Message struct {
 	id          snowflake.Snowflake
 	channelID   snowflake.Snowflake
@@ -66,37 +66,32 @@ type Message struct {
 	content     string
 }
 
-// ID TODOC
+// ID returns the ID of the message
 func (m *Message) ID() snowflake.Snowflake {
 	return m.id
 }
 
-// ChannelID TODOC
+// ChannelID returns the ID of the channel the message was sent to
 func (m *Message) ChannelID() snowflake.Snowflake {
 	return m.channelID
 }
 
-// MessageType TODOC
+// MessageType returns the MessageType of the message
 func (m *Message) MessageType() MessageType {
 	return m.messageType
 }
 
-// AuthorID TODOC
+// AuthorID returns the ID of the author of the message
 func (m *Message) AuthorID() snowflake.Snowflake {
 	return m.author.id
 }
 
-// AuthorIDString TODOC
-func (m *Message) AuthorIDString() string {
-	return m.author.IDString()
-}
-
-// ContentString TODOC
+// ContentString returns the content of the message
 func (m *Message) ContentString() string {
 	return m.content
 }
 
-// MessageFromElementMap TODOC
+// MessageFromElementMap generates a new Message object from the given data
 func MessageFromElementMap(eMap map[string]Element) (m Message, err error) {
 	var ok bool
 	var e2 Element
@@ -134,7 +129,7 @@ func MessageFromElementMap(eMap map[string]Element) (m Message, err error) {
 	return
 }
 
-// MessageFromElement TODOC
+// MessageFromElement generates a new Message object from the given Element
 func MessageFromElement(e Element) (Message, error) {
 	eMap, id, err := MapAndIDFromElement(e)
 	if err != nil {

@@ -6,13 +6,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// HeartbeatPayload TODOC
+// HeartbeatPayload is the specialized payload for sending "heartbeat" events to the discord gateway websocket
 type HeartbeatPayload struct {
 	Sequence int
 }
 
-// Payload TODOC
-func (hp HeartbeatPayload) Payload() (p etfapi.Payload, err error) {
+// Payload converts the specialized payload to a generic etfapi.Payload
+func (hp *HeartbeatPayload) Payload() (p etfapi.Payload, err error) {
 	p.OpCode = constants.Heartbeat
 	p.Data = map[string]etfapi.Element{}
 
@@ -30,15 +30,5 @@ func (hp HeartbeatPayload) Payload() (p etfapi.Payload, err error) {
 		}
 	}
 
-	return
-}
-
-// HeartbeatAckPayload TODOC
-type HeartbeatAckPayload struct {
-}
-
-// Payload TODOC
-func (hp HeartbeatAckPayload) Payload() (p etfapi.Payload, err error) {
-	p.OpCode = constants.Heartbeat
 	return
 }
