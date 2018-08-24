@@ -102,10 +102,11 @@ func (c *wsClient) Connect(token string) (err error) {
 	start := time.Now()
 	c.conn, dialResp, err = c.deps.WSDialer().Dial(c.gatewayURL, dialHeader)
 
-	_ = level.Debug(logger).Log(
+	_ = level.Info(logger).Log(
 		"message", "ws client dial complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", dialResp.StatusCode,
+		"url", c.gatewayURL,
 	)
 
 	if err != nil {
@@ -144,12 +145,12 @@ func (c *wsClient) HandleRequests(ctx context.Context) error {
 	controls, ctx := errgroup.WithContext(ctx)
 
 	controls.Go(func() error {
-		_ = level.Debug(c.deps.Logger()).Log("message", "starting response handler")
+		_ = level.Info(c.deps.Logger()).Log("message", "starting response handler")
 		return c.handleResponses(ctx)
 	})
 
 	controls.Go(func() error {
-		_ = level.Debug(c.deps.Logger()).Log("message", "starting message reader")
+		_ = level.Info(c.deps.Logger()).Log("message", "starting message reader")
 		return c.readMessages(ctx)
 	})
 
@@ -240,7 +241,7 @@ func (c *wsClient) handleRequest(req WSMessage) {
 		_ = level.Info(logger).Log("message", "handleRequest received interrupt -- shutting down")
 		return
 	default:
-		_ = level.Debug(logger).Log("message", "handleRequest dispatching request")
+		_ = level.Info(logger).Log("message", "handleRequest dispatching request")
 		c.handler.HandleRequest(req, c.responses)
 	}
 }
@@ -260,6 +261,8 @@ func (c *wsClient) processResponse(resp WSMessage) {
 	_ = level.Info(logging.WithContext(resp.Ctx, c.deps.Logger())).Log(
 		"message", "done sending message",
 		"elapsed_ns", time.Since(start).Nanoseconds(),
+		"ws_msg_type", resp.MessageType,
+		"ws_msg_len", len(resp.MessageContents),
 	)
 
 	if err != nil {
@@ -281,7 +284,7 @@ func (c *wsClient) handleResponses(ctx context.Context) error {
 			_ = level.Info(c.deps.Logger()).Log("message", "handleResponses shutting down")
 
 			defer func() {
-				_ = level.Debug(c.deps.Logger()).Log("message", "gracefully closing the socket")
+				_ = level.Info(c.deps.Logger()).Log("message", "gracefully closing the socket")
 				err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				if err != nil {
 					_ = level.Error(c.deps.Logger()).Log("message", "Unable to write websocket close message", "error", err)

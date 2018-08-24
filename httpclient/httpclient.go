@@ -74,7 +74,7 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 	)
 	start := time.Now()
 	resp, err = c.deps.HTTPDoer().Do(req)
-	_ = level.Debug(logger).Log(
+	_ = level.Info(logger).Log(
 		"message", "http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
@@ -110,7 +110,7 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 	)
 	start := time.Now()
 	resp, err = c.deps.HTTPDoer().Do(req)
-	_ = level.Debug(logger).Log(
+	_ = level.Info(logger).Log(
 		"message", "http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
@@ -148,7 +148,7 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 
 	start := time.Now()
 	resp, err = c.deps.HTTPDoer().Do(req)
-	_ = level.Debug(logger).Log(
+	_ = level.Info(logger).Log(
 		"message", "http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
@@ -185,7 +185,7 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 
 	start := time.Now()
 	resp, err = c.deps.HTTPDoer().Do(req)
-	_ = level.Debug(logger).Log(
+	_ = level.Info(logger).Log(
 		"message", "http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,

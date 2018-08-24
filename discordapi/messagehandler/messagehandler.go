@@ -86,11 +86,11 @@ func (c *discordMessageHandler) AddHandler(event string, handler discordapi.Disc
 
 func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Debug(logger).Log("message", "discordapi dispatching request")
+	_ = level.Info(logger).Log("message", "discordapi dispatching request")
 
 	select {
 	case <-req.Ctx.Done():
-		_ = level.Debug(logger).Log("message", "discordapi already done. skipping request")
+		_ = level.Info(logger).Log("message", "discordapi already done. skipping request")
 		return
 	default:
 	}
@@ -120,6 +120,7 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 		return
 	}
 
+	_ = level.Info(logger).Log("message", "sending to opHandler", "op_code", p.OpCode)
 	opHandler(p, req, resp)
 }
 

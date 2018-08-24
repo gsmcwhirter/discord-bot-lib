@@ -235,8 +235,6 @@ func (d *discordBot) Disconnect() error {
 }
 
 func (d *discordBot) Run(ctx context.Context) error {
-	_ = level.Debug(d.deps.Logger()).Log("message", "setting bot signal watcher")
-
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
@@ -269,7 +267,7 @@ func (d *discordBot) UpdateSequence(seq int) bool {
 }
 
 func (d *discordBot) heartbeatHandler(ctx context.Context) error {
-	_ = level.Debug(d.deps.Logger()).Log("message", "waiting for heartbeat config")
+	_ = level.Info(d.deps.Logger()).Log("message", "waiting for heartbeat config")
 
 	// wait for init
 	if d.heartbeat == nil {
@@ -305,7 +303,7 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 			if reqCtx == nil {
 				reqCtx = util.NewRequestContextFrom(ctx)
 			}
-			_ = level.Debug(logging.WithContext(reqCtx, d.deps.Logger())).Log("message", "manual heartbeat requested")
+			_ = level.Info(logging.WithContext(reqCtx, d.deps.Logger())).Log("message", "manual heartbeat requested")
 
 			err := d.sendHeartbeat(reqCtx)
 			if err != nil {
