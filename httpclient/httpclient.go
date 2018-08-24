@@ -25,11 +25,11 @@ type HTTPClient interface {
 
 type dependencies interface {
 	Logger() log.Logger
+	HTTPDoer() Doer
 }
 
 type httpClient struct {
 	deps    dependencies
-	client  *http.Client
 	headers http.Header
 }
 
@@ -37,7 +37,6 @@ type httpClient struct {
 func NewHTTPClient(deps dependencies) HTTPClient {
 	return &httpClient{
 		deps:    deps,
-		client:  &http.Client{},
 		headers: http.Header{},
 	}
 }
@@ -74,13 +73,16 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 	start := time.Now()
-	resp, err = c.client.Do(req)
+	resp, err = c.deps.HTTPDoer().Do(req)
 	_ = level.Debug(logger).Log(
 		"message", "http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 	if err != nil {
+		return
+	}
+	if resp.Body == nil {
 		return
 	}
 	defer resp.Body.Close() //nolint: errcheck
@@ -107,13 +109,16 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 	start := time.Now()
-	resp, err = c.client.Do(req)
+	resp, err = c.deps.HTTPDoer().Do(req)
 	_ = level.Debug(logger).Log(
 		"message", "http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 	if err != nil {
+		return
+	}
+	if resp.Body == nil {
 		return
 	}
 	defer resp.Body.Close() //nolint: errcheck
@@ -142,13 +147,16 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 	)
 
 	start := time.Now()
-	resp, err = c.client.Do(req)
+	resp, err = c.deps.HTTPDoer().Do(req)
 	_ = level.Debug(logger).Log(
 		"message", "http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 	if err != nil {
+		return
+	}
+	if resp.Body == nil {
 		return
 	}
 	defer resp.Body.Close() //nolint: errcheck
@@ -176,13 +184,16 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 	)
 
 	start := time.Now()
-	resp, err = c.client.Do(req)
+	resp, err = c.deps.HTTPDoer().Do(req)
 	_ = level.Debug(logger).Log(
 		"message", "http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 	if err != nil {
+		return
+	}
+	if resp.Body == nil {
 		return
 	}
 	defer resp.Body.Close() //nolint: errcheck

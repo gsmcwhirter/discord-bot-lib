@@ -31,14 +31,14 @@ type WSClient interface {
 
 type dependencies interface {
 	Logger() log.Logger
+	WSDialer() Dialer
 }
 
 type wsClient struct {
 	deps dependencies
 
 	gatewayURL string
-	dialer     *websocket.Dialer
-	conn       *websocket.Conn
+	conn       Conn
 	handler    MessageHandler
 
 	responses chan WSMessage
@@ -53,7 +53,6 @@ type wsClient struct {
 // Options enables setting up a WSClient with the desired connection settings
 type Options struct {
 	GatewayURL            string
-	Dialer                *websocket.Dialer
 	MaxConcurrentHandlers int
 }
 
@@ -63,12 +62,6 @@ func NewWSClient(deps dependencies, options Options) WSClient {
 		deps:       deps,
 		gatewayURL: options.GatewayURL,
 		closeLock:  &sync.Mutex{},
-	}
-
-	if options.Dialer != nil {
-		c.dialer = options.Dialer
-	} else {
-		c.dialer = websocket.DefaultDialer
 	}
 
 	c.pool = &sync.WaitGroup{}
@@ -107,7 +100,7 @@ func (c *wsClient) Connect(token string) (err error) {
 	)
 
 	start := time.Now()
-	c.conn, dialResp, err = c.dialer.Dial(c.gatewayURL, dialHeader)
+	c.conn, dialResp, err = c.deps.WSDialer().Dial(c.gatewayURL, dialHeader)
 
 	_ = level.Debug(logger).Log(
 		"message", "ws client dial complete",
@@ -118,7 +111,9 @@ func (c *wsClient) Connect(token string) (err error) {
 	if err != nil {
 		return err
 	}
-	defer dialResp.Body.Close() // nolint: errcheck
+	if dialResp.Body != nil {
+		defer dialResp.Body.Close() // nolint: errcheck
+	}
 
 	_ = level.Info(logger).Log("message", "ws connected")
 
@@ -128,7 +123,7 @@ func (c *wsClient) Connect(token string) (err error) {
 func (c *wsClient) Close() {
 	c.pool.Wait()
 	if c.conn != nil {
-		c.conn.Close() // nolint: errcheck
+		_ = c.conn.Close()
 	}
 }
 
@@ -169,6 +164,12 @@ func (c *wsClient) doReads(ctx context.Context) error {
 	defer level.Info(c.deps.Logger()).Log("message", "websocket reader done") //nolint: errcheck
 
 	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		msgType, msg, err := c.conn.ReadMessage()
 		if err != nil {
 			_ = level.Error(c.deps.Logger()).Log(

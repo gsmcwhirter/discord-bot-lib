@@ -12,3 +12,5 @@
 *.out
 
 *_easyjson.go
+
+bin/

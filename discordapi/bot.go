@@ -120,12 +120,12 @@ func (d *discordBot) AuthenticateAndConnect() error {
 
 	err := d.deps.ConnectRateLimiter().Wait(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "connection rate limit error")
 	}
 
 	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/gateway/bot", d.config.APIURL), nil)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not get gateway information")
 	}
 	if resp.StatusCode != http.StatusOK {
 		return errors.Wrap(ErrResponse, "non-200 response")
@@ -139,7 +139,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	respData := jsonapi.GatewayResponse{}
 	err = respData.UnmarshalJSON(body)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not unmarshal gateway information")
 	}
 
 	_ = level.Debug(logger).Log(
@@ -151,8 +151,9 @@ func (d *discordBot) AuthenticateAndConnect() error {
 
 	connectURL, err := url.Parse(respData.URL)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse connection url")
 	}
+
 	q := connectURL.Query()
 	q.Add("v", "6")
 	q.Add("encoding", "etf")
@@ -168,7 +169,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 
 	err = d.deps.WSClient().Connect(d.config.BotToken)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not WSClient().Connect()")
 	}
 
 	// See https://discordapp.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags
