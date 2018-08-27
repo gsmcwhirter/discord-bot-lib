@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
@@ -16,8 +16,14 @@ func guildCreate(id snowflake.Snowflake, name string) ([]byte, error) {
 
 	eMap["id"] = idE
 
+	nameE, err := etfapi.NewStringElement(name)
+	if err != nil {
+		return nil, err
+	}
+	eMap["name"] = nameE
+
 	p := etfapi.Payload{
-		OpCode:    constants.Dispatch,
+		OpCode:    discordapi.Dispatch,
 		EventName: "GUILD_CREATE",
 		Data:      eMap,
 	}

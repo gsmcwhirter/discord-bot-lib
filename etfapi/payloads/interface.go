@@ -3,7 +3,7 @@ package payloads
 import (
 	"context"
 
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 	"github.com/pkg/errors"
 )

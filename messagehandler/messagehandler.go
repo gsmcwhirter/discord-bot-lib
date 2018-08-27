@@ -9,10 +9,10 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
+	"github.com/gsmcwhirter/discord-bot-lib/bot"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi/payloads"
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 )
@@ -25,11 +25,11 @@ type dependencies interface {
 
 type discordMessageHandler struct {
 	deps           dependencies
-	bot            discordapi.DiscordBot
-	opCodeDispatch map[constants.OpCode]discordapi.DiscordMessageHandlerFunc
+	bot            bot.DiscordBot
+	opCodeDispatch map[discordapi.OpCode]bot.DiscordMessageHandlerFunc
 
 	dispatcherLock *sync.Mutex
-	eventDispatch  map[string][]discordapi.DiscordMessageHandlerFunc
+	eventDispatch  map[string][]bot.DiscordMessageHandlerFunc
 }
 
 func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
@@ -37,46 +37,46 @@ func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMess
 
 // NewDiscordMessageHandler creates a new DiscordMessageHandler object with default state and
 // session management handlers installed
-func NewDiscordMessageHandler(deps dependencies) discordapi.DiscordMessageHandler {
+func NewDiscordMessageHandler(deps dependencies) bot.DiscordMessageHandler {
 	c := discordMessageHandler{
 		deps:           deps,
 		dispatcherLock: &sync.Mutex{},
 	}
 
-	c.opCodeDispatch = map[constants.OpCode]discordapi.DiscordMessageHandlerFunc{
-		constants.Hello:           c.handleHello,
-		constants.Heartbeat:       c.handleHeartbeat,
-		constants.HeartbeatAck:    noop,
-		constants.InvalidSession:  nil,
-		constants.InvalidSequence: nil,
-		constants.Reconnect:       nil,
-		constants.Dispatch:        c.handleDispatch,
+	c.opCodeDispatch = map[discordapi.OpCode]bot.DiscordMessageHandlerFunc{
+		discordapi.Hello:           c.handleHello,
+		discordapi.Heartbeat:       c.handleHeartbeat,
+		discordapi.HeartbeatAck:    noop,
+		discordapi.InvalidSession:  nil,
+		discordapi.InvalidSequence: nil,
+		discordapi.Reconnect:       nil,
+		discordapi.Dispatch:        c.handleDispatch,
 	}
 
-	c.eventDispatch = map[string][]discordapi.DiscordMessageHandlerFunc{
-		"READY":                []discordapi.DiscordMessageHandlerFunc{c.handleReady},
-		"GUILD_CREATE":         []discordapi.DiscordMessageHandlerFunc{c.handleGuildCreate},
-		"GUILD_UPDATE":         []discordapi.DiscordMessageHandlerFunc{c.handleGuildUpdate},
-		"GUILD_DELETE":         []discordapi.DiscordMessageHandlerFunc{c.handleGuildDelete},
-		"CHANNEL_CREATE":       []discordapi.DiscordMessageHandlerFunc{c.handleChannelCreate},
-		"CHANNEL_UPDATE":       []discordapi.DiscordMessageHandlerFunc{c.handleChannelUpdate},
-		"CHANNEL_DELETE":       []discordapi.DiscordMessageHandlerFunc{c.handleChannelDelete},
-		"GUILD_MEMBER_ADD":     []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
-		"GUILD_MEMEBER_UPDATE": []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberUpdate},
-		"GUILD_MEMBER_REMOVE":  []discordapi.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
-		"GUILD_ROLE_CREATE":    []discordapi.DiscordMessageHandlerFunc{c.handleGuildRoleCreate},
-		"GUILD_ROLE_UPDATE":    []discordapi.DiscordMessageHandlerFunc{c.handleGuildRoleUpdate},
-		"GUILD_ROLE_DELETE":    []discordapi.DiscordMessageHandlerFunc{c.handleGuildRoleDelete},
+	c.eventDispatch = map[string][]bot.DiscordMessageHandlerFunc{
+		"READY":                []bot.DiscordMessageHandlerFunc{c.handleReady},
+		"GUILD_CREATE":         []bot.DiscordMessageHandlerFunc{c.handleGuildCreate},
+		"GUILD_UPDATE":         []bot.DiscordMessageHandlerFunc{c.handleGuildUpdate},
+		"GUILD_DELETE":         []bot.DiscordMessageHandlerFunc{c.handleGuildDelete},
+		"CHANNEL_CREATE":       []bot.DiscordMessageHandlerFunc{c.handleChannelCreate},
+		"CHANNEL_UPDATE":       []bot.DiscordMessageHandlerFunc{c.handleChannelUpdate},
+		"CHANNEL_DELETE":       []bot.DiscordMessageHandlerFunc{c.handleChannelDelete},
+		"GUILD_MEMBER_ADD":     []bot.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
+		"GUILD_MEMEBER_UPDATE": []bot.DiscordMessageHandlerFunc{c.handleGuildMemberUpdate},
+		"GUILD_MEMBER_REMOVE":  []bot.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
+		"GUILD_ROLE_CREATE":    []bot.DiscordMessageHandlerFunc{c.handleGuildRoleCreate},
+		"GUILD_ROLE_UPDATE":    []bot.DiscordMessageHandlerFunc{c.handleGuildRoleUpdate},
+		"GUILD_ROLE_DELETE":    []bot.DiscordMessageHandlerFunc{c.handleGuildRoleDelete},
 	}
 
 	return &c
 }
 
-func (c *discordMessageHandler) ConnectToBot(bot discordapi.DiscordBot) {
+func (c *discordMessageHandler) ConnectToBot(bot bot.DiscordBot) {
 	c.bot = bot
 }
 
-func (c *discordMessageHandler) AddHandler(event string, handler discordapi.DiscordMessageHandlerFunc) {
+func (c *discordMessageHandler) AddHandler(event string, handler bot.DiscordMessageHandlerFunc) {
 	c.dispatcherLock.Lock()
 	defer c.dispatcherLock.Unlock()
 

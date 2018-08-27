@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/jsonapi"
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 

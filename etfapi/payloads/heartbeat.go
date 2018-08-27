@@ -1,8 +1,8 @@
 package payloads
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
 	"github.com/pkg/errors"
 )
 
@@ -13,7 +13,7 @@ type HeartbeatPayload struct {
 
 // Payload converts the specialized payload to a generic etfapi.Payload
 func (hp *HeartbeatPayload) Payload() (p etfapi.Payload, err error) {
-	p.OpCode = constants.Heartbeat
+	p.OpCode = discordapi.Heartbeat
 	p.Data = map[string]etfapi.Element{}
 
 	if hp.Sequence < 0 {

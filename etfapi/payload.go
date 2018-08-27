@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
 	"github.com/pkg/errors"
 )
 
 // Payload represents the data in a etf api payload (both for sending and receiving)
 type Payload struct {
-	OpCode    constants.OpCode
+	OpCode    discordapi.OpCode
 	SeqNum    *int
 	EventName string
 
@@ -167,7 +167,7 @@ func (p *Payload) unmarshal(key string, val Element) error {
 		if err != nil {
 			return errors.Wrap(err, "bad payload")
 		}
-		p.OpCode = constants.OpCode(eVal)
+		p.OpCode = discordapi.OpCode(eVal)
 
 	case "d":
 		switch val.Code {

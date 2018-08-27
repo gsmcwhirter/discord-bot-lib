@@ -1,4 +1,4 @@
-package discordapi
+package bot
 
 import (
 	"bytes"
@@ -17,10 +17,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi/payloads"
 	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/jsonapi"
 	"github.com/gsmcwhirter/discord-bot-lib/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/util"

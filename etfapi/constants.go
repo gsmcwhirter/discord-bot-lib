@@ -5,7 +5,7 @@ import "fmt"
 // ETFCode is a type alias for representing ETF type codes
 type ETFCode int
 
-// See https://github.com/discordapp/erlpack/blob/master/cpp/constants.h
+// See https://github.com/discordapp/erlpack/blob/master/cpp/discordapi.h
 
 // These are the ETF type codes that this library knows about
 const (

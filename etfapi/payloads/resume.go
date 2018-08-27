@@ -1,8 +1,8 @@
 package payloads
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/constants"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
 	"github.com/pkg/errors"
 )
 
@@ -15,7 +15,7 @@ type ResumePayload struct {
 
 // Payload converts the specialized payload to a generic etfapi.Payload
 func (rp *ResumePayload) Payload() (p etfapi.Payload, err error) {
-	p.OpCode = constants.Resume
+	p.OpCode = discordapi.Resume
 	p.Data = map[string]etfapi.Element{}
 
 	// TOKEN

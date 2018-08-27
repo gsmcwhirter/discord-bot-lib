@@ -1,4 +1,4 @@
-package constants
+package discordapi
 
 import "fmt"
 
