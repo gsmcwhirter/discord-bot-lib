@@ -128,6 +128,25 @@ func marshalInterface(code ETFCode, val interface{}) ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "couldn't marshal Atom value")
 		}
+	case SmallBig, LargeBig:
+		v, ok := val.([]byte)
+		if !ok {
+			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
+		}
+
+		if len(v) != 9 {
+			return nil, errors.Wrap(ErrBadMarshalData, "not a int64 byte slice")
+		}
+
+		_, err = b.Write([]byte{byte(len(v) - 1)})
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't marshal Int64 size")
+		}
+
+		_, err = b.Write(v)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't marshal Int64 value")
+		}
 	case Int32:
 		v, ok := val.([]byte)
 		if !ok {
@@ -294,6 +313,18 @@ func intToInt32Slice(v int) ([]byte, error) {
 	binary.BigEndian.PutUint32(size, uint32(v))
 
 	return size, nil
+}
+
+func int64ToInt64Slice(v int64) ([]byte, error) {
+
+	data := make([]byte, 9)
+	if v < 0 {
+		v = -v
+		data[0] = 1
+	}
+	binary.LittleEndian.PutUint64(data[1:], uint64(v))
+
+	return data, nil
 }
 
 func int32SliceToInt(v []byte) (int, error) {

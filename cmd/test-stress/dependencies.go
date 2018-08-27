@@ -14,6 +14,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/discordapi/messagehandler"
 	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 )
 
@@ -49,28 +50,23 @@ func (d *mockHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-type mockWSConn struct{}
-
-func (c *mockWSConn) Close() error                    { return nil }
-func (c *mockWSConn) SetReadDeadline(time.Time) error { return nil }
-func (c *mockWSConn) ReadMessage() (int, []byte, error) {
-	return 0, nil, nil
-}
-func (c *mockWSConn) WriteMessage(int, []byte) error {
-	return nil
-}
-
-type mockWSDialer struct {
-}
-
-func (d *mockWSDialer) Dial(string, http.Header) (wsclient.Conn, *http.Response, error) {
-	return &mockWSConn{}, &http.Response{StatusCode: 200}, nil
-}
-
 func createDependencies(c config, conf discordapi.BotConfig) (d *dependencies, err error) {
+	gcreate, err := guildCreate(snowflake.Snowflake(12345), "Test Guild!")
+	if err != nil {
+		return nil, err
+	}
+
 	d = &dependencies{
-		doer:    &mockHTTPDoer{},
-		wsd:     &mockWSDialer{},
+		doer: &mockHTTPDoer{},
+		wsd: &mockWSDialer{
+			MsgType: int(wsclient.Binary),
+			First: [][]byte{
+				nil, // TODO: identify
+			},
+			Repeat: [][]byte{
+				gcreate,
+			},
+		},
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
 		session: etfapi.NewSession(),

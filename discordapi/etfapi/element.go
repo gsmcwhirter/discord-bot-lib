@@ -94,6 +94,20 @@ func NewInt32Element(val int) (e Element, err error) {
 	return
 }
 
+// NewSmallBigElement generates a new Element representing a 64-bit unsigned integer value
+func NewSmallBigElement(val int64) (e Element, err error) {
+	var v []byte
+	v, err = int64ToInt64Slice(val)
+	if err != nil {
+		err = errors.Wrap(err, "could not convert to int64 slice")
+		return
+	}
+
+	e, err = NewElement(SmallBig, v)
+	err = errors.Wrap(err, "could not create SmallBig Element")
+	return
+}
+
 // NewBinaryElement generates a new Element representing Binary data
 func NewBinaryElement(val []byte) (e Element, err error) {
 	e, err = NewElement(Binary, val)

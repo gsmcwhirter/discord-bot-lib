@@ -9,8 +9,9 @@ import (
 
 func setup(start func(config) error) *cli.Command {
 	c := cli.NewCLI(AppName, BuildVersion, BuildSHA, BuildDate, cli.CommandOptions{
-		ShortHelp: "discord bot lib stress test",
-		Args:      cli.NoArgs,
+		ShortHelp:    "discord bot lib stress test",
+		Args:         cli.NoArgs,
+		SilenceUsage: true,
 	})
 
 	var configFile string
