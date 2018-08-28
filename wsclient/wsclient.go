@@ -161,6 +161,38 @@ func (c *wsClient) HandleRequests(ctx context.Context) error {
 	return err
 }
 
+func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byte) {
+	defer c.pool.Done()
+
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
+
+	reqCtx := util.NewRequestContextFrom(ctx)
+	mT := MessageType(msgType)
+	mC := make([]byte, len(msg))
+	copy(mC, msg)
+
+	wsMsg := WSMessage{Ctx: reqCtx, MessageType: mT, MessageContents: mC}
+	_ = level.Info(logging.WithContext(reqCtx, c.deps.Logger())).Log(
+		"message", "received message",
+		"ws_msg_type", mT,
+		"ws_msg_len", len(mC),
+	)
+
+	_ = level.Debug(logging.WithContext(reqCtx, c.deps.Logger())).Log(
+		"message", "waiting for worker token",
+	)
+	c.poolTokens <- struct{}{}
+	_ = level.Info(logging.WithContext(reqCtx, c.deps.Logger())).Log(
+		"message", "worker token acquired",
+	)
+
+	c.handleRequest(wsMsg)
+}
+
 func (c *wsClient) doReads(ctx context.Context) error {
 	defer level.Info(c.deps.Logger()).Log("message", "websocket reader done") //nolint: errcheck
 
@@ -182,27 +214,8 @@ func (c *wsClient) doReads(ctx context.Context) error {
 			return errors.Wrap(err, "read error")
 		}
 
-		reqCtx := util.NewRequestContextFrom(ctx)
-		mT := MessageType(msgType)
-		mC := make([]byte, len(msg))
-		copy(mC, msg)
-
-		wsMsg := WSMessage{Ctx: reqCtx, MessageType: mT, MessageContents: mC}
-		_ = level.Info(logging.WithContext(reqCtx, c.deps.Logger())).Log(
-			"message", "received message",
-			"ws_msg_type", mT,
-			"ws_msg_len", len(mC),
-		)
-
-		_ = level.Debug(logging.WithContext(reqCtx, c.deps.Logger())).Log(
-			"message", "waiting for worker token",
-		)
-		c.poolTokens <- struct{}{}
-		_ = level.Info(logging.WithContext(reqCtx, c.deps.Logger())).Log(
-			"message", "worker token acquired",
-		)
 		c.pool.Add(1)
-		go c.handleRequest(wsMsg)
+		go c.handleMessageRead(ctx, msgType, msg)
 	}
 }
 
@@ -227,8 +240,6 @@ func (c *wsClient) readMessages(ctx context.Context) error {
 }
 
 func (c *wsClient) handleRequest(req WSMessage) {
-	defer c.pool.Done()
-
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
 	defer func() {
