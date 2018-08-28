@@ -51,7 +51,7 @@ func init() {
 // Marshal converts a payload into a properly formatted []byte that can be sent over
 // a websocket connection
 func (p *Payload) Marshal() ([]byte, error) {
-	var data []byte
+	var e Element
 	var err error
 
 	b := bytes.Buffer{}
@@ -66,60 +66,41 @@ func (p *Payload) Marshal() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to write outer map label")
 	}
-	err = writeLength32(&b, len)
-	if err != nil {
+	if err = writeLength32(&b, len); err != nil {
 		return nil, errors.Wrap(err, "unable to write outer map length")
 	}
 
-	_, err = opElement.WriteTo(&b)
-	if err != nil {
+	if err = opElement.MarshalTo(&b); err != nil {
 		return nil, errors.Wrap(err, "unable to write 'op' key")
 	}
-	data, err = intToInt8Slice(int(p.OpCode))
+	e, err = NewInt8Element(int(p.OpCode))
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert 'op' value to byte slice")
+		return nil, errors.Wrap(err, "unable to create 'op' value element")
 	}
-	data, err = marshalInterface(Int8, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal 'op' value")
-	}
-	_, err = b.Write(data)
-	if err != nil {
+	if err = e.MarshalTo(&b); err != nil {
 		return nil, errors.Wrap(err, "unable to write 'op' value")
 	}
 
-	_, err = dElement.WriteTo(&b)
-	if err != nil {
+	if err = dElement.MarshalTo(&b); err != nil {
 		return nil, errors.Wrap(err, "unable to write 'd' key")
 	}
-	e2, err := ElementMapToElementSlice(p.Data)
+	e, err = NewMapElement(p.Data)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to slicify 'd' value")
+		return nil, errors.Wrap(err, "unable to create 'd' value element")
 	}
-	data, err = marshalInterface(Map, e2)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal 'd' value")
-	}
-	_, err = b.Write(data)
-	if err != nil {
+	if err = e.MarshalTo(&b); err != nil {
 		return nil, errors.Wrap(err, "unable to write 'd' value")
 	}
 
 	if p.SeqNum != nil {
-		_, err = sElement.WriteTo(&b)
-		if err != nil {
+		if err = sElement.MarshalTo(&b); err != nil {
 			return nil, errors.Wrap(err, "unable to write 's' key")
 		}
-		data, err = intToInt32Slice(*p.SeqNum)
+		e, err = NewInt32Element(*p.SeqNum)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to convert 's' value to byte slice")
+			return nil, errors.Wrap(err, "unable to create 's' value element")
 		}
-		data, err = marshalInterface(Int32, data)
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to marshal 's' value")
-		}
-		_, err = b.Write(data)
-		if err != nil {
+		if err = e.MarshalTo(&b); err != nil {
 			return nil, errors.Wrap(err, "unable to write 's' value")
 		}
 	}
@@ -228,39 +209,39 @@ func Unmarshal(raw []byte) (*Payload, error) {
 	return &p, nil
 }
 
-// PrettyString generates a pretty, multi-line, human-readable representation of a Payload
-func (p *Payload) PrettyString(indent string, skipFirstIndent bool) string {
-	b := bytes.Buffer{}
-	if skipFirstIndent {
-		_, _ = b.WriteString("Payload{\n")
-	} else {
-		_, _ = b.WriteString(fmt.Sprintf("%sPayload{\n", indent))
-	}
+// // PrettyString generates a pretty, multi-line, human-readable representation of a Payload
+// func (p *Payload) PrettyString(indent string, skipFirstIndent bool) string {
+// 	b := bytes.Buffer{}
+// 	if skipFirstIndent {
+// 		_, _ = b.WriteString("Payload{\n")
+// 	} else {
+// 		_, _ = b.WriteString(fmt.Sprintf("%sPayload{\n", indent))
+// 	}
 
-	_, _ = b.WriteString(fmt.Sprintf("%s  OpCode: %v\n", indent, p.OpCode))
-	if p.EventName != "" {
-		_, _ = b.WriteString(fmt.Sprintf("%s  EventName: %v\n", indent, p.EventName))
-	}
-	if p.SeqNum != nil {
-		_, _ = b.WriteString(fmt.Sprintf("%s  SeqNum: %v\n", indent, *p.SeqNum))
-	}
+// 	_, _ = b.WriteString(fmt.Sprintf("%s  OpCode: %v\n", indent, p.OpCode))
+// 	if p.EventName != "" {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  EventName: %v\n", indent, p.EventName))
+// 	}
+// 	if p.SeqNum != nil {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  SeqNum: %v\n", indent, *p.SeqNum))
+// 	}
 
-	if p.DataList != nil {
-		_, _ = b.WriteString(fmt.Sprintf("%s  DataList: [\n", indent))
-		for _, v := range p.DataList {
-			_, _ = b.WriteString(v.PrettyString(indent+"     ", false))
-			_, _ = b.WriteString("\n")
-		}
-		_, _ = b.WriteString(fmt.Sprintf("%s  ]", indent))
-	} else {
-		_, _ = b.WriteString(fmt.Sprintf("%s  Data: {\n", indent))
-		for k, v := range p.Data {
-			_, _ = b.WriteString(fmt.Sprintf("%s    %v: ", indent, k))
-			_, _ = b.WriteString(v.PrettyString(indent+"     ", true))
-			_, _ = b.WriteString("\n")
-		}
-		_, _ = b.WriteString(fmt.Sprintf("%s  }", indent))
-	}
+// 	if p.DataList != nil {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  DataList: [\n", indent))
+// 		for _, v := range p.DataList {
+// 			_, _ = b.WriteString(v.PrettyString(indent+"     ", false))
+// 			_, _ = b.WriteString("\n")
+// 		}
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  ]", indent))
+// 	} else {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  Data: {\n", indent))
+// 		for k, v := range p.Data {
+// 			_, _ = b.WriteString(fmt.Sprintf("%s    %v: ", indent, k))
+// 			_, _ = b.WriteString(v.PrettyString(indent+"     ", true))
+// 			_, _ = b.WriteString("\n")
+// 		}
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  }", indent))
+// 	}
 
-	return b.String()
-}
+// 	return b.String()
+// }

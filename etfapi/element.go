@@ -15,39 +15,40 @@ type Element struct {
 	Vals []Element
 }
 
-// NewElement generates a new Element to hold data.
-//
-// If the code is a collection-type (determined by code.IsCollection), then
-// val should be a []Elelemt. Otherwise, val should be a []byte
-func NewElement(code ETFCode, val interface{}) (e Element, err error) {
+var trueB = []byte("true")
+var falseB = []byte("false")
+var nilB = []byte("nil")
+
+// NewCollectionElement generates a new Element to hold data for collection types.
+func NewCollectionElement(code ETFCode, val []Element) (e Element, err error) {
+	if !code.IsCollection() {
+		err = ErrBadElementData
+		return
+	}
+
 	e.Code = code
-
-	if v, ok := val.([]Element); ok {
-		if !code.IsCollection() {
-			err = ErrBadElementData
-			return
-		}
-		e.Vals = v
-
-		return
-	}
-
-	if v, ok := val.([]byte); ok {
-		if code.IsCollection() {
-			err = ErrBadElementData
-			return
-		}
-		e.Val = v
-
-		return
-	}
+	e.Vals = val
 
 	return
 }
 
+// NewBasicElement generates a new Element to hold data for non-collection types.
+func NewBasicElement(code ETFCode, val []byte) (e Element, err error) {
+	if code.IsCollection() {
+		err = ErrBadElementData
+		return
+	}
+
+	e.Code = code
+	e.Val = val
+
+	return
+
+}
+
 // NewNilElement generates a new Element representing "nil"
 func NewNilElement() (e Element, err error) {
-	e, err = NewAtomElement("nil")
+	e, err = NewAtomElement(nilB)
 	err = errors.Wrap(err, "could not create Nil Element")
 	return
 }
@@ -55,9 +56,9 @@ func NewNilElement() (e Element, err error) {
 // NewBoolElement generates a new Element representing a boolean value
 func NewBoolElement(val bool) (e Element, err error) {
 	if val {
-		e, err = NewAtomElement("true")
+		e, err = NewAtomElement(trueB)
 	} else {
-		e, err = NewAtomElement("false")
+		e, err = NewAtomElement(falseB)
 	}
 
 	err = errors.Wrap(err, "could not create Bool Element")
@@ -74,7 +75,7 @@ func NewInt8Element(val int) (e Element, err error) {
 		return
 	}
 
-	e, err = NewElement(Int8, v)
+	e, err = NewBasicElement(Int8, v)
 	err = errors.Wrap(err, "could not create Int8 Element")
 	return
 }
@@ -89,7 +90,7 @@ func NewInt32Element(val int) (e Element, err error) {
 		return
 	}
 
-	e, err = NewElement(Int32, v)
+	e, err = NewBasicElement(Int32, v)
 	err = errors.Wrap(err, "could not create Int32 Element")
 	return
 }
@@ -103,28 +104,28 @@ func NewSmallBigElement(val int64) (e Element, err error) {
 		return
 	}
 
-	e, err = NewElement(SmallBig, v)
+	e, err = NewBasicElement(SmallBig, v)
 	err = errors.Wrap(err, "could not create SmallBig Element")
 	return
 }
 
 // NewBinaryElement generates a new Element representing Binary data
 func NewBinaryElement(val []byte) (e Element, err error) {
-	e, err = NewElement(Binary, val)
+	e, err = NewBasicElement(Binary, val)
 	err = errors.Wrap(err, "could not create binary Element")
 	return
 }
 
 // NewAtomElement generates a new Element representing an Atom value
-func NewAtomElement(val string) (e Element, err error) {
-	e, err = NewElement(Atom, []byte(val))
+func NewAtomElement(val []byte) (e Element, err error) {
+	e, err = NewBasicElement(Atom, val)
 	err = errors.Wrap(err, "could not create atom Element")
 	return
 }
 
 // NewStringElement generates a new Element representing a String value
 func NewStringElement(val string) (e Element, err error) {
-	e, err = NewElement(Binary, []byte(val))
+	e, err = NewBasicElement(Binary, []byte(val))
 	err = errors.Wrap(err, "could not create string Element")
 	return
 }
@@ -139,7 +140,7 @@ func NewMapElement(val map[string]Element) (e Element, err error) {
 		return
 	}
 
-	e, err = NewElement(Map, e2)
+	e, err = NewCollectionElement(Map, e2)
 	err = errors.Wrap(err, "could not create map Element")
 	return
 }
@@ -148,7 +149,7 @@ func NewMapElement(val map[string]Element) (e Element, err error) {
 //
 // NOTE: empty lists are likely not handled well
 func NewListElement(val []Element) (e Element, err error) {
-	e, err = NewElement(List, val)
+	e, err = NewCollectionElement(List, val)
 	err = errors.Wrap(err, "could not create list Element")
 	return
 }
@@ -162,25 +163,48 @@ func (e Element) String() string {
 	}
 }
 
-// WriteTo formats the data represented by the element as a []byte and
-// writes it to the given writer
-func (e *Element) WriteTo(b io.Writer) (int64, error) {
-	var tmp interface{}
-	if e.Val != nil {
-		tmp = e.Val
-	} else if e.Vals != nil {
-		tmp = e.Vals
-	} else {
-		tmp = nil
-	}
-
-	data, err := marshalInterface(e.Code, tmp)
+// Marshal formats the data in the given element in etf binary format
+func (e *Element) Marshal() ([]byte, error) {
+	b := &bytes.Buffer{}
+	err := e.MarshalTo(b)
 	if err != nil {
-		return 0, errors.Wrap(err, "couldn't marshal element")
+		return nil, errors.Wrap(err, "could not marshal Element")
+	}
+	return b.Bytes(), nil
+}
+
+// MarshalTo formats the data in the given element in etf binary format
+// and writes it to the provided writer
+func (e *Element) MarshalTo(b io.Writer) error {
+	var err error
+
+	_, err = b.Write([]byte{byte(e.Code)})
+	if err != nil {
+		return errors.Wrap(err, "could not marshal element code")
 	}
 
-	n, err := b.Write(data)
-	return int64(n), err
+	switch e.Code {
+	case Map:
+		err = marshalMapTo(b, e.Vals)
+	case EmptyList:
+		err = nil
+	case List:
+		err = marshalListTo(b, e.Vals)
+	case Atom, String:
+		err = marshalStringTo(b, e.Val)
+	case Binary:
+		err = marshalBinaryTo(b, e.Val)
+	case Int8:
+		err = marshalInt8To(b, e.Val)
+	case Int32:
+		err = marshalInt32To(b, e.Val)
+	case SmallBig:
+		err = marshalInt64To(b, e.Val)
+	default:
+		err = errors.Wrap(ErrBadMarshalData, "unsupported etf element code")
+	}
+
+	return errors.Wrap(err, "could not marshal element data")
 }
 
 // ToString converts a string-like element to a real string, if possible
@@ -293,57 +317,57 @@ func (e *Element) IsList() bool {
 
 // IsNil determines if an element represents a "nil" value
 func (e *Element) IsNil() bool {
-	return e.Code == Atom && string(e.Val) == "nil"
+	return e.Code == Atom && bytes.Equal(e.Val, nilB)
 }
 
 // IsTrue determines if an element represents a "true" value
 func (e *Element) IsTrue() bool {
-	return e.Code == Atom && string(e.Val) == "true"
+	return e.Code == Atom && bytes.Equal(e.Val, trueB)
 }
 
 // IsFalse determines if an element represents a "false" value
 func (e *Element) IsFalse() bool {
-	return e.Code == Atom && string(e.Val) == "false"
+	return e.Code == Atom && bytes.Equal(e.Val, falseB)
 }
 
-// PrettyString generates a pretty, human-readable representation of an Element
-func (e *Element) PrettyString(indent string, skipFirstIndent bool) string {
-	b := bytes.Buffer{}
+// // PrettyString generates a pretty, human-readable representation of an Element
+// func (e *Element) PrettyString(indent string, skipFirstIndent bool) string {
+// 	b := bytes.Buffer{}
 
-	if e.Code.IsStringish() {
-		if skipFirstIndent {
-			indent = ""
-		}
-		_, _ = b.WriteString(fmt.Sprintf("%s%s", indent, string(e.Val)))
-		return b.String()
-	}
+// 	if e.Code.IsStringish() {
+// 		if skipFirstIndent {
+// 			indent = ""
+// 		}
+// 		_, _ = b.WriteString(fmt.Sprintf("%s%s", indent, string(e.Val)))
+// 		return b.String()
+// 	}
 
-	if skipFirstIndent {
-		_, _ = b.WriteString("Element{\n")
-	} else {
-		_, _ = b.WriteString(fmt.Sprintf("%sElement{\n", indent))
-	}
+// 	if skipFirstIndent {
+// 		_, _ = b.WriteString("Element{\n")
+// 	} else {
+// 		_, _ = b.WriteString(fmt.Sprintf("%sElement{\n", indent))
+// 	}
 
-	_, _ = b.WriteString(fmt.Sprintf("%s  Type: %v\n", indent, e.Code))
-	if e.Code == List {
-		_, _ = b.WriteString(fmt.Sprintf("%s  Vals: [\n", indent))
-		for _, v := range e.Vals {
-			_, _ = b.WriteString(v.PrettyString(indent+"     ", false))
-			_, _ = b.WriteString("\n")
-		}
-		_, _ = b.WriteString(fmt.Sprintf("%s  ]", indent))
-	} else if e.Code == Map {
-		_, _ = b.WriteString(fmt.Sprintf("%s  Vals: {\n", indent))
-		for i := 0; i < len(e.Vals); i += 2 {
-			_, _ = b.WriteString(e.Vals[i].PrettyString(indent+"     ", false))
-			_, _ = b.WriteString(": ")
-			_, _ = b.WriteString(e.Vals[i+1].PrettyString(indent+"     ", true))
-			_, _ = b.WriteString("\n")
-		}
-		_, _ = b.WriteString(fmt.Sprintf("%s  }", indent))
-	} else {
-		_, _ = b.WriteString(fmt.Sprintf("%s  Val: %v", indent, e.Val))
-	}
+// 	_, _ = b.WriteString(fmt.Sprintf("%s  Type: %v\n", indent, e.Code))
+// 	if e.Code == List {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  Vals: [\n", indent))
+// 		for _, v := range e.Vals {
+// 			_, _ = b.WriteString(v.PrettyString(indent+"     ", false))
+// 			_, _ = b.WriteString("\n")
+// 		}
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  ]", indent))
+// 	} else if e.Code == Map {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  Vals: {\n", indent))
+// 		for i := 0; i < len(e.Vals); i += 2 {
+// 			_, _ = b.WriteString(e.Vals[i].PrettyString(indent+"     ", false))
+// 			_, _ = b.WriteString(": ")
+// 			_, _ = b.WriteString(e.Vals[i+1].PrettyString(indent+"     ", true))
+// 			_, _ = b.WriteString("\n")
+// 		}
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  }", indent))
+// 	} else {
+// 		_, _ = b.WriteString(fmt.Sprintf("%s  Val: %v", indent, e.Val))
+// 	}
 
-	return b.String()
-}
+// 	return b.String()
+// }

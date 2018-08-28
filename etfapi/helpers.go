@@ -1,7 +1,6 @@
 package etfapi
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -11,24 +10,15 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
-func writeAtom(b io.Writer, val []byte) error {
+func writeLength16(b io.Writer, n int) error {
 	// assumes the Atom identifier byte has already been written
-	size, err := intToInt16Slice(len(val))
+	size, err := intToInt16Slice(n)
 	if err != nil {
-		return errors.Wrap(err, "couldn't marshal size")
+		return errors.Wrap(err, "couldn't marshal length")
 	}
 
 	_, err = b.Write(size)
-	if err != nil {
-		return errors.Wrap(err, "could not write size")
-	}
-
-	_, err = b.Write(val)
-	if err != nil {
-		return errors.Wrap(err, "could not write value")
-	}
-
-	return nil
+	return errors.Wrap(err, "could not write length")
 }
 
 func writeLength32(b io.Writer, n int) error {
@@ -41,147 +31,117 @@ func writeLength32(b io.Writer, n int) error {
 	return errors.Wrap(err, "could not write length")
 }
 
-func marshalInterface(code ETFCode, val interface{}) ([]byte, error) {
-	// var data []byte
+func marshalMapTo(b io.Writer, v []Element) error {
 	var err error
-
-	b := bytes.Buffer{}
-	b.WriteByte(byte(code))
-
-	switch code {
-	case Map:
-		v, ok := val.([]Element)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a list of elements")
-		}
-
-		if len(v)%2 != 0 {
-			return nil, errors.Wrap(ErrBadMarshalData, "bad parity on map list")
-		}
-
-		err = writeLength32(&b, len(v)/2)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal map length")
-		}
-
-		for i := 0; i < len(v); i += 2 {
-
-			if !v[i].Code.IsStringish() {
-				return nil, errors.Wrap(ErrBadMarshalData, "bad map key")
-			}
-
-			_, err = v[i].WriteTo(&b)
-			if err != nil {
-				return nil, errors.Wrap(err, "couldn't marshal map key")
-			}
-
-			_, err = v[i+1].WriteTo(&b)
-			if err != nil {
-				return nil, errors.Wrap(err, "couldn't marshal map value")
-			}
-		}
-	case List:
-		v, ok := val.([]Element)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a list of elements")
-		}
-
-		err = writeLength32(&b, len(v))
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal list length")
-		}
-
-		for _, e := range v {
-			_, err = e.WriteTo(&b)
-			if err != nil {
-				return nil, errors.Wrap(err, "couldn't marshal list value")
-			}
-		}
-
-		err = b.WriteByte(byte(EmptyList))
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't write trailing list byte")
-		}
-
-	case Binary:
-		v, ok := val.([]byte)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
-		}
-
-		err = writeLength32(&b, len(v))
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal binary length")
-		}
-
-		_, err = b.Write(v)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal binary value")
-		}
-	case Atom, String:
-		v, ok := val.([]byte)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
-		}
-
-		err = writeAtom(&b, v)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal Atom value")
-		}
-	case SmallBig, LargeBig:
-		v, ok := val.([]byte)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
-		}
-
-		if len(v) != 9 {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a int64 byte slice")
-		}
-
-		_, err = b.Write([]byte{byte(len(v) - 1)})
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal Int64 size")
-		}
-
-		_, err = b.Write(v)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal Int64 value")
-		}
-	case Int32:
-		v, ok := val.([]byte)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
-		}
-
-		if len(v) != 4 {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a int32 byte slice")
-		}
-
-		_, err = b.Write(v)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal Int32 value")
-		}
-
-	case Int8:
-		v, ok := val.([]byte)
-		if !ok {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a byte slice")
-		}
-
-		if len(v) != 1 {
-			return nil, errors.Wrap(ErrBadMarshalData, "not a int8 byte slice")
-		}
-
-		_, err = b.Write(v)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't marshal Int8 value")
-		}
-
-	default:
-		return nil, ErrBadMarshalData
+	if len(v)%2 != 0 {
+		return errors.Wrap(ErrBadMarshalData, "bad parity on map list")
 	}
 
-	return b.Bytes(), nil
+	err = writeLength32(b, len(v)/2)
+	if err != nil {
+		return errors.Wrap(err, "couldn't marshal map length")
+	}
+
+	for i := 0; i < len(v); i += 2 {
+		if !v[i].Code.IsStringish() {
+			return errors.Wrap(ErrBadMarshalData, "bad map key")
+		}
+
+		err = v[i].MarshalTo(b)
+		if err != nil {
+			return errors.Wrap(err, "couldn't marshal map key")
+		}
+
+		err = v[i+1].MarshalTo(b)
+		if err != nil {
+			return errors.Wrap(err, "couldn't marshal map value")
+		}
+	}
+
+	return nil
+}
+
+func marshalListTo(b io.Writer, v []Element) error {
+	var err error
+
+	err = writeLength32(b, len(v))
+	if err != nil {
+		return errors.Wrap(err, "couldn't marshal list length")
+	}
+
+	for _, e := range v {
+		err = e.MarshalTo(b)
+		if err != nil {
+			return errors.Wrap(err, "couldn't marshal list value")
+		}
+	}
+
+	_, err = b.Write([]byte{EmptyList})
+	return errors.Wrap(err, "couldn't write trailing list byte")
+}
+
+func marshalBinaryTo(b io.Writer, v []byte) error {
+	var err error
+
+	err = writeLength32(b, len(v))
+	if err != nil {
+		return errors.Wrap(err, "couldn't marshal binary length")
+	}
+
+	_, err = b.Write(v)
+	return errors.Wrap(err, "couldn't marshal binary value")
+}
+
+// for Atom, String
+func marshalStringTo(b io.Writer, v []byte) error {
+	var err error
+
+	err = writeLength16(b, len(v))
+	if err != nil {
+		return errors.Wrap(err, "couldn't marshal string length")
+	}
+
+	_, err = b.Write(v)
+	return errors.Wrap(err, "couldn't marshal string value")
+}
+
+// for SmallBig, LargeBig
+func marshalInt64To(b io.Writer, v []byte) error {
+	var err error
+
+	if len(v) != 9 {
+		return errors.Wrap(ErrBadMarshalData, "not a int64 byte slice")
+	}
+
+	_, err = b.Write([]byte{byte(len(v) - 1)})
+	if err != nil {
+		return errors.Wrap(err, "couldn't marshal Int64 size")
+	}
+
+	_, err = b.Write(v)
+	return errors.Wrap(err, "couldn't marshal Int64 value")
+}
+
+func marshalInt32To(b io.Writer, v []byte) error {
+	var err error
+
+	if len(v) != 4 {
+		return errors.Wrap(ErrBadMarshalData, "not a int32 byte slice")
+	}
+
+	_, err = b.Write(v)
+	return errors.Wrap(err, "couldn't marshal Int32 value")
+}
+
+func marshalInt8To(b io.Writer, v []byte) error {
+	var err error
+
+	if len(v) != 1 {
+		return errors.Wrap(ErrBadMarshalData, "not a int8 byte slice")
+	}
+
+	_, err = b.Write(v)
+	return errors.Wrap(err, "couldn't marshal Int8 value")
 }
 
 func unmarshalSlice(raw []byte, numElements int) (uint32, []Element, error) {
