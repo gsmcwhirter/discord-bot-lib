@@ -186,6 +186,18 @@ func (s *state) UpsertGuildMemberFromElementMap(eMap map[string]Element) (err er
 		return
 	}
 
+	e, ok = eMap["user"]
+	if !ok {
+		err = errors.Wrap(ErrMissingData, "UpsertGuildMemberFromElementMap could not find user element")
+		return
+	}
+
+	eMap, err = e.ToMap()
+	if err != nil {
+		err = errors.Wrap(err, "Up[sertGuildMemberFromElementMap could not convert user element to a map")
+		return
+	}
+
 	if _, err = g.UpsertMemberFromElementMap(eMap); err != nil {
 		err = errors.Wrap(err, "UpsertGuildMemberFromElementMap could not upsert guild member into the session")
 		return
@@ -214,6 +226,18 @@ func (s *state) UpsertGuildRoleFromElementMap(eMap map[string]Element) (err erro
 	g, ok := s.guilds[id]
 	if !ok {
 		err = errors.Wrap(ErrNotFound, "UpsertGuildRoleFromElementMap could not find the guild to add a role to")
+		return
+	}
+
+	e, ok = eMap["role"]
+	if !ok {
+		err = errors.Wrap(ErrMissingData, "UpsertGuildRoleFromElementMap could not find the role element")
+		return
+	}
+
+	eMap, err = e.ToMap()
+	if err != nil {
+		err = errors.Wrap(err, "UpsertGuildRoleFromElementMap could not convert role element into a map")
 		return
 	}
 

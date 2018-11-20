@@ -54,19 +54,19 @@ func NewDiscordMessageHandler(deps dependencies) bot.DiscordMessageHandler {
 	}
 
 	c.eventDispatch = map[string][]bot.DiscordMessageHandlerFunc{
-		"READY":                []bot.DiscordMessageHandlerFunc{c.handleReady},
-		"GUILD_CREATE":         []bot.DiscordMessageHandlerFunc{c.handleGuildCreate},
-		"GUILD_UPDATE":         []bot.DiscordMessageHandlerFunc{c.handleGuildUpdate},
-		"GUILD_DELETE":         []bot.DiscordMessageHandlerFunc{c.handleGuildDelete},
-		"CHANNEL_CREATE":       []bot.DiscordMessageHandlerFunc{c.handleChannelCreate},
-		"CHANNEL_UPDATE":       []bot.DiscordMessageHandlerFunc{c.handleChannelUpdate},
-		"CHANNEL_DELETE":       []bot.DiscordMessageHandlerFunc{c.handleChannelDelete},
-		"GUILD_MEMBER_ADD":     []bot.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
-		"GUILD_MEMEBER_UPDATE": []bot.DiscordMessageHandlerFunc{c.handleGuildMemberUpdate},
-		"GUILD_MEMBER_REMOVE":  []bot.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
-		"GUILD_ROLE_CREATE":    []bot.DiscordMessageHandlerFunc{c.handleGuildRoleCreate},
-		"GUILD_ROLE_UPDATE":    []bot.DiscordMessageHandlerFunc{c.handleGuildRoleUpdate},
-		"GUILD_ROLE_DELETE":    []bot.DiscordMessageHandlerFunc{c.handleGuildRoleDelete},
+		"READY":               []bot.DiscordMessageHandlerFunc{c.handleReady},
+		"GUILD_CREATE":        []bot.DiscordMessageHandlerFunc{c.handleGuildCreate},
+		"GUILD_UPDATE":        []bot.DiscordMessageHandlerFunc{c.handleGuildUpdate},
+		"GUILD_DELETE":        []bot.DiscordMessageHandlerFunc{c.handleGuildDelete},
+		"CHANNEL_CREATE":      []bot.DiscordMessageHandlerFunc{c.handleChannelCreate},
+		"CHANNEL_UPDATE":      []bot.DiscordMessageHandlerFunc{c.handleChannelUpdate},
+		"CHANNEL_DELETE":      []bot.DiscordMessageHandlerFunc{c.handleChannelDelete},
+		"GUILD_MEMBER_ADD":    []bot.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
+		"GUILD_MEMBER_UPDATE": []bot.DiscordMessageHandlerFunc{c.handleGuildMemberUpdate},
+		"GUILD_MEMBER_REMOVE": []bot.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
+		"GUILD_ROLE_CREATE":   []bot.DiscordMessageHandlerFunc{c.handleGuildRoleCreate},
+		"GUILD_ROLE_UPDATE":   []bot.DiscordMessageHandlerFunc{c.handleGuildRoleUpdate},
+		"GUILD_ROLE_DELETE":   []bot.DiscordMessageHandlerFunc{c.handleGuildRoleDelete},
 	}
 
 	return &c
@@ -233,11 +233,14 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 	eventHandlers, ok := c.eventDispatch[p.EventName]
 	c.dispatcherLock.Unlock()
 
-	if ok {
-		_ = level.Info(logger).Log("message", "processing event", "event_name", p.EventName)
-		for _, eventHandler := range eventHandlers {
-			eventHandler(p, req, resp)
-		}
+	if !ok {
+		_ = level.Debug(logger).Log("message", "no event dispatch handler found", "event_name", p.EventName)
+		return
+	}
+
+	_ = level.Info(logger).Log("message", "processing event", "event_name", p.EventName)
+	for _, eventHandler := range eventHandlers {
+		eventHandler(p, req, resp)
 	}
 }
 
