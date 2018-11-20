@@ -1,6 +1,8 @@
 package etfapi
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
@@ -31,13 +33,44 @@ func (g *Guild) OwnsChannel(cid snowflake.Snowflake) bool {
 
 // ChannelWithName finds the channel id for the channel with the provided name
 func (g *Guild) ChannelWithName(name string) (snowflake.Snowflake, bool) {
+	name = strings.ToLower(name)
+
 	for _, c := range g.channels {
-		if c.name == name {
+		if strings.ToLower(c.name) == name {
 			return c.id, true
 		}
 	}
 
 	return 0, false
+}
+
+// RoleWithName finds the role id for the role with the provided name
+func (g *Guild) RoleWithName(name string) (snowflake.Snowflake, bool) {
+	name = strings.ToLower(name)
+
+	for _, r := range g.roles {
+		if strings.ToLower(r.name) == name {
+			return r.id, true
+		}
+	}
+
+	return 0, false
+}
+
+// HasRole determines if the user with the provided ID has the role with the provided id
+func (g *Guild) HasRole(uid, rid snowflake.Snowflake) bool {
+	gm, ok := g.members[uid]
+	if !ok {
+		return false
+	}
+
+	for _, rid2 := range gm.roles {
+		if rid2 == rid {
+			return true
+		}
+	}
+
+	return false
 }
 
 // IsAdmin determines if the user with the provided ID has administrator powers
