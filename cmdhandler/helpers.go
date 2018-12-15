@@ -3,6 +3,7 @@ package cmdhandler
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 	"github.com/pkg/errors"
@@ -66,4 +67,68 @@ func RoleMentionString(rid snowflake.Snowflake) string {
 // IsRoleMention determines if a string is a mention of a server role
 func IsRoleMention(v string) bool {
 	return roleMentionRe.MatchString(v)
+}
+
+func textSplit(text string, target int, delim string) []string {
+	var res []string
+
+	lines := strings.Split(text, delim)
+	// fmt.Printf("lines: %v\n", lines)
+
+	var current string
+	for i, line := range lines {
+
+		if i < len(lines)-1 && delim == "\n" {
+			line += "\n"
+		}
+
+		// fmt.Printf("current at top: %q, line: %q\n", current, line)
+
+		if len(current)+len(line) <= target {
+			// fmt.Println("appending")
+			current += line
+			continue
+		}
+
+		if i > 0 {
+			// fmt.Println("end current")
+			res = append(res, current)
+		}
+
+		if len(line) <= target {
+			// fmt.Println("start new current")
+			current = line
+			continue
+		}
+
+		if delim == " " {
+			// fmt.Println("fallback")
+			for len(line) > target {
+				res = append(res, line[:target])
+				line = line[target:]
+			}
+
+			current = line
+			continue
+		}
+
+		// fmt.Printf("word split next line, res = %#v\n", res)
+		parts := textSplit(strings.TrimRight(line, "\n"), target, " ")
+		// fmt.Printf("%#v\n", parts)
+		for _, p := range parts[:len(parts)-1] {
+			res = append(res, p)
+		}
+		current = parts[len(parts)-1]
+		if i < len(lines)-1 {
+			current += "\n"
+		}
+		continue
+
+	}
+
+	if current != "" {
+		res = append(res, current)
+	}
+
+	return res
 }

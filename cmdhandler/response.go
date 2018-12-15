@@ -10,6 +10,10 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 )
 
+const maxLen = 1024
+const maxEmbedLen = 5900
+const ctn = "\n\n(continued...)"
+
 // Response is the interface that should be returned from a command handler
 type Response interface {
 	SetColor(int)
@@ -18,6 +22,7 @@ type Response interface {
 	ToString() string
 	ToMessage() json.Marshaler
 	Channel() snowflake.Snowflake
+	Split() []Response
 }
 
 // SimpleResponse is a Response that is intended to present plain text
@@ -75,6 +80,30 @@ func (r *SimpleResponse) ToMessage() json.Marshaler {
 		Content: r.ToString(),
 		Tts:     false,
 	}
+}
+
+// Split separates the current response into possibly-several to account for response length limits
+func (r *SimpleResponse) Split() []Response {
+	if len(r.ToString()) < maxLen {
+		return []Response{r}
+	}
+
+	split := textSplit(r.ToString(), maxLen-len(ctn)-len(r.To)-4, "\n")
+
+	resps := make([]Response, 0, len(split))
+	for i, s := range split {
+		if i < len(split)-1 {
+			s += ctn
+		}
+
+		resps = append(resps, &SimpleResponse{
+			To:        r.To,
+			Content:   s,
+			ToChannel: r.ToChannel,
+		})
+	}
+
+	return resps
 }
 
 // SimpleEmbedResponse is a Response that is intended to present
@@ -173,6 +202,38 @@ func (r *SimpleEmbedResponse) ToMessage() json.Marshaler {
 	}
 
 	return m
+}
+
+// Split separates the current response into possibly-several to account for response length limits
+func (r *SimpleEmbedResponse) Split() []Response {
+	if len(r.ToString()) < maxLen {
+		return []Response{r}
+	}
+
+	split := textSplit(r.ToString(), maxLen-len(ctn)-len(r.To)-4, "\n")
+
+	resps := make([]Response, 0, len(split))
+	for i, s := range split {
+		title := ""
+		if i == 0 {
+			title = r.Title
+		}
+
+		if i < len(split)-1 {
+			s += ctn
+		}
+
+		resps = append(resps, &SimpleEmbedResponse{
+			To:          r.To,
+			Title:       title,
+			Description: s,
+			Color:       r.Color,
+			FooterText:  r.FooterText,
+			ToChannel:   r.ToChannel,
+		})
+	}
+
+	return resps
 }
 
 // EmbedField is part of an EmbedResponse that represents
@@ -296,3 +357,175 @@ func (r *EmbedResponse) ToMessage() json.Marshaler {
 
 	return m
 }
+
+// Split separates the current response into possibly-several to account for response length limits
+func (r *EmbedResponse) Split() []Response {
+
+	if len(r.ToString()) < maxLen {
+		return []Response{r}
+	}
+
+	resps := make([]Response, 0, 2)
+
+	// prepare messages for just the description
+	descSplit := textSplit(r.Description, maxLen-len(ctn)-len(r.To)-4, "\n")
+	if len(descSplit) > 1 {
+		for i, ds := range descSplit[:len(descSplit)-1] {
+			title := ""
+			if i == 0 {
+				title = r.Title
+			}
+
+			resps = append(resps, &SimpleEmbedResponse{
+				To:          r.To,
+				Title:       title,
+				Description: ds + ctn,
+				Color:       r.Color,
+				FooterText:  r.FooterText,
+				ToChannel:   r.ToChannel,
+			})
+		}
+	}
+
+	// this is the first message that will contain field content
+	desc := descSplit[len(descSplit)-1]
+	resp := &EmbedResponse{
+		To:          r.To,
+		Title:       "",
+		Description: desc,
+		Color:       r.Color,
+		FooterText:  r.FooterText,
+		ToChannel:   r.ToChannel,
+	}
+	descRespLen := len(desc) + len(r.FooterText)
+
+	// find out how many fields will fit on the last description message
+	nextField, nextFieldSplits := r.fillResp(resp, 0, descRespLen)
+
+	// last of the description is prepared
+	resps = append(resps, resp)
+
+	// do we need to continue an unfinished field?
+	resps, resp = r.fillResps(resps, nextField, nextFieldSplits)
+	nextField++
+
+	// TODO: Go through all the remaining fields
+	for nextField < len(r.Fields) {
+		// find out how many fields will fit on the last description message
+		nextField, nextFieldSplits := r.fillResp(resp, nextField, 0)
+
+		// last of the description is prepared
+		resps = append(resps, resp)
+
+		// do we need to continue an unfinished field?
+		resps, resp = r.fillResps(resps, nextField, nextFieldSplits)
+		nextField++
+	}
+
+	return resps
+}
+
+func (r *EmbedResponse) fillResp(resp *EmbedResponse, startField int, existingLen int) (nextField int, nextFieldSplits []string) {
+	// find out how many fields will fit on the last description message
+	for i, f := range r.Fields[startField:] {
+		nextField = i + startField
+
+		split := textSplit(f.Val, maxLen-len(ctn), "\n")
+		sliceStart := 0
+
+		if len(split[0])+existingLen < maxEmbedLen {
+			sliceStart = 1
+
+			if len(split) > 1 {
+				split[0] += ctn
+			}
+			resp.Fields = append(resp.Fields, EmbedField{
+				Name: f.Name,
+				Val:  split[0],
+			})
+		}
+
+		nextFieldSplits = split[sliceStart:]
+
+		if sliceStart == 0 || len(split) > 1 {
+			break
+		}
+	}
+
+	return
+}
+
+func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSplits []string) (newResps []Response, resp *EmbedResponse) {
+	newResps = resps
+
+	// do we need to continue an unfinished field?
+	for _, s := range nextFieldSplits {
+		resp = &EmbedResponse{
+			To:          r.To,
+			Title:       "",
+			Description: "",
+			Color:       r.Color,
+			FooterText:  r.FooterText,
+			ToChannel:   r.ToChannel,
+		}
+
+		resp.Fields = append(resp.Fields, EmbedField{
+			Name: r.Fields[nextField].Name,
+			Val:  s,
+		})
+
+		newResps = append(newResps, resp)
+	}
+
+	return
+}
+
+// func (r *EmbedResponse) fillResp(resps []Response, resp *EmbedResponse, nextField int, nextFieldSplits []string, existingLen int) (resps []Response, nextResp *EmbedResponse, newNext int, newNextSplits []string) {
+// 	// do we need to continue an unfinished field?
+// 	for i, s := range nextFieldSplits {
+// 		resp.Fields = append(resp.Fields, EmbedField{
+// 			Name: r.Fields[nextField].Name,
+// 			Val:  s,
+// 		})
+
+// 		resps = append(resps, resp)
+
+// 		if i < len(nextFieldSplits)-1 {
+// 			resp = &EmbedResponse{
+// 				To:          r.To,
+// 				Title:       "",
+// 				Description: "",
+// 				Color:       r.Color,
+// 				FooterText:  r.FooterText,
+// 				ToChannel:   r.ToChannel,
+// 			}
+// 		}
+// 	}
+
+// 	for i, f := range r.Fields[nextField:] {
+// 		newNext = i + nextField
+
+// 		split := textSplit(f.Val, maxLen-len(ctn), "\n")
+// 		sliceStart := 0
+
+// 		if len(split[0])+existingLen < maxEmbedLen {
+// 			sliceStart = 1
+
+// 			if len(split) > 1 {
+// 				split[0] += ctn
+// 			}
+// 			resp.Fields = append(resp.Fields, EmbedField{
+// 				Name: f.Name,
+// 				Val:  split[0],
+// 			})
+// 		}
+
+// 		newNextSplits = split[sliceStart:]
+
+// 		if sliceStart == 0 || len(split) > 1 {
+// 			break
+// 		}
+// 	}
+
+// 	return
+// }

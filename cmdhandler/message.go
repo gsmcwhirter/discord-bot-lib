@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/go-util/parser"
 )
 
 // Message is the api for a message that a command handler will respond to
@@ -13,39 +14,51 @@ type Message interface {
 	GuildID() snowflake.Snowflake
 	ChannelID() snowflake.Snowflake
 	MessageID() snowflake.Snowflake
-	Contents() string
+	Contents() []string
+	ContentErr() error
 }
 
 type simpleMessage struct {
-	ctx       context.Context
-	userID    snowflake.Snowflake
-	guildID   snowflake.Snowflake
-	channelID snowflake.Snowflake
-	messageID snowflake.Snowflake
-	contents  string
+	ctx        context.Context
+	userID     snowflake.Snowflake
+	guildID    snowflake.Snowflake
+	channelID  snowflake.Snowflake
+	messageID  snowflake.Snowflake
+	contents   []string
+	contentErr error
 }
 
 // NewSimpleMessage creates a new Message object
 func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) Message {
+	tokens, err := parser.Tokenize(contents, ' ', '\\', '"')
+
 	return &simpleMessage{
-		ctx:       ctx,
-		userID:    userID,
-		guildID:   guildID,
-		channelID: channelID,
-		messageID: messageID,
-		contents:  contents,
+		ctx:        ctx,
+		userID:     userID,
+		guildID:    guildID,
+		channelID:  channelID,
+		messageID:  messageID,
+		contents:   tokens,
+		contentErr: err,
 	}
 }
 
 // NewWithContents clones a given message object but substitutes the Contents() with the provided string
 func NewWithContents(m Message, contents string) Message {
+	tokens, err := parser.Tokenize(contents, ' ', '\\', '"')
+	return NewWithTokens(m, tokens, err)
+}
+
+// NewWithTokens clones a given message object but substitutes the Contents() and ContentErr()
+func NewWithTokens(m Message, tokens []string, contentErr error) Message {
 	return &simpleMessage{
-		ctx:       m.Context(),
-		userID:    m.UserID(),
-		guildID:   m.GuildID(),
-		channelID: m.ChannelID(),
-		messageID: m.MessageID(),
-		contents:  contents,
+		ctx:        m.Context(),
+		userID:     m.UserID(),
+		guildID:    m.GuildID(),
+		channelID:  m.ChannelID(),
+		messageID:  m.MessageID(),
+		contents:   tokens,
+		contentErr: contentErr,
 	}
 }
 
@@ -69,6 +82,10 @@ func (m *simpleMessage) MessageID() snowflake.Snowflake {
 	return m.messageID
 }
 
-func (m *simpleMessage) Contents() string {
+func (m *simpleMessage) Contents() []string {
 	return m.contents
+}
+
+func (m *simpleMessage) ContentErr() error {
+	return m.contentErr
 }
