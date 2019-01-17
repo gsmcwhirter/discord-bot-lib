@@ -146,7 +146,17 @@ func (ch *CommandHandler) HandleMessage(msg Message) (Response, error) {
 		To: UserMentionString(msg.UserID()),
 	}
 
-	cmd, err := ch.parser.ParseCommand(msg.Contents()[0])
+	var cmd string
+	var err error
+	var rest []string
+
+	if len(msg.Contents()) == 0 {
+		err = parser.ErrUnknownCommand
+	} else {
+		cmd, err = ch.parser.ParseCommand(msg.Contents()[0])
+		rest = msg.Contents()[1:]
+	}
+
 	if err == parser.ErrUnknownCommand {
 		if ch.helpOnUnknownCommands {
 			var cmd2 string
@@ -162,7 +172,8 @@ func (ch *CommandHandler) HandleMessage(msg Message) (Response, error) {
 			}
 
 			var s Response
-			s, err = subHandler.HandleMessage(NewWithTokens(msg, msg.Contents()[1:], msg.ContentErr()))
+
+			s, err = subHandler.HandleMessage(NewWithTokens(msg, rest, msg.ContentErr()))
 			s.IncludeError(parser.ErrUnknownCommand)
 			return s, err
 		}
@@ -173,7 +184,7 @@ func (ch *CommandHandler) HandleMessage(msg Message) (Response, error) {
 	subHandler, cmdExists := ch.getHandler(cmd)
 
 	if (err == nil || err == parser.ErrNotACommand) && cmd == "" && cmdExists {
-		return subHandler.HandleMessage(NewWithTokens(msg, msg.Contents()[1:], msg.ContentErr()))
+		return subHandler.HandleMessage(NewWithTokens(msg, rest, msg.ContentErr()))
 	}
 
 	if err != nil {
@@ -187,5 +198,5 @@ func (ch *CommandHandler) HandleMessage(msg Message) (Response, error) {
 		return r, ErrMissingHandler
 	}
 
-	return subHandler.HandleMessage(NewWithTokens(msg, msg.Contents()[1:], msg.ContentErr()))
+	return subHandler.HandleMessage(NewWithTokens(msg, rest, msg.ContentErr()))
 }
