@@ -7,6 +7,8 @@ import (
 	"github.com/gsmcwhirter/go-util/parser"
 )
 
+var quotes = []rune{'"', '“', '”', '«', '»', '„'}
+
 // Message is the api for a message that a command handler will respond to
 type Message interface {
 	Context() context.Context
@@ -30,7 +32,7 @@ type simpleMessage struct {
 
 // NewSimpleMessage creates a new Message object
 func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) Message {
-	tokens, err := parser.Tokenize(contents, ' ', '\\', '"')
+	tokens, err := parser.Tokenize(contents, ' ', '\\', quotes)
 
 	return &simpleMessage{
 		ctx:        ctx,
@@ -45,7 +47,7 @@ func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID
 
 // NewWithContents clones a given message object but substitutes the Contents() with the provided string
 func NewWithContents(m Message, contents string) Message {
-	tokens, err := parser.Tokenize(contents, ' ', '\\', '"')
+	tokens, err := parser.Tokenize(contents, ' ', '\\', quotes)
 	return NewWithTokens(m, tokens, err)
 }
 
