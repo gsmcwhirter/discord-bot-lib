@@ -202,31 +202,33 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 
 	_ = level.Info(logger).Log("message", "sending message to channel")
 
-	b, err := m.MarshalJSON()
+	var b []byte
+
+	b, err = m.MarshalJSON()
 	if err != nil {
-		return
+		return nil, nil, errors.Wrap(err, "could not marshal message as json")
 	}
+
 	_ = level.Info(logger).Log("message", "sending message", "payload", string(b))
 	r := bytes.NewReader(b)
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
 	}
 
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 	resp, body, err = d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r)
 	if err != nil {
-		err = errors.Wrap(err, "could not complete the message send")
-		return
+		return nil, nil, errors.Wrap(err, "could not complete the message send")
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		err = errors.Wrap(ErrResponse, "non-200 response")
 	}
 
-	return
+	return resp, body, err
 }
 
 func (d *discordBot) Disconnect() error {

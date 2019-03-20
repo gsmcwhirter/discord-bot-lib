@@ -369,11 +369,14 @@ func (r *EmbedResponse) Split() []Response {
 
 	// prepare messages for just the description
 	descSplit := textSplit(r.Description, maxLen-len(ctn)-len(r.To)-4, "\n")
+	// fmt.Printf("descSplit: %#v\n", descSplit)
+
+	title := r.Title
+
 	if len(descSplit) > 1 {
 		for i, ds := range descSplit[:len(descSplit)-1] {
-			title := ""
-			if i == 0 {
-				title = r.Title
+			if i > 0 {
+				title = ""
 			}
 
 			resps = append(resps, &SimpleEmbedResponse{
@@ -391,13 +394,14 @@ func (r *EmbedResponse) Split() []Response {
 	desc := descSplit[len(descSplit)-1]
 	resp := &EmbedResponse{
 		To:          r.To,
-		Title:       "",
+		Title:       title,
 		Description: desc,
 		Color:       r.Color,
 		FooterText:  r.FooterText,
 		ToChannel:   r.ToChannel,
 	}
 	descRespLen := len(desc) + len(r.FooterText)
+	title = ""
 
 	// find out how many fields will fit on the last description message
 	nextField, nextFieldSplits := r.fillResp(resp, 0, descRespLen)

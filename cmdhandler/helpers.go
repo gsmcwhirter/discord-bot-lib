@@ -72,8 +72,12 @@ func IsRoleMention(v string) bool {
 func textSplit(text string, target int, delim string) []string {
 	var res []string
 
+	if text == "" {
+		return []string{""}
+	}
+
 	lines := strings.Split(text, delim)
-	// fmt.Printf("lines: %v\n", lines)
+	// fmt.Printf("lines: %v {%v, %v}\n", lines, text, delim)
 
 	var current string
 	for i, line := range lines {
