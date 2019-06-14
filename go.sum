@@ -121,6 +121,8 @@ github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgf
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/gsmcwhirter/go-util/v2 v2.1.1 h1:xQlTsbqDVqxx43yLjxdrilpXtt/oQ/L5ddCpEOlWWg8=
 github.com/gsmcwhirter/go-util/v2 v2.1.1/go.mod h1:g1SJMVYpkISyS5JuK0N3Qi+rd/kFViSL8+YroPf/BJo=
+github.com/gsmcwhirter/go-util/v2 v2.1.2 h1:qH0jpJSvrrIio/uqaGDCBDCRp33fgYFDW4kNXrC0N8k=
+github.com/gsmcwhirter/go-util/v2 v2.1.2/go.mod h1:0fiWdltZYMgjFEOaP+UEvryDc5/urSqQB3cZ/zJ63nA=
 github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce/go.mod h1:oZtUIOe8dh44I2q6ScRibXws4Ajl+d+nod3AaR9vL5w=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=

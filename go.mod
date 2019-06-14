@@ -6,7 +6,7 @@ require (
 	github.com/go-kit/kit v0.8.0
 	github.com/golangci/golangci-lint v1.17.1
 	github.com/gorilla/websocket v1.4.0
-	github.com/gsmcwhirter/go-util/v2 v2.1.1
+	github.com/gsmcwhirter/go-util/v2 v2.1.2
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v1.2.1
