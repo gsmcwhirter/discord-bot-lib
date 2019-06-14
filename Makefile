@@ -35,9 +35,9 @@ test:  ## run go test
 version:  ## Print the version string and git sha that would be recorded if a release was built now
 	$Q echo $(VERSION) $(GIT_SHA)
 
-vet:  deps ## run various linters and vetters
-	$Q goimports -w -local github.com/gsmcwhirter/discord-bot-lib  .
-	$Q gofmt -s -w .
+vet: deps generate ## run various linters and vetters
+	$Q bash -c 'for d in $$(go list -f {{.Dir}} ./...); do gofmt -s -w $$d/*.go; done'
+	$Q bash -c 'for d in $$(go list -f {{.Dir}} ./...); do goimports -w -local $(PROJECT) $$d/*.go; done'
 	$Q golangci-lint run -E golint,gosimple,staticcheck ./...
 	$Q golangci-lint run -E deadcode,depguard,errcheck,gocritic,gofmt,goimports,gosec,govet,ineffassign,nakedret,prealloc,structcheck,typecheck,unconvert,varcheck ./...
 
