@@ -4,18 +4,17 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/go-kit/kit/log"
+	log "github.com/gsmcwhirter/go-util/v3/logging"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
 )
 
 type dependencies struct {
@@ -72,7 +71,7 @@ func createDependencies(c config, conf bot.Config) (*dependencies, error) {
 		session: etfapi.NewSession(),
 	}
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	logger := log.NewLogfmtLogger()
 	logger = log.With(logger, "timestamp", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 	d.logger = logger
 

@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"sync"
 
+	log "github.com/gsmcwhirter/go-util/v3/logging"
+	"github.com/gsmcwhirter/go-util/v3/logging/level"
 	"golang.org/x/time/rate"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-
-	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
 )
 
 type dependencies interface {
@@ -85,20 +84,20 @@ func (c *discordMessageHandler) AddHandler(event string, handler bot.DiscordMess
 
 func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "discordapi dispatching request")
+	level.Info(logger).Message("discordapi dispatching request")
 
 	select {
 	case <-req.Ctx.Done():
-		_ = level.Info(logger).Log("message", "discordapi already done. skipping request")
+		level.Info(logger).Message("discordapi already done. skipping request")
 		return
 	default:
 	}
 
-	_ = level.Debug(logger).Log("message", "processing server message", "ws_msg", fmt.Sprintf("%v", req.MessageContents))
+	level.Debug(logger).Message("processing server message", "ws_msg", fmt.Sprintf("%v", req.MessageContents))
 
 	p, err := etfapi.Unmarshal(req.MessageContents)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error unmarshaling payload", "error", err, "ws_msg", fmt.Sprintf("%v", req.MessageContents))
+		level.Error(logger).Err("error unmarshaling payload", err, "ws_msg", fmt.Sprintf("%v", req.MessageContents))
 		return
 	}
 
@@ -106,20 +105,20 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 		c.bot.UpdateSequence(*p.SeqNum)
 	}
 
-	_ = level.Debug(logger).Log("message", "received payload", "payload", p)
+	level.Debug(logger).Message("received payload", "payload", p)
 
 	opHandler, ok := c.opCodeDispatch[p.OpCode]
 	if !ok {
-		_ = level.Error(logger).Log("message", "unrecognized OpCode", "op_code", p.OpCode)
+		level.Error(logger).Message("unrecognized OpCode", "op_code", p.OpCode)
 		return
 	}
 
 	if opHandler == nil {
-		_ = level.Error(logger).Log("message", "no handler for OpCode", "op_code", p.OpCode)
+		level.Error(logger).Message("no handler for OpCode", "op_code", p.OpCode)
 		return
 	}
 
-	_ = level.Info(logger).Log("message", "sending to opHandler", "op_code", p.OpCode)
+	level.Info(logger).Message("sending to opHandler", "op_code", p.OpCode)
 	opHandler(p, req, resp)
 }
 
@@ -137,13 +136,13 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 		// set heartbeat stuff
 		interval, err := rawInterval.ToInt()
 		if err != nil {
-			_ = level.Error(logger).Log("message", "error handling hello heartbeat config", "err", err)
+			level.Error(logger).Err("error handling hello heartbeat config", err)
 			return
 		}
 
-		_ = level.Info(logger).Log("message", "configuring heartbeat", "interval", interval)
+		level.Info(logger).Message("configuring heartbeat", "interval", interval)
 		c.bot.ReconfigureHeartbeat(req.Ctx, interval)
-		_ = level.Debug(logger).Log("message", "configuring heartbeat done")
+		level.Debug(logger).Message("configuring heartbeat done")
 	}
 
 	// send identify
@@ -152,7 +151,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 
 	sessID := c.deps.BotSession().ID()
 	if sessID != "" {
-		_ = level.Info(logger).Log("message", "generating resume payload")
+		level.Info(logger).Message("generating resume payload")
 		rp := &payloads.ResumePayload{
 			Token:     c.bot.Config().BotToken,
 			SessionID: sessID,
@@ -161,7 +160,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 
 		m, err = payloads.ETFPayloadToMessage(req.Ctx, rp)
 	} else {
-		_ = level.Info(logger).Log("message", "generating identify payload")
+		level.Info(logger).Message("generating identify payload")
 		ip := &payloads.IdentifyPayload{
 			Token: c.bot.Config().BotToken,
 			Properties: payloads.IdentifyPayloadProperties{
@@ -189,18 +188,18 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 	}
 
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error generating identify/resume payload", "err", err)
+		level.Error(logger).Err("error generating identify/resume payload", err)
 		return
 	}
 
 	err = c.deps.MessageRateLimiter().Wait(req.Ctx)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error ratelimiting", "err", err)
+		level.Error(logger).Err("error ratelimiting", err)
 		return
 	}
 
-	_ = level.Info(logger).Log("message", "sending identify/resume to channel")
-	_ = level.Debug(logger).Log("message", "sending response to channel", "message", m, "msg_len", len(m.MessageContents))
+	level.Info(logger).Message("sending identify/resume to channel")
+	level.Debug(logger).Message("sending response to channel", "resp_message", m, "msg_len", len(m.MessageContents))
 	resp <- m
 }
 
@@ -212,9 +211,9 @@ func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "requesting manual heartbeat")
+	level.Info(logger).Message("requesting manual heartbeat")
 	c.bot.ReconfigureHeartbeat(req.Ctx, 0)
-	_ = level.Debug(logger).Log("message", "manual heartbeat done")
+	level.Debug(logger).Message("manual heartbeat done")
 }
 
 func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
@@ -226,18 +225,18 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
-	_ = level.Info(logger).Log("message", "looking up event dispatch handler", "event_name", p.EventName)
+	level.Info(logger).Message("looking up event dispatch handler", "event_name", p.EventName)
 
 	c.dispatcherLock.Lock()
 	eventHandlers, ok := c.eventDispatch[p.EventName]
 	c.dispatcherLock.Unlock()
 
 	if !ok {
-		_ = level.Debug(logger).Log("message", "no event dispatch handler found", "event_name", p.EventName)
+		level.Debug(logger).Message("no event dispatch handler found", "event_name", p.EventName)
 		return
 	}
 
-	_ = level.Info(logger).Log("message", "processing event", "event_name", p.EventName)
+	level.Info(logger).Message("processing event", "event_name", p.EventName)
 	for _, eventHandler := range eventHandlers {
 		eventHandler(p, req, resp)
 	}
@@ -254,7 +253,7 @@ func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMe
 
 	err := c.deps.BotSession().UpdateFromReady(p)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error setting up session", "err", err)
+		level.Error(logger).Err("error setting up session", err)
 		return
 	}
 }
@@ -267,11 +266,11 @@ func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild", "event_name", "GUILD_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_CREATE")
+	level.Info(logger).Message("upserting guild", "event_name", "GUILD_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
+	level.Debug(logger).Message("upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_CREATE")
 	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild create", "err", err)
+		level.Error(logger).Err("error processing guild create", err)
 		return
 	}
 }
@@ -284,11 +283,11 @@ func (c *discordMessageHandler) handleGuildUpdate(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild", "event_name", "GUILD_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_UPDATE")
+	level.Info(logger).Message("upserting guild", "event_name", "GUILD_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
+	level.Debug(logger).Message("upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_UPDATE")
 	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild update", "err", err)
+		level.Error(logger).Err("error processing guild update", err)
 		return
 	}
 }
@@ -301,11 +300,11 @@ func (c *discordMessageHandler) handleGuildDelete(p *etfapi.Payload, req wsclien
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild", "event_name", "GUILD_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_DELETE")
+	level.Info(logger).Message("upserting guild", "event_name", "GUILD_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
+	level.Debug(logger).Message("upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_DELETE")
 	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild delete", "err", err)
+		level.Error(logger).Err("error processing guild delete", err)
 		return
 	}
 }
@@ -318,11 +317,11 @@ func (c *discordMessageHandler) handleChannelCreate(p *etfapi.Payload, req wscli
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting channel", "event_name", "CHANNEL_CREATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
-	_ = level.Debug(logger).Log("message", "upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_CREATE")
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_CREATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
+	level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_CREATE")
 	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing channel create", "err", err)
+		level.Error(logger).Err("error processing channel create", err)
 		return
 	}
 }
@@ -335,11 +334,11 @@ func (c *discordMessageHandler) handleChannelUpdate(p *etfapi.Payload, req wscli
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting channel", "event_name", "CHANNEL_UPDATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
-	_ = level.Debug(logger).Log("message", "upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_UPDATE")
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_UPDATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
+	level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_UPDATE")
 	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing channel update", "err", err)
+		level.Error(logger).Err("error processing channel update", err)
 		return
 	}
 }
@@ -352,11 +351,11 @@ func (c *discordMessageHandler) handleChannelDelete(p *etfapi.Payload, req wscli
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting channel", "event_name", "CHANNEL_DELETE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
-	_ = level.Debug(logger).Log("message", "upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_DELETE")
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_DELETE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
+	level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_DELETE")
 	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing channel delete", "err", err)
+		level.Error(logger).Err("error processing channel delete", err)
 		return
 	}
 }
@@ -369,11 +368,11 @@ func (c *discordMessageHandler) handleGuildMemberCreate(p *etfapi.Payload, req w
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild member", "event_name", "GUILD_MEMBER_ADD", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_ADD")
+	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_ADD", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
+	level.Debug(logger).Message("upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_ADD")
 	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild member create", "err", err)
+		level.Error(logger).Err("error processing guild member create", err)
 		return
 	}
 }
@@ -386,11 +385,11 @@ func (c *discordMessageHandler) handleGuildMemberUpdate(p *etfapi.Payload, req w
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild member", "event_name", "GUILD_MEMBER_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_UPDATE")
+	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
+	level.Debug(logger).Message("upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_UPDATE")
 	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild member update", "err", err)
+		level.Error(logger).Err("error processing guild member update", err)
 		return
 	}
 }
@@ -403,11 +402,11 @@ func (c *discordMessageHandler) handleGuildMemberDelete(p *etfapi.Payload, req w
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild member", "event_name", "GUILD_MEMBER_REMOVE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_REMOVE")
+	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_REMOVE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
+	level.Debug(logger).Message("upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_REMOVE")
 	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild member delete", "err", err)
+		level.Error(logger).Err("error processing guild member delete", err)
 		return
 	}
 }
@@ -420,11 +419,11 @@ func (c *discordMessageHandler) handleGuildRoleCreate(p *etfapi.Payload, req wsc
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild role", "event_name", "GUILD_ROLE_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_CREATE")
+	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
+	level.Debug(logger).Message("upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_CREATE")
 	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild role create", "err", err)
+		level.Error(logger).Err("error processing guild role create", err)
 		return
 	}
 }
@@ -437,11 +436,11 @@ func (c *discordMessageHandler) handleGuildRoleUpdate(p *etfapi.Payload, req wsc
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild role", "event_name", "GUILD_ROLE_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_UPDATE")
+	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
+	level.Debug(logger).Message("upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_UPDATE")
 	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild role update", "err", err)
+		level.Error(logger).Err("error processing guild role update", err)
 		return
 	}
 }
@@ -454,11 +453,11 @@ func (c *discordMessageHandler) handleGuildRoleDelete(p *etfapi.Payload, req wsc
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	_ = level.Info(logger).Log("message", "upserting guild role", "event_name", "GUILD_ROLE_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
-	_ = level.Debug(logger).Log("message", "upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_DELETE")
+	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
+	level.Debug(logger).Message("upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_DELETE")
 	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
 	if err != nil {
-		_ = level.Error(logger).Log("message", "error processing guild role delete", "err", err)
+		level.Error(logger).Err("error processing guild role delete", err)
 		return
 	}
 }

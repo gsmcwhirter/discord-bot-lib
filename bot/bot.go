@@ -9,21 +9,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gsmcwhirter/go-util/v3/errors"
+	log "github.com/gsmcwhirter/go-util/v3/logging"
+	"github.com/gsmcwhirter/go-util/v3/logging/level"
+	"github.com/gsmcwhirter/go-util/v3/request"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/util"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -114,7 +113,7 @@ func (d *discordBot) AddMessageHandler(event string, handler DiscordMessageHandl
 }
 
 func (d *discordBot) AuthenticateAndConnect() error {
-	ctx := util.NewRequestContext()
+	ctx := request.NewRequestContext()
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	err := d.deps.ConnectRateLimiter().Wait(ctx)
@@ -130,7 +129,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(ErrResponse, "non-200 response")
 	}
 
-	_ = level.Debug(logger).Log(
+	level.Debug(logger).Message("response stats",
 		"response_body", body,
 		"response_bytes", len(body),
 	)
@@ -141,12 +140,12 @@ func (d *discordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(err, "could not unmarshal gateway information")
 	}
 
-	_ = level.Debug(logger).Log(
+	level.Debug(logger).Message("gateway response",
 		"gateway_url", respData.URL,
 		"gateway_shards", respData.Shards,
 	)
 
-	_ = level.Info(logger).Log("message", "acquired gateway url")
+	level.Info(logger).Message("acquired gateway url")
 
 	connectURL, err := url.Parse(respData.URL)
 	if err != nil {
@@ -158,8 +157,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	q.Add("encoding", "etf")
 	connectURL.RawQuery = q.Encode()
 
-	_ = level.Info(logger).Log(
-		"message", "connecting to gateway",
+	level.Info(logger).Message("connecting to gateway",
 		"gateway_url", connectURL.String(),
 	)
 
@@ -199,7 +197,7 @@ func (d *discordBot) Config() Config {
 func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (resp *http.Response, body []byte, err error) {
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
-	_ = level.Info(logger).Log("message", "sending message to channel")
+	level.Info(logger).Message("sending message to channel")
 
 	var b []byte
 
@@ -208,7 +206,7 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 		return nil, nil, errors.Wrap(err, "could not marshal message as json")
 	}
 
-	_ = level.Info(logger).Log("message", "sending message", "payload", string(b))
+	level.Info(logger).Message("sending message", "payload", string(b))
 	r := bytes.NewReader(b)
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
@@ -268,18 +266,18 @@ func (d *discordBot) UpdateSequence(seq int) bool {
 }
 
 func (d *discordBot) heartbeatHandler(ctx context.Context) error {
-	_ = level.Info(d.deps.Logger()).Log("message", "waiting for heartbeat config")
+	level.Info(d.deps.Logger()).Message("waiting for heartbeat config")
 
 	// wait for init
 	if d.heartbeat == nil {
 		select {
 		case <-ctx.Done():
-			_ = level.Info(d.deps.Logger()).Log("message", "heartbeat loop stopping before config")
+			level.Info(d.deps.Logger()).Message("heartbeat loop stopping before config")
 			return ctx.Err()
 		case req := <-d.heartbeats:
 			if req.interval > 0 {
 				d.heartbeat = time.NewTicker(time.Duration(req.interval) * time.Millisecond)
-				_ = level.Info(d.deps.Logger()).Log("message", "starting heartbeat loop", "interval", req.interval)
+				level.Info(d.deps.Logger()).Message("starting heartbeat loop", "interval", req.interval)
 			}
 		}
 	}
@@ -288,13 +286,13 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done(): // quit
-			_ = level.Info(d.deps.Logger()).Log("message", "heartbeat quitting at request")
+			level.Info(d.deps.Logger()).Message("heartbeat quitting at request")
 			d.heartbeat.Stop()
 			return ctx.Err()
 
 		case req := <-d.heartbeats: // reconfigure
 			if req.interval > 0 {
-				_ = level.Info(d.deps.Logger()).Log("message", "reconfiguring heartbeat loop", "interval", req.interval)
+				level.Info(d.deps.Logger()).Message("reconfiguring heartbeat loop", "interval", req.interval)
 				d.heartbeat.Stop()
 				d.heartbeat = time.NewTicker(time.Duration(req.interval) * time.Millisecond)
 				continue
@@ -302,9 +300,9 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 
 			reqCtx := req.ctx
 			if reqCtx == nil {
-				reqCtx = util.NewRequestContextFrom(ctx)
+				reqCtx = request.NewRequestContextFrom(ctx)
 			}
-			_ = level.Info(logging.WithContext(reqCtx, d.deps.Logger())).Log("message", "manual heartbeat requested")
+			level.Info(logging.WithContext(reqCtx, d.deps.Logger())).Message("manual heartbeat requested")
 
 			err := d.sendHeartbeat(reqCtx)
 			if err != nil {
@@ -312,8 +310,8 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 			}
 
 		case <-d.heartbeat.C: // tick
-			_ = level.Debug(d.deps.Logger()).Log("message", "bum-bum")
-			reqCtx := util.NewRequestContextFrom(ctx)
+			level.Debug(d.deps.Logger()).Message("bum-bum")
+			reqCtx := request.NewRequestContextFrom(ctx)
 			err := d.sendHeartbeat(reqCtx)
 			if err != nil {
 				return err
@@ -327,13 +325,13 @@ func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
 		Sequence: d.lastSequence,
 	})
 	if err != nil {
-		_ = level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Log("message", "error formatting heartbeat", "err", err)
+		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error formatting heartbeat", err)
 		return errors.Wrap(err, "error formatting heartbeat")
 	}
 
 	err = d.deps.MessageRateLimiter().Wait(m.Ctx)
 	if err != nil {
-		_ = level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Log("message", "error rate limiting", "err", err)
+		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error rate limiting", err)
 		return errors.Wrap(err, "error rate limiting")
 	}
 	d.deps.WSClient().SendMessage(m)

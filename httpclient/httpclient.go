@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	log "github.com/gsmcwhirter/go-util/v3/logging"
+	"github.com/gsmcwhirter/go-util/v3/logging/level"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/logging"
 )
 
 // HTTPClient is the interface of an http client
@@ -67,15 +67,13 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 		addHeaders(&req.Header, *headers)
 	}
 
-	_ = level.Debug(logger).Log(
-		"message", "http get start",
+	level.Debug(logger).Message("http get start",
 		"url", url,
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
-	_ = level.Info(logger).Log(
-		"message", "http get complete",
+	level.Info(logger).Message("http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
@@ -101,15 +99,13 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 		addHeaders(&req.Header, *headers)
 	}
 
-	_ = level.Debug(logger).Log(
-		"message", "http get start",
+	level.Debug(logger).Message("http get start",
 		"url", url,
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
-	_ = level.Info(logger).Log(
-		"message", "http get complete",
+	level.Info(logger).Message("http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
@@ -135,23 +131,21 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 		addHeaders(&req.Header, *headers)
 	}
 
-	_ = level.Debug(logger).Log(
-		"message", "http post start",
+	level.Debug(logger).Message("http post start",
 		"url", url,
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
-	_ = level.Info(logger).Log(
-		"message", "http post complete",
+	level.Info(logger).Message("http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 	if err != nil || resp.Body == nil {
 		return resp, err
 	}
-	_ = resp.Body.Close() //nolint: errcheck
+	_ = resp.Body.Close()
 
 	return resp, nil
 }
@@ -169,16 +163,14 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 		addHeaders(&req.Header, *headers)
 	}
 
-	_ = level.Debug(logger).Log(
-		"message", "http post start",
+	level.Debug(logger).Message("http post start",
 		"url", url,
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
-	_ = level.Info(logger).Log(
-		"message", "http post complete",
+	level.Info(logger).Message("http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)

@@ -8,17 +8,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/gsmcwhirter/go-util/v2/deferutil"
+	"github.com/gsmcwhirter/go-util/v3/deferutil"
+	log "github.com/gsmcwhirter/go-util/v3/logging"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
 )
+
+type nopLogger struct{}
+
+func (l nopLogger) Log(kv ...interface{}) error              { return nil }
+func (l nopLogger) Err(m string, e error, kv ...interface{}) {}
+func (l nopLogger) Message(m string, kv ...interface{})      {}
+func (l nopLogger) Printf(f string, a ...interface{})        {}
 
 type mockHTTPDoer struct{}
 
@@ -99,7 +106,7 @@ func TestDiscordBot(t *testing.T) {
 	}
 
 	deps := &mockdeps{
-		logger:  log.NewNopLogger(),
+		logger:  nopLogger{},
 		doer:    &mockHTTPDoer{},
 		wsd:     &mockWSDialer{},
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),

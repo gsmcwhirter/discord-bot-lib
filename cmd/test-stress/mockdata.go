@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/v6/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
 )
 
 func guildCreate(id snowflake.Snowflake, name string) ([]byte, error) {

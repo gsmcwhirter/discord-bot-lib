@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/gsmcwhirter/go-util/v3/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
 )
 
 // ErrNotUserMention is the error returned when a user mention string is required but not provided

@@ -3,9 +3,9 @@ package etfapi
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/gsmcwhirter/go-util/v3/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
 )
 
 // ChannelType represents the type of a discord channel

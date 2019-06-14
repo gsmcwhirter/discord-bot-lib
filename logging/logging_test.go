@@ -1,14 +1,15 @@
 package logging
 
 import (
-	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v6/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v6/util"
+	"github.com/gsmcwhirter/go-util/v3/request"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v7/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
 )
 
 type mockLogger struct {
@@ -20,56 +21,25 @@ func (l *mockLogger) Log(keyvals ...interface{}) error {
 	return nil
 }
 
-func TestWithContextOk(t *testing.T) {
-	mock := &mockLogger{}
-
-	ctx := util.NewRequestContext()
-	logger := WithContext(ctx, mock)
-
-	logger.Log("message", "foo")
-
-	if assert.Equal(t, 1, len(mock.calls)) {
-		call := mock.calls[0]
-		callArgs := make([]string, 0, len(call))
-		for _, arg := range call {
-			argStr, ok := arg.(string)
-			if ok {
-				callArgs = append(callArgs, argStr)
-			}
-		}
-
-		assert.Equal(t, []string{"request_id", ctx.Value(util.ContextKey("request_id")).(string), "message", "foo"}, callArgs)
-	}
-
+func (l *mockLogger) Err(msg string, err error, keyvals ...interface{}) {
+	keyvals = append([]interface{}{"message", msg, "error", err}, keyvals...)
+	_ = l.Log(keyvals...)
 }
 
-func TestWithContextMissing(t *testing.T) {
-	mock := &mockLogger{}
+func (l *mockLogger) Message(msg string, keyvals ...interface{}) {
+	keyvals = append([]interface{}{"message", msg}, keyvals...)
+	_ = l.Log(keyvals...)
+}
 
-	ctx := context.Background()
-	logger := WithContext(ctx, mock)
-
-	logger.Log("message", "foo")
-
-	if assert.Equal(t, 1, len(mock.calls)) {
-		call := mock.calls[0]
-		callArgs := make([]string, 0, len(call))
-		for _, arg := range call {
-			argStr, ok := arg.(string)
-			if ok {
-				callArgs = append(callArgs, argStr)
-			}
-		}
-
-		assert.Equal(t, []string{"request_id", "unknown", "message", "foo"}, callArgs)
-	}
-
+func (l *mockLogger) Printf(f string, args ...interface{}) {
+	msg := fmt.Sprintf(f, args...)
+	_ = l.Log("message", msg)
 }
 
 func TestWithMessage(t *testing.T) {
 	mock := &mockLogger{}
 
-	ctx := util.NewRequestContext()
+	ctx := request.NewRequestContext()
 	msg := cmdhandler.NewSimpleMessage(ctx, snowflake.Snowflake(1), snowflake.Snowflake(2), snowflake.Snowflake(3), snowflake.Snowflake(4), "test")
 
 	logger := WithMessage(msg, mock)
@@ -86,7 +56,11 @@ func TestWithMessage(t *testing.T) {
 			}
 		}
 
-		assert.Equal(t, []string{"request_id", ctx.Value(util.ContextKey("request_id")).(string), "user_id", "1", "channel_id", "3", "guild_id", "2", "message_id", "4", "message", "foo"}, callArgs)
+		rid, ok := request.GetRequestID(ctx)
+		if !ok {
+			rid = "(unknown)"
+		}
+		assert.Equal(t, []string{"request_id", rid, "user_id", "1", "channel_id", "3", "guild_id", "2", "message_id", "4", "message", "foo"}, callArgs)
 	}
 
 }
