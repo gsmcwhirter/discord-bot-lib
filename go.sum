@@ -120,9 +120,6 @@ github.com/gostaticanalysis/analysisutil v0.0.0-20190318220348-4088753ea4d3/go.m
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
-github.com/gsmcwhirter/discord-bot-lib v6.1.1+incompatible h1:G7OViqrdvLyAud5ZjbjsZ0zduY8scIB7bFAkOuaTTR4=
-github.com/gsmcwhirter/discord-bot-lib/v7 v7.0.0 h1:kCOq3CvrAqrgxcl3gG0o27731ERQUmJqhx4QeGdwbuo=
-github.com/gsmcwhirter/discord-bot-lib/v7 v7.0.0/go.mod h1:PbdGVC6hACUij96Y9s1MEyoyPvPunK1HjZMvfk2PZX8=
 github.com/gsmcwhirter/go-util/v3 v3.0.0 h1:m4pC1MKSxpt789L3f6v1jZ+jdHJPY5LwpIckUH8TVKY=
 github.com/gsmcwhirter/go-util/v3 v3.0.0/go.mod h1:RMDupl0uhxAd3l0sQqOtIPRu+xwgjRfugQxMgMFTeUI=
 github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce/go.mod h1:oZtUIOe8dh44I2q6ScRibXws4Ajl+d+nod3AaR9vL5w=
