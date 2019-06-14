@@ -7,7 +7,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v3/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
 )
 
 var errDone = errors.New("done")

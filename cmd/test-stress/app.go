@@ -9,7 +9,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v3/deferutil"
 	"github.com/gsmcwhirter/go-util/v3/pprofsidecar"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
 )
 
 type config struct {

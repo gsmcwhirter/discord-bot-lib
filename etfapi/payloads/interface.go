@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v3/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
 )
 
 // ETFPayload is the interface that a specialized etf api payload conforms to

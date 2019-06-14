@@ -16,13 +16,14 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -36,6 +37,7 @@ type dependencies interface {
 	ConnectRateLimiter() *rate.Limiter
 	BotSession() *etfapi.Session
 	DiscordMessageHandler() DiscordMessageHandler
+	ErrReporter() errreport.Reporter
 }
 
 // DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
@@ -72,6 +74,8 @@ type Config struct {
 	OS          string
 	BotName     string
 	BotPresence string
+
+	ErrReporter errreport.Reporter
 }
 
 // HBReconfig
@@ -237,10 +241,12 @@ func (d *discordBot) Run(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
+		defer d.deps.ErrReporter().AutoNotify(ctx)
 		return d.heartbeatHandler(ctx)
 	})
 
 	g.Go(func() error {
+		defer d.deps.ErrReporter().AutoNotify(ctx)
 		return d.deps.WSClient().HandleRequests(ctx)
 	})
 

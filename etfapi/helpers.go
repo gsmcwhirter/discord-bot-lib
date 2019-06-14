@@ -7,7 +7,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v3/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
 )
 
 func writeLength16(b io.Writer, n int) error {

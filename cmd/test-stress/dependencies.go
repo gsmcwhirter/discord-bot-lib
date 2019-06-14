@@ -9,12 +9,13 @@ import (
 	log "github.com/gsmcwhirter/go-util/v3/logging"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
 )
 
 type dependencies struct {
@@ -27,6 +28,7 @@ type dependencies struct {
 	cnxrl   *rate.Limiter
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
+	rep     errreport.Reporter
 }
 
 func (d *dependencies) Close()                                           {}
@@ -39,6 +41,7 @@ func (d *dependencies) MessageRateLimiter() *rate.Limiter                { retur
 func (d *dependencies) ConnectRateLimiter() *rate.Limiter                { return d.cnxrl }
 func (d *dependencies) BotSession() *etfapi.Session                      { return d.session }
 func (d *dependencies) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
+func (d *dependencies) ErrReporter() errreport.Reporter                  { return d.rep }
 
 type mockHTTPDoer struct{}
 
@@ -69,6 +72,11 @@ func createDependencies(c config, conf bot.Config) (*dependencies, error) {
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
 		session: etfapi.NewSession(),
+		rep:     conf.ErrReporter,
+	}
+
+	if d.rep == nil {
+		d.rep = errreport.NopReporter{}
 	}
 
 	logger := log.NewLogfmtLogger()

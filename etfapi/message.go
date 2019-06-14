@@ -5,7 +5,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v3/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
 )
 
 // MessageType represents the type of message received in a discord channel

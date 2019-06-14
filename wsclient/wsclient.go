@@ -14,7 +14,8 @@ import (
 	"github.com/gsmcwhirter/go-util/v3/request"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
 )
 
 // WSClient is the api for a client that maintains an active websocket connection and hands
@@ -31,6 +32,7 @@ type WSClient interface {
 type dependencies interface {
 	Logger() log.Logger
 	WSDialer() Dialer
+	ErrReporter() errreport.Reporter
 }
 
 type wsClient struct {
@@ -143,11 +145,13 @@ func (c *wsClient) HandleRequests(ctx context.Context) error {
 	controls, ctx := errgroup.WithContext(ctx)
 
 	controls.Go(func() error {
+		defer c.deps.ErrReporter().AutoNotify(ctx)
 		level.Info(c.deps.Logger()).Message("starting response handler")
 		return c.handleResponses(ctx)
 	})
 
 	controls.Go(func() error {
+		defer c.deps.ErrReporter().AutoNotify(ctx)
 		level.Info(c.deps.Logger()).Message("starting message reader")
 		return c.readMessages(ctx)
 	})
@@ -160,6 +164,7 @@ func (c *wsClient) HandleRequests(ctx context.Context) error {
 }
 
 func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byte) {
+	defer c.deps.ErrReporter().Recover(ctx)
 	defer c.pool.Done()
 
 	select {
@@ -217,11 +222,13 @@ func (c *wsClient) readMessages(ctx context.Context) error {
 
 	reader, ctx := errgroup.WithContext(ctx)
 	reader.Go(func() error {
+		defer c.deps.ErrReporter().AutoNotify(ctx)
 		return c.doReads(ctx)
 	})
 
 	// watches for close message
 	reader.Go(func() error {
+		defer c.deps.ErrReporter().AutoNotify(ctx)
 		<-ctx.Done()
 		level.Info(c.deps.Logger()).Message("readMessages shutting down")
 		c.gracefulClose()

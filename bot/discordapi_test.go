@@ -13,11 +13,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
 )
 
 type nopLogger struct{}
@@ -81,6 +82,7 @@ type mockdeps struct {
 	cnxrl   *rate.Limiter
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
+	rep     errreport.Reporter
 }
 
 func (d *mockdeps) Logger() log.Logger                               { return d.logger }
@@ -92,6 +94,7 @@ func (d *mockdeps) MessageRateLimiter() *rate.Limiter                { return d.
 func (d *mockdeps) ConnectRateLimiter() *rate.Limiter                { return d.cnxrl }
 func (d *mockdeps) BotSession() *etfapi.Session                      { return d.session }
 func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
+func (d *mockdeps) ErrReporter() errreport.Reporter                  { return d.rep }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -112,6 +115,7 @@ func TestDiscordBot(t *testing.T) {
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
 		session: etfapi.NewSession(),
+		rep:     errreport.NopReporter{},
 	}
 
 	deps.http = httpclient.NewHTTPClient(deps)

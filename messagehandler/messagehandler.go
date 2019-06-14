@@ -8,12 +8,12 @@ import (
 	"github.com/gsmcwhirter/go-util/v3/logging/level"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v7/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v7/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
 )
 
 type dependencies interface {
