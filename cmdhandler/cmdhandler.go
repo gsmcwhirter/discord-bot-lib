@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gsmcwhirter/go-util/parser"
+	"github.com/gsmcwhirter/go-util/v2/parser"
 	"github.com/pkg/errors"
 )
 

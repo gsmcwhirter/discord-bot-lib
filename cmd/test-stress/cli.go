@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/gsmcwhirter/go-util/cli"
+	"github.com/gsmcwhirter/go-util/v2/cli"
 )
 
 func setup(start func(config) error) *cli.Command {

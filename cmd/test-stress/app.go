@@ -6,7 +6,7 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/gsmcwhirter/go-util/pprofsidecar"
+	"github.com/gsmcwhirter/go-util/v2/pprofsidecar"
 
 	"github.com/gsmcwhirter/discord-bot-lib/bot"
 )
