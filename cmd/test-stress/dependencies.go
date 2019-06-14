@@ -72,11 +72,7 @@ func createDependencies(c config, conf bot.Config) (*dependencies, error) {
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
 		session: etfapi.NewSession(),
-		rep:     conf.ErrReporter,
-	}
-
-	if d.rep == nil {
-		d.rep = errreport.NopReporter{}
+		rep:     errreport.NopReporter{},
 	}
 
 	logger := log.NewLogfmtLogger()

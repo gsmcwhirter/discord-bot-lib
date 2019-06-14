@@ -74,8 +74,6 @@ type Config struct {
 	OS          string
 	BotName     string
 	BotPresence string
-
-	ErrReporter errreport.Reporter
 }
 
 // HBReconfig
