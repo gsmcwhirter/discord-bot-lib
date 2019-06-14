@@ -20,138 +20,132 @@ var falseB = []byte("false")
 var nilB = []byte("nil")
 
 // NewCollectionElement generates a new Element to hold data for collection types.
-func NewCollectionElement(code ETFCode, val []Element) (e Element, err error) {
+func NewCollectionElement(code ETFCode, val []Element) (Element, error) {
+	var e Element
+
 	if !code.IsCollection() {
-		err = ErrBadElementData
-		return
+		return e, ErrBadElementData
 	}
 
 	e.Code = code
 	e.Vals = val
 
-	return
+	return e, nil
 }
 
 // NewBasicElement generates a new Element to hold data for non-collection types.
-func NewBasicElement(code ETFCode, val []byte) (e Element, err error) {
+func NewBasicElement(code ETFCode, val []byte) (Element, error) {
+	var e Element
+
 	if code.IsCollection() {
-		err = ErrBadElementData
-		return
+		return e, ErrBadElementData
 	}
 
 	e.Code = code
 	e.Val = val
 
-	return
+	return e, nil
 
 }
 
 // NewNilElement generates a new Element representing "nil"
-func NewNilElement() (e Element, err error) {
-	e, err = NewAtomElement(nilB)
-	err = errors.Wrap(err, "could not create Nil Element")
-	return
+func NewNilElement() (Element, error) {
+	e, err := NewAtomElement(nilB)
+	return e, errors.Wrap(err, "could not create Nil Element")
 }
 
 // NewBoolElement generates a new Element representing a boolean value
-func NewBoolElement(val bool) (e Element, err error) {
+func NewBoolElement(val bool) (Element, error) {
+	var e Element
+	var err error
+
 	if val {
 		e, err = NewAtomElement(trueB)
 	} else {
 		e, err = NewAtomElement(falseB)
 	}
 
-	err = errors.Wrap(err, "could not create Bool Element")
-	return
+	return e, errors.Wrap(err, "could not create Bool Element")
 }
 
 // NewInt8Element generates a new Element representing an 8-bit unsigned integer value;
 // Bounds checking will happen inside the function.
-func NewInt8Element(val int) (e Element, err error) {
-	var v []byte
-	v, err = intToInt8Slice(val)
+func NewInt8Element(val int) (Element, error) {
+	var e Element
+
+	v, err := intToInt8Slice(val)
 	if err != nil {
-		err = errors.Wrap(err, "could not convert to int8 slice")
-		return
+		return e, errors.Wrap(err, "could not convert to int8 slice")
 	}
 
 	e, err = NewBasicElement(Int8, v)
-	err = errors.Wrap(err, "could not create Int8 Element")
-	return
+	return e, errors.Wrap(err, "could not create Int8 Element")
 }
 
 // NewInt32Element generates a new Element representing a 32-bit unsigned integer value;
 // Bounds checking will happen inside the function
-func NewInt32Element(val int) (e Element, err error) {
-	var v []byte
-	v, err = intToInt32Slice(val)
+func NewInt32Element(val int) (Element, error) {
+	var e Element
+
+	v, err := intToInt32Slice(val)
 	if err != nil {
-		err = errors.Wrap(err, "could not convert to int32 slice")
-		return
+		return e, errors.Wrap(err, "could not convert to int32 slice")
 	}
 
 	e, err = NewBasicElement(Int32, v)
-	err = errors.Wrap(err, "could not create Int32 Element")
-	return
+	return e, errors.Wrap(err, "could not create Int32 Element")
 }
 
 // NewSmallBigElement generates a new Element representing a 64-bit unsigned integer value
-func NewSmallBigElement(val int64) (e Element, err error) {
-	var v []byte
-	v, err = int64ToInt64Slice(val)
+func NewSmallBigElement(val int64) (Element, error) {
+	var e Element
+
+	v, err := int64ToInt64Slice(val)
 	if err != nil {
-		err = errors.Wrap(err, "could not convert to int64 slice")
-		return
+		return e, errors.Wrap(err, "could not convert to int64 slice")
 	}
 
 	e, err = NewBasicElement(SmallBig, v)
-	err = errors.Wrap(err, "could not create SmallBig Element")
-	return
+	return e, errors.Wrap(err, "could not create SmallBig Element")
 }
 
 // NewBinaryElement generates a new Element representing Binary data
-func NewBinaryElement(val []byte) (e Element, err error) {
-	e, err = NewBasicElement(Binary, val)
-	err = errors.Wrap(err, "could not create binary Element")
-	return
+func NewBinaryElement(val []byte) (Element, error) {
+	e, err := NewBasicElement(Binary, val)
+	return e, errors.Wrap(err, "could not create binary Element")
 }
 
 // NewAtomElement generates a new Element representing an Atom value
-func NewAtomElement(val []byte) (e Element, err error) {
-	e, err = NewBasicElement(Atom, val)
-	err = errors.Wrap(err, "could not create atom Element")
-	return
+func NewAtomElement(val []byte) (Element, error) {
+	e, err := NewBasicElement(Atom, val)
+	return e, errors.Wrap(err, "could not create atom Element")
 }
 
 // NewStringElement generates a new Element representing a String value
-func NewStringElement(val string) (e Element, err error) {
-	e, err = NewBasicElement(Binary, []byte(val))
-	err = errors.Wrap(err, "could not create string Element")
-	return
+func NewStringElement(val string) (Element, error) {
+	e, err := NewBasicElement(Binary, []byte(val))
+	return e, errors.Wrap(err, "could not create string Element")
 }
 
 // NewMapElement generates a new Element representing a Map
 //
 // Keys are encoded as Binary type elements
-func NewMapElement(val map[string]Element) (e Element, err error) {
+func NewMapElement(val map[string]Element) (Element, error) {
 	e2, err := ElementMapToElementSlice(val)
 	if err != nil {
-		err = errors.Wrap(err, "could not create element slice")
-		return
+		return Element{}, errors.Wrap(err, "could not create element slice")
 	}
 
-	e, err = NewCollectionElement(Map, e2)
-	err = errors.Wrap(err, "could not create map Element")
-	return
+	e, err := NewCollectionElement(Map, e2)
+	return e, errors.Wrap(err, "could not create map Element")
 }
 
 // NewListElement generates a new Element representing a List
 //
 // NOTE: empty lists are likely not handled well
-func NewListElement(val []Element) (e Element, err error) {
-	e, err = NewCollectionElement(List, val)
-	err = errors.Wrap(err, "could not create list Element")
-	return
+func NewListElement(val []Element) (Element, error) {
+	e, err := NewCollectionElement(List, val)
+	return e, errors.Wrap(err, "could not create list Element")
 }
 
 func (e Element) String() string {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 // ChannelType represents the type of a discord channel
@@ -14,20 +14,16 @@ type ChannelType int
 // These are the known discord channel types
 const (
 	GuildTextChannel     ChannelType = 0
-	DMChannel                        = 1
-	GuildVoiceChannel                = 2
-	GroupDMChannel                   = 3
-	GuildCategoryChannel             = 4
+	DMChannel            ChannelType = 1
+	GuildVoiceChannel    ChannelType = 2
+	GroupDMChannel       ChannelType = 3
+	GuildCategoryChannel ChannelType = 4
 )
 
 // ChannelTypeFromElement extracts the channel type from a etf Element
-func ChannelTypeFromElement(e Element) (t ChannelType, err error) {
+func ChannelTypeFromElement(e Element) (ChannelType, error) {
 	temp, err := e.ToInt()
-	if err != nil {
-		err = errors.Wrap(err, "could not unmarshal channelType")
-	}
-	t = ChannelType(temp)
-	return
+	return ChannelType(temp), errors.Wrap(err, "could not unmarshal channelType")
 }
 
 func (t ChannelType) String() string {
@@ -68,23 +64,22 @@ func (c *Channel) ID() snowflake.Snowflake {
 
 // UpdateFromElementMap updates information about the channel
 // This will not remove known data, only replace it
-func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
+func (c *Channel) UpdateFromElementMap(eMap map[string]Element) error {
 	var ok bool
 	var e2 Element
 	var u User
+	var err error
 
 	c.channelType, err = ChannelTypeFromElement(eMap["type"])
 	if err != nil {
-		err = errors.Wrap(err, "could not get channelType")
-		return
+		return errors.Wrap(err, "could not get channelType")
 	}
 
 	e2, ok = eMap["guild_id"]
 	if ok && !e2.IsNil() {
 		c.guildID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}
 	}
 
@@ -92,8 +87,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok {
 		c.name, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get name")
-			return
+			return errors.Wrap(err, "could not get name")
 		}
 	}
 
@@ -101,8 +95,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok {
 		c.topic, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get topic")
-			return
+			return errors.Wrap(err, "could not get topic")
 		}
 	}
 
@@ -110,8 +103,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok && !e2.IsNil() {
 		c.lastMessageID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get last_message_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get last_message_id snowflake.Snowflake")
 		}
 	}
 
@@ -119,8 +111,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok && !e2.IsNil() {
 		c.parentID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get parent_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get parent_id snowflake.Snowflake")
 		}
 	}
 
@@ -128,8 +119,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok && !e2.IsNil() {
 		c.ownerID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
 		}
 	}
 
@@ -137,8 +127,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok && !e2.IsNil() {
 		c.applicationID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get application_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get application_id snowflake.Snowflake")
 		}
 	}
 
@@ -148,38 +137,41 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]Element) (err error) {
 		for _, e3 := range e2.Vals {
 			u, err = UserFromElement(e3)
 			if err != nil {
-				err = errors.Wrap(err, "could not inflate channel user")
-				return
+				return errors.Wrap(err, "could not inflate channel user")
 			}
 			c.recipients = append(c.recipients, u)
 		}
 	}
 
-	return
+	return nil
 }
 
 // ChannelFromElement creates a new Channel object from the given etf Element.
 // The element should be a Map-type Element
-func ChannelFromElement(e Element) (c Channel, err error) {
+func ChannelFromElement(e Element) (Channel, error) {
+	var c Channel
 	var eMap map[string]Element
+	var err error
+
 	eMap, c.id, err = MapAndIDFromElement(e)
 	if err != nil {
-		return
+		return c, err
 	}
 
 	err = c.UpdateFromElementMap(eMap)
-	return
+	return c, err
 }
 
 // ChannelFromElementMap creates a new Channel object from the given data map.
-func ChannelFromElementMap(eMap map[string]Element) (c Channel, err error) {
+func ChannelFromElementMap(eMap map[string]Element) (Channel, error) {
+	var c Channel
+	var err error
+
 	c.id, err = SnowflakeFromElement(eMap["id"])
 	if err != nil {
-		err = errors.Wrap(err, "could not get channel id")
-		return
+		return c, errors.Wrap(err, "could not get channel id")
 	}
 
 	err = c.UpdateFromElementMap(eMap)
-	err = errors.Wrap(err, "could not create a channel")
-	return
+	return c, errors.Wrap(err, "could not create a channel")
 }

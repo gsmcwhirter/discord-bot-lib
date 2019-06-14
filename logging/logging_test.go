@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
-
-	"github.com/gsmcwhirter/discord-bot-lib/util"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/util"
 )
 
 type mockLogger struct {

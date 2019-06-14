@@ -1,12 +1,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
+	"github.com/pkg/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
 )
 
 var errDone = errors.New("done")

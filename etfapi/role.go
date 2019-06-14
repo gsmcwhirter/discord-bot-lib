@@ -3,7 +3,7 @@ package etfapi
 import (
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 const (
@@ -25,16 +25,17 @@ func (r *Role) IsAdmin() bool {
 // UpdateFromElementMap updates the data in a role from the given information
 //
 // This will not remove data, only change and add data
-func (r *Role) UpdateFromElementMap(eMap map[string]Element) (err error) {
+func (r *Role) UpdateFromElementMap(eMap map[string]Element) error {
 	var ok bool
 	var e2 Element
+
+	var err error
 
 	e2, ok = eMap["name"]
 	if ok {
 		r.name, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get name string")
-			return
+			return errors.Wrap(err, "could not get name string")
 		}
 	}
 
@@ -42,25 +43,24 @@ func (r *Role) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok {
 		r.permissions, err = e2.ToInt64()
 		if err != nil {
-			err = errors.Wrap(err, "could not get permissions")
-			return
+			return errors.Wrap(err, "could not get permissions")
 		}
 	}
 
-	return
+	return nil
 }
 
 // RoleFromElement generates a new Role object from the given Element
-func RoleFromElement(e Element) (r Role, err error) {
+func RoleFromElement(e Element) (Role, error) {
 	var eMap map[string]Element
+	var r Role
+	var err error
 
 	eMap, r.id, err = MapAndIDFromElement(e)
 	if err != nil {
-		return
+		return r, err
 	}
 
 	err = r.UpdateFromElementMap(eMap)
-	err = errors.Wrap(err, "could not create a role")
-
-	return
+	return r, errors.Wrap(err, "could not create a role")
 }

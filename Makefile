@@ -34,6 +34,9 @@ version:  ## Print the version string and git sha that would be recorded if a re
 	$Q echo $(VERSION) $(GIT_SHA)
 
 vet:  deps ## run various linters and vetters
+	$Q goimports -w -local github.com/gsmcwhirter/discord-bot-lib  .
+	$Q gofmt -s -w .
+	$Q golangci-lint run -E golint,gosimple,staticcheck ./...
 	$Q golangci-lint run -E deadcode,depguard,errcheck,gocritic,gofmt,goimports,gosec,govet,ineffassign,nakedret,prealloc,structcheck,typecheck,unconvert,varcheck ./...
 
 help:  ## Show the help message

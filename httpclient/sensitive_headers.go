@@ -10,8 +10,8 @@ var sensitiveHeaders = map[string]bool{
 }
 
 // NonSensitiveHeaders is a helper to strip out sensitive data from headers when logging
-func NonSensitiveHeaders(h http.Header) (h2 http.Header) {
-	h2 = http.Header{}
+func NonSensitiveHeaders(h http.Header) http.Header {
+	h2 := http.Header{}
 
 	for k, vs := range h {
 		if sensitiveHeaders[strings.ToLower(k)] {
@@ -24,5 +24,5 @@ func NonSensitiveHeaders(h http.Header) (h2 http.Header) {
 		}
 	}
 
-	return
+	return h2
 }

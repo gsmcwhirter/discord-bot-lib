@@ -9,7 +9,7 @@ type MessageType int
 // Websocket Message types
 const (
 	Text   MessageType = 1
-	Binary             = 2
+	Binary MessageType = 2
 )
 
 func (t MessageType) String() string {

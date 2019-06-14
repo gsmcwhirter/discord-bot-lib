@@ -5,8 +5,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 	"github.com/pkg/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 // ErrNotUserMention is the error returned when a user mention string is required but not provided
@@ -70,14 +71,14 @@ func IsRoleMention(v string) bool {
 }
 
 func textSplit(text string, target int, delim string) []string {
-	var res []string
-
 	if text == "" {
 		return []string{""}
 	}
 
 	lines := strings.Split(text, delim)
 	// fmt.Printf("lines: %v {%v, %v}\n", lines, text, delim)
+
+	res := make([]string, 0, len(lines)/2)
 
 	var current string
 	for i, line := range lines {
@@ -119,9 +120,7 @@ func textSplit(text string, target int, delim string) []string {
 		// fmt.Printf("word split next line, res = %#v\n", res)
 		parts := textSplit(strings.TrimRight(line, "\n"), target, " ")
 		// fmt.Printf("%#v\n", parts)
-		for _, p := range parts[:len(parts)-1] {
-			res = append(res, p)
-		}
+		res = append(res, parts[:len(parts)-1]...)
 		current = parts[len(parts)-1]
 		if i < len(lines)-1 {
 			current += "\n"

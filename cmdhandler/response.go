@@ -1,13 +1,12 @@
 package cmdhandler
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/gsmcwhirter/discord-bot-lib/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 const maxLen = 1024
@@ -20,7 +19,7 @@ type Response interface {
 	IncludeError(err error)
 	HasErrors() bool
 	ToString() string
-	ToMessage() json.Marshaler
+	ToMessage() JSONMarshaler
 	Channel() snowflake.Snowflake
 	Split() []Response
 }
@@ -75,7 +74,7 @@ func (r *SimpleResponse) ToString() string {
 
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
-func (r *SimpleResponse) ToMessage() json.Marshaler {
+func (r *SimpleResponse) ToMessage() JSONMarshaler {
 	return jsonapi.Message{
 		Content: r.ToString(),
 		Tts:     false,
@@ -169,7 +168,7 @@ func (r *SimpleEmbedResponse) ToString() string {
 
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
-func (r *SimpleEmbedResponse) ToMessage() json.Marshaler {
+func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
 	m := jsonapi.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
 		Tts:     false,
@@ -315,7 +314,7 @@ func (r *EmbedResponse) ToString() string {
 
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
-func (r *EmbedResponse) ToMessage() json.Marshaler {
+func (r *EmbedResponse) ToMessage() JSONMarshaler {
 	m := jsonapi.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
 		Tts:     false,
@@ -401,7 +400,6 @@ func (r *EmbedResponse) Split() []Response {
 		ToChannel:   r.ToChannel,
 	}
 	descRespLen := len(desc) + len(r.FooterText)
-	title = ""
 
 	// find out how many fields will fit on the last description message
 	nextField, nextFieldSplits := r.fillResp(resp, 0, descRespLen)
@@ -416,7 +414,7 @@ func (r *EmbedResponse) Split() []Response {
 	// TODO: Go through all the remaining fields
 	for nextField < len(r.Fields) {
 		// find out how many fields will fit on the last description message
-		nextField, nextFieldSplits := r.fillResp(resp, nextField, 0)
+		nextField, nextFieldSplits = r.fillResp(resp, nextField, 0)
 
 		// last of the description is prepared
 		resps = append(resps, resp)
@@ -429,7 +427,10 @@ func (r *EmbedResponse) Split() []Response {
 	return resps
 }
 
-func (r *EmbedResponse) fillResp(resp *EmbedResponse, startField int, existingLen int) (nextField int, nextFieldSplits []string) {
+func (r *EmbedResponse) fillResp(resp *EmbedResponse, startField, existingLen int) (int, []string) {
+	var nextField int
+	var nextFieldSplits []string
+
 	// find out how many fields will fit on the last description message
 	for i, f := range r.Fields[startField:] {
 		nextField = i + startField
@@ -456,11 +457,12 @@ func (r *EmbedResponse) fillResp(resp *EmbedResponse, startField int, existingLe
 		}
 	}
 
-	return
+	return nextField, nextFieldSplits
 }
 
-func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSplits []string) (newResps []Response, resp *EmbedResponse) {
-	newResps = resps
+func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSplits []string) ([]Response, *EmbedResponse) {
+	newResps := resps
+	var resp *EmbedResponse
 
 	// do we need to continue an unfinished field?
 	for _, s := range nextFieldSplits {
@@ -481,7 +483,7 @@ func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSpli
 		newResps = append(newResps, resp)
 	}
 
-	return
+	return newResps, resp
 }
 
 // func (r *EmbedResponse) fillResp(resps []Response, resp *EmbedResponse, nextField int, nextFieldSplits []string, existingLen int) (resps []Response, nextResp *EmbedResponse, newNext int, newNextSplits []string) {

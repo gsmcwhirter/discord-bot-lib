@@ -10,12 +10,12 @@ import (
 	"github.com/go-kit/kit/log"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
 )
 
 type dependencies struct {
@@ -50,13 +50,13 @@ func (d *mockHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-func createDependencies(c config, conf bot.BotConfig) (d *dependencies, err error) {
+func createDependencies(c config, conf bot.Config) (*dependencies, error) {
 	gcreate, err := guildCreate(snowflake.Snowflake(12345), "Test Guild!")
 	if err != nil {
 		return nil, err
 	}
 
-	d = &dependencies{
+	d := &dependencies{
 		doer: &mockHTTPDoer{},
 		wsd: &mockWSDialer{
 			MsgType: int(wsclient.Binary),
@@ -83,5 +83,5 @@ func createDependencies(c config, conf bot.BotConfig) (d *dependencies, err erro
 	})
 	d.mh = messagehandler.NewDiscordMessageHandler(d)
 
-	return
+	return d, nil
 }

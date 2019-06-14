@@ -1,9 +1,10 @@
 package payloads
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
 	"github.com/pkg/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
 )
 
 // IdentifyPayloadProperties holds the data about the os, etc. of the bot when identifying
@@ -43,15 +44,18 @@ type IdentifyPayload struct {
 }
 
 // Payload converts the specialized payload to a generic etfapi.Payload
-func (ip *IdentifyPayload) Payload() (p etfapi.Payload, err error) {
-	p.OpCode = discordapi.Identify
-	p.Data = map[string]etfapi.Element{}
+func (ip *IdentifyPayload) Payload() (etfapi.Payload, error) {
+	var err error
+
+	p := etfapi.Payload{
+		OpCode: discordapi.Identify,
+		Data:   map[string]etfapi.Element{},
+	}
 
 	// TOKEN
 	p.Data["token"], err = etfapi.NewStringElement(ip.Token)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for token")
-		return
+		return p, errors.Wrap(err, "could not create Element for token")
 	}
 
 	// PROPERTIES
@@ -59,40 +63,34 @@ func (ip *IdentifyPayload) Payload() (p etfapi.Payload, err error) {
 
 	propMap["$os"], err = etfapi.NewStringElement(ip.Properties.OS)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Properties OS")
-		return
+		return p, errors.Wrap(err, "could not create Element for Properties OS")
 	}
 
 	propMap["$browser"], err = etfapi.NewStringElement(ip.Properties.Browser)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Properties Browser")
-		return
+		return p, errors.Wrap(err, "could not create Element for Properties Browser")
 	}
 
 	propMap["$device"], err = etfapi.NewStringElement(ip.Properties.Device)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Properties Device")
-		return
+		return p, errors.Wrap(err, "could not create Element for Properties Device")
 	}
 
 	p.Data["properties"], err = etfapi.NewMapElement(propMap)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Properties map")
-		return
+		return p, errors.Wrap(err, "could not create Element for Properties map")
 	}
 
 	// COMPRESS -- FALSE
 	p.Data["compress"], err = etfapi.NewBoolElement(false)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Compress")
-		return
+		return p, errors.Wrap(err, "could not create Element for Compress")
 	}
 
 	// LARGE_THRESHOLD
 	p.Data["large_threshold"], err = etfapi.NewInt32Element(ip.LargeThreshold)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for LargeThreshold")
-		return
+		return p, errors.Wrap(err, "could not create Element for LargeThreshold")
 	}
 
 	// SHARD
@@ -100,20 +98,17 @@ func (ip *IdentifyPayload) Payload() (p etfapi.Payload, err error) {
 
 	shardData[0], err = etfapi.NewInt32Element(ip.Shard.ID)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Shard ID")
-		return
+		return p, errors.Wrap(err, "could not create Element for Shard ID")
 	}
 
 	shardData[1], err = etfapi.NewInt32Element(ip.Shard.MaxID + 1)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Shard Total")
-		return
+		return p, errors.Wrap(err, "could not create Element for Shard Total")
 	}
 
 	p.Data["shard"], err = etfapi.NewListElement(shardData)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Shard")
-		return
+		return p, errors.Wrap(err, "could not create Element for Shard")
 	}
 
 	// PRESENCE
@@ -121,15 +116,13 @@ func (ip *IdentifyPayload) Payload() (p etfapi.Payload, err error) {
 
 	presMap["status"], err = etfapi.NewStringElement(ip.Presence.Status)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Presence Status")
-		return
+		return p, errors.Wrap(err, "could not create Element for Presence Status")
 	}
 
 	if ip.Presence.Since > 0 {
 		presMap["since"], err = etfapi.NewInt32Element(ip.Presence.Since)
 		if err != nil {
-			err = errors.Wrap(err, "could not create Element for Presence Since")
-			return
+			return p, errors.Wrap(err, "could not create Element for Presence Since")
 		}
 	}
 
@@ -137,33 +130,28 @@ func (ip *IdentifyPayload) Payload() (p etfapi.Payload, err error) {
 
 	gameMap["name"], err = etfapi.NewStringElement(ip.Presence.Game.Name)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Presence Game Name")
-		return
+		return p, errors.Wrap(err, "could not create Element for Presence Game Name")
 	}
 
 	gameMap["type"], err = etfapi.NewInt32Element(ip.Presence.Game.Type)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Presence Game Type")
-		return
+		return p, errors.Wrap(err, "could not create Element for Presence Game Type")
 	}
 
 	presMap["game"], err = etfapi.NewMapElement(gameMap)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Presence Game map")
-		return
+		return p, errors.Wrap(err, "could not create Element for Presence Game map")
 	}
 
 	presMap["afk"], err = etfapi.NewBoolElement(ip.Presence.AFK)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Presence AFK")
-		return
+		return p, errors.Wrap(err, "could not create Element for Presence AFK")
 	}
 
 	p.Data["presence"], err = etfapi.NewMapElement(presMap)
 	if err != nil {
-		err = errors.Wrap(err, "could not create Element for Presence map")
-		return
+		return p, errors.Wrap(err, "could not create Element for Presence map")
 	}
 
-	return
+	return p, nil
 }

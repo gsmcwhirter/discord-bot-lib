@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 // Guild represents the known data about a discord guild
@@ -102,19 +102,19 @@ func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
 // UpdateFromElementMap updates information about the guild from the provided data
 //
 // This will not delete data; it will only add and change data
-func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
+func (g *Guild) UpdateFromElementMap(eMap map[string]Element) error {
 	var ok bool
 	var e2 Element
 	var m GuildMember
 	var c Channel
 	var r Role
+	var err error
 
 	e2, ok = eMap["owner_id"]
 	if ok && !e2.IsNil() {
 		g.ownerID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
 		}
 	}
 
@@ -122,8 +122,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok && !e2.IsNil() {
 		g.applicationID, err = SnowflakeFromElement(e2)
 		if err != nil {
-			err = errors.Wrap(err, "could not get application_id snowflake.Snowflake")
-			return
+			return errors.Wrap(err, "could not get application_id snowflake.Snowflake")
 		}
 	}
 
@@ -131,8 +130,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 	if ok {
 		g.name, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get name")
-			return
+			return errors.Wrap(err, "could not get name")
 		}
 	}
 
@@ -142,8 +140,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 			var uavStr string
 			uavStr, err = e2.ToString()
 			if err != nil {
-				err = errors.Wrap(err, "could not get unavailable status")
-				return
+				return errors.Wrap(err, "could not get unavailable status")
 			}
 
 			switch uavStr {
@@ -152,8 +149,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 			case "false":
 				g.available = true
 			default:
-				err = errors.Wrap(ErrBadData, "did not get true or false availability")
-				return
+				return errors.Wrap(ErrBadData, "did not get true or false availability")
 			}
 		}
 	}
@@ -163,8 +159,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 		for _, e3 := range e2.Vals {
 			m, err = GuildMemberFromElement(e3)
 			if err != nil {
-				err = errors.Wrap(err, "could not inflate guild member")
-				return
+				return errors.Wrap(err, "could not inflate guild member")
 			}
 			g.members[m.id] = m
 		}
@@ -175,8 +170,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 		for _, e3 := range e2.Vals {
 			c, err = ChannelFromElement(e3)
 			if err != nil {
-				err = errors.Wrap(err, "could not inflate guild channel")
-				return
+				return errors.Wrap(err, "could not inflate guild channel")
 			}
 			g.channels[c.id] = c
 		}
@@ -187,22 +181,22 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]Element) (err error) {
 		for _, e3 := range e2.Vals {
 			r, err = RoleFromElement(e3)
 			if err != nil {
-				err = errors.Wrap(err, "could not inflate guild role")
-				return
+				return errors.Wrap(err, "could not inflate guild role")
 			}
 			g.roles[r.id] = r
 		}
 	}
 
-	return
+	return nil
 }
 
 // UpsertMemberFromElementMap upserts a GuildMemeber in the guild from the given data
-func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (m GuildMember, err error) {
+func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (GuildMember, error) {
+	var m GuildMember
+
 	mid, err := SnowflakeFromElement(eMap["id"])
 	if err != nil {
-		err = errors.Wrap(err, "could not get member id")
-		return
+		return m, errors.Wrap(err, "could not get member id")
 	}
 
 	m, ok := g.members[mid]
@@ -211,19 +205,20 @@ func (g *Guild) UpsertMemberFromElementMap(eMap map[string]Element) (m GuildMemb
 	}
 	err = m.UpdateFromElementMap(eMap)
 	if err != nil {
-		return
+		return m, err
 	}
 	g.members[mid] = m
 
-	return
+	return m, nil
 }
 
 // UpsertRoleFromElementMap upserts a Role in the guild from the given data
-func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (r Role, err error) {
+func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (Role, error) {
+	var r Role
+
 	rid, err := SnowflakeFromElement(eMap["id"])
 	if err != nil {
-		err = errors.Wrap(err, "could not get role id")
-		return
+		return r, errors.Wrap(err, "could not get role id")
 	}
 
 	r, ok := g.roles[rid]
@@ -232,41 +227,38 @@ func (g *Guild) UpsertRoleFromElementMap(eMap map[string]Element) (r Role, err e
 	}
 	err = r.UpdateFromElementMap(eMap)
 	if err != nil {
-		return
+		return r, err
 	}
 
 	g.roles[rid] = r
-
-	return
+	return r, nil
 }
 
 // GuildFromElementMap creates a new Guild object from the given data
-func GuildFromElementMap(eMap map[string]Element) (g Guild, err error) {
-	g.channels = map[snowflake.Snowflake]Channel{}
-	g.members = map[snowflake.Snowflake]GuildMember{}
-	g.roles = map[snowflake.Snowflake]Role{}
+func GuildFromElementMap(eMap map[string]Element) (Guild, error) {
+	g := Guild{
+		channels: map[snowflake.Snowflake]Channel{},
+		members:  map[snowflake.Snowflake]GuildMember{},
+		roles:    map[snowflake.Snowflake]Role{},
+	}
+
+	var err error
 
 	g.id, err = SnowflakeFromElement(eMap["id"])
 	if err != nil {
-		err = errors.Wrap(err, "could not get guild id")
-		return
+		return g, errors.Wrap(err, "could not get guild id")
 	}
 
 	err = g.UpdateFromElementMap(eMap)
-	err = errors.Wrap(err, "could not create a guild")
-	return
+	return g, errors.Wrap(err, "could not create a guild")
 }
 
 // GuildFromElement creates a new Guild object from the given Element
-func GuildFromElement(e Element) (g Guild, err error) {
-	var eMap map[string]Element
-
-	eMap, _, err = MapAndIDFromElement(e)
+func GuildFromElement(e Element) (Guild, error) {
+	eMap, _, err := MapAndIDFromElement(e)
 	if err != nil {
-		err = errors.Wrap(err, "could not create guild map")
-		return
+		return Guild{}, errors.Wrap(err, "could not create guild map")
 	}
 
-	g, err = GuildFromElementMap(eMap)
-	return
+	return GuildFromElementMap(eMap)
 }

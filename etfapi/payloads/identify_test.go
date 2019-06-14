@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
 )
 
 func TestIdentifyPayload_Payload(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 func writeLength16(b io.Writer, n int) error {
@@ -62,9 +62,7 @@ func marshalMapTo(b io.Writer, v []Element) error {
 }
 
 func marshalListTo(b io.Writer, v []Element) error {
-	var err error
-
-	err = writeLength32(b, len(v))
+	err := writeLength32(b, len(v))
 	if err != nil {
 		return errors.Wrap(err, "couldn't marshal list length")
 	}
@@ -76,14 +74,12 @@ func marshalListTo(b io.Writer, v []Element) error {
 		}
 	}
 
-	_, err = b.Write([]byte{EmptyList})
+	_, err = b.Write([]byte{byte(EmptyList)})
 	return errors.Wrap(err, "couldn't write trailing list byte")
 }
 
 func marshalBinaryTo(b io.Writer, v []byte) error {
-	var err error
-
-	err = writeLength32(b, len(v))
+	err := writeLength32(b, len(v))
 	if err != nil {
 		return errors.Wrap(err, "couldn't marshal binary length")
 	}
@@ -94,9 +90,7 @@ func marshalBinaryTo(b io.Writer, v []byte) error {
 
 // for Atom, String
 func marshalStringTo(b io.Writer, v []byte) error {
-	var err error
-
-	err = writeLength16(b, len(v))
+	err := writeLength16(b, len(v))
 	if err != nil {
 		return errors.Wrap(err, "couldn't marshal string length")
 	}
@@ -321,8 +315,7 @@ func ElementMapToElementSlice(m map[string]Element) ([]Element, error) {
 			return nil, errors.Wrap(err, "could not create Element for key")
 		}
 
-		e = append(e, el)
-		e = append(e, v)
+		e = append(e, el, v)
 	}
 
 	return e, nil
@@ -330,24 +323,19 @@ func ElementMapToElementSlice(m map[string]Element) ([]Element, error) {
 
 // MapAndIDFromElement converts a Map element into a string->Element map and attempts to extract
 // an id Snowflake from the "id" field
-func MapAndIDFromElement(e Element) (eMap map[string]Element, id snowflake.Snowflake, err error) {
-	eMap, err = e.ToMap()
+func MapAndIDFromElement(e Element) (map[string]Element, snowflake.Snowflake, error) {
+	eMap, err := e.ToMap()
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("could not inflate element to map: %v", e))
-		return
+		return eMap, 0, errors.Wrap(err, fmt.Sprintf("could not inflate element to map: %v", e))
 	}
 
-	id, err = SnowflakeFromElement(eMap["id"])
-	err = errors.Wrap(err, "could not get id snowflake.Snowflake")
-	return
+	id, err := SnowflakeFromElement(eMap["id"])
+	return eMap, id, errors.Wrap(err, "could not get id snowflake.Snowflake")
 }
 
 // SnowflakeFromElement converts a number-like Element into a Snowflake
-func SnowflakeFromElement(e Element) (s snowflake.Snowflake, err error) {
+func SnowflakeFromElement(e Element) (snowflake.Snowflake, error) {
 	temp, err := e.ToInt64()
-	if err != nil {
-		err = errors.Wrap(err, "could not unmarshal snowflake.Snowflake")
-	}
-	s = snowflake.Snowflake(temp)
-	return
+	s := snowflake.Snowflake(temp)
+	return s, errors.Wrap(err, "could not unmarshal snowflake.Snowflake")
 }

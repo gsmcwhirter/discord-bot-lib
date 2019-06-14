@@ -3,8 +3,9 @@ package cmdhandler
 import (
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 const longContent = `"""
@@ -125,6 +126,6 @@ func TestEmbedResponseSplit(t *testing.T) {
 		assert.Equal(t, "test footer", p.(*EmbedResponse).FooterText)
 		assert.Equal(t, snowflake.Snowflake(1), p.(*EmbedResponse).ToChannel)
 		assert.Equal(t, 1, len(p.(*EmbedResponse).Fields))
-		assert.Greater(t, len(p.(*EmbedResponse).Fields[0].Val), 2)
+		assert.True(t, len(p.(*EmbedResponse).Fields[0].Val) > 2)
 	}
 }

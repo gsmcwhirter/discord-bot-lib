@@ -3,7 +3,7 @@ package etfapi
 import (
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 // User represents the data about a discord user
@@ -17,46 +17,46 @@ type User struct {
 // UpdateFromElementMap updates the information about a user from the given data
 //
 // This will not remove information, only change and add information
-func (u *User) UpdateFromElementMap(eMap map[string]Element) (err error) {
+func (u *User) UpdateFromElementMap(eMap map[string]Element) error {
 	var e2 Element
 	var ok bool
+	var err error
 
 	if e2, ok = eMap["username"]; ok {
 		u.username, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get username")
-			return
+			return errors.Wrap(err, "could not get username")
 		}
 	}
 
 	if e2, ok = eMap["discriminator"]; ok {
 		u.discriminator, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get discriminator")
-			return
+			return errors.Wrap(err, "could not get discriminator")
 		}
 	}
 
 	if e2, ok = eMap["avatar"]; ok {
 		u.avatar, err = e2.ToString()
 		if err != nil {
-			err = errors.Wrap(err, "could not get avatar")
-			return
+			return errors.Wrap(err, "could not get avatar")
 		}
 	}
 
-	return
+	return nil
 }
 
 // UserFromElement generates a new User object from the given Element
-func UserFromElement(e Element) (u User, err error) {
+func UserFromElement(e Element) (User, error) {
+	var u User
 	var eMap map[string]Element
+	var err error
+
 	eMap, u.id, err = MapAndIDFromElement(e)
 	if err != nil {
-		return
+		return u, err
 	}
 
 	err = u.UpdateFromElementMap(eMap)
-	err = errors.Wrap(err, "could not inflate user data")
-	return
+	return u, errors.Wrap(err, "could not inflate user data")
 }

@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
 )
 
 func TestPayload_Marshal(t *testing.T) {
@@ -32,7 +32,7 @@ func TestPayload_Marshal(t *testing.T) {
 				SeqNum:    s,
 				EventName: "test",
 				Data: map[string]etfapi.Element{
-					"test": etfapi.Element{
+					"test": {
 						Code: etfapi.Int8,
 						Val:  []byte{128},
 					},
@@ -82,7 +82,7 @@ func TestUnmarshal(t *testing.T) {
 				OpCode: 1,
 				SeqNum: s,
 				Data: map[string]etfapi.Element{
-					"test": etfapi.Element{
+					"test": {
 						Code: etfapi.Int8,
 						Val:  []byte{128},
 					},

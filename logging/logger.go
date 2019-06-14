@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-kit/kit/log"
 
-	"github.com/gsmcwhirter/discord-bot-lib/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/util"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/util"
 )
 
 // WithContext wraps a logger to include the request_id from a context in log messages

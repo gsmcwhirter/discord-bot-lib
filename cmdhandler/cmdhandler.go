@@ -41,7 +41,7 @@ type CommandHandler struct {
 // NewCommandHandler creates a new CommandHandler from the given parser
 //
 // NOTE: the parser's settings must match the Options.CaseSensitive value
-func NewCommandHandler(parser parser.Parser, opts Options) (*CommandHandler, error) {
+func NewCommandHandler(p parser.Parser, opts Options) (*CommandHandler, error) {
 	ch := CommandHandler{
 		commands:              map[string]MessageHandler{},
 		preCommand:            opts.PreCommand,
@@ -49,7 +49,7 @@ func NewCommandHandler(parser parser.Parser, opts Options) (*CommandHandler, err
 		caseSensitive:         opts.CaseSensitive,
 	}
 
-	err := ch.SetParser(parser)
+	err := ch.SetParser(p)
 	if err != nil {
 		return nil, err
 	}
@@ -130,14 +130,14 @@ func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
 	ch.commands[strings.ToLower(cmd)] = handler
 }
 
-func (ch *CommandHandler) getHandler(cmd string) (h MessageHandler, ok bool) {
+func (ch *CommandHandler) getHandler(cmd string) (MessageHandler, bool) {
 	if ch.caseSensitive {
-		h, ok = ch.commands[cmd]
-		return
+		h, ok := ch.commands[cmd]
+		return h, ok
 	}
 
-	h, ok = ch.commands[strings.ToLower(cmd)]
-	return
+	h, ok := ch.commands[strings.ToLower(cmd)]
+	return h, ok
 }
 
 // HandleMessage dispatches a Message to the relevant handler

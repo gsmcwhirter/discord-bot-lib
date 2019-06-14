@@ -6,9 +6,10 @@ import (
 
 	_ "net/http/pprof"
 
+	"github.com/gsmcwhirter/go-util/v2/deferutil"
 	"github.com/gsmcwhirter/go-util/v2/pprofsidecar"
 
-	"github.com/gsmcwhirter/discord-bot-lib/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
 )
 
 type config struct {
@@ -18,7 +19,7 @@ type config struct {
 func start(c config) error {
 	fmt.Printf("%+v\n", c)
 
-	conf := bot.BotConfig{
+	conf := bot.Config{
 		ClientID:     "test id",
 		ClientSecret: "test secret",
 		BotToken:     "test token",
@@ -35,16 +36,16 @@ func start(c config) error {
 	}
 	defer deps.Close()
 
-	bot := bot.NewDiscordBot(deps, conf)
-	err = bot.AuthenticateAndConnect()
+	b := bot.NewDiscordBot(deps, conf)
+	err = b.AuthenticateAndConnect()
 	if err != nil {
 		return err
 	}
-	defer bot.Disconnect()
+	defer deferutil.CheckDefer(b.Disconnect)
 
 	// ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	return pprofsidecar.Run(ctx, c.PProfHostPort, nil, bot.Run)
+	return pprofsidecar.Run(ctx, c.PProfHostPort, nil, b.Run)
 }

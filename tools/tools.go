@@ -5,9 +5,9 @@ package tools
 // go.mod.
 
 import (
-	_ "github.com/golangci/golangci-lint/pkg/golinters"
-	// _ "github.com/mailru/easyjson"
-	// _ "github.com/valyala/quicktemplate"
-	// _ "golang.org/x/tools/go/packages"
-	_ "golang.org/x/tools/imports"
+	_ "github.com/golangci/golangci-lint/pkg/golinters" // for golangci-lint
+	_ "golang.org/x/tools/imports"                      // for goimports
+	// _ "github.com/mailru/easyjson"  // for easyjson
+	// _ "github.com/valyala/quicktemplate"  // for qtc
+	// _ "golang.org/x/tools/go/packages"  // for stringer
 )

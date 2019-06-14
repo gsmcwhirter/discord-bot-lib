@@ -29,6 +29,8 @@ linters-settings:
     list-type: blacklist
     include-go-root: true
     packages:
+      # don't use work stuff by accident
+      - go.zr.org
       # Use github.com/pkg/errors instead
       - errors
       # Use github.com/spf13/pflag instead

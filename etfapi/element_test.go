@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
 )
 
 func TestNewCollectionElement(t *testing.T) {
@@ -24,7 +24,7 @@ func TestNewCollectionElement(t *testing.T) {
 			args: args{
 				code: etfapi.List,
 				val: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.EmptyList,
 					},
 				},
@@ -32,7 +32,7 @@ func TestNewCollectionElement(t *testing.T) {
 			wantE: etfapi.Element{
 				Code: etfapi.List,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.EmptyList,
 					},
 				},
@@ -44,7 +44,7 @@ func TestNewCollectionElement(t *testing.T) {
 			args: args{
 				code: etfapi.Int8,
 				val: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.EmptyList,
 					},
 				},
@@ -406,16 +406,16 @@ func TestNewMapElement(t *testing.T) {
 		{
 			name: "ok",
 			args: args{map[string]etfapi.Element{
-				"test": etfapi.Element{Code: etfapi.Int8, Val: []byte{1}},
+				"test": {Code: etfapi.Int8, Val: []byte{1}},
 			}},
 			wantE: etfapi.Element{
 				Code: etfapi.Map,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
@@ -450,11 +450,11 @@ func TestNewListElement(t *testing.T) {
 		{
 			name: "ok",
 			args: args{[]etfapi.Element{
-				etfapi.Element{
+				{
 					Code: etfapi.Int8,
 					Val:  []byte{2},
 				},
-				etfapi.Element{
+				{
 					Code: etfapi.Int8,
 					Val:  []byte{1},
 				},
@@ -462,11 +462,11 @@ func TestNewListElement(t *testing.T) {
 			wantE: etfapi.Element{
 				Code: etfapi.List,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{2},
 					},
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
@@ -505,11 +505,11 @@ func TestElement_Marshal(t *testing.T) {
 			fields: fields{
 				Code: etfapi.Map,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
@@ -531,11 +531,11 @@ func TestElement_Marshal(t *testing.T) {
 			fields: fields{
 				Code: etfapi.List,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
@@ -691,11 +691,11 @@ func TestElement_MarshalTo(t *testing.T) {
 			fields: fields{
 				Code: etfapi.Map,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
@@ -717,11 +717,11 @@ func TestElement_MarshalTo(t *testing.T) {
 			fields: fields{
 				Code: etfapi.List,
 				Vals: []etfapi.Element{
-					etfapi.Element{
+					{
 						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
-					etfapi.Element{
+					{
 						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},

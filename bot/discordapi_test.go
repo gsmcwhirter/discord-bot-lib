@@ -9,14 +9,15 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/gsmcwhirter/go-util/v2/deferutil"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
 )
 
 type mockHTTPDoer struct{}
@@ -86,7 +87,7 @@ func (d *mockdeps) BotSession() *etfapi.Session                      { return d.
 func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 
 func TestDiscordBot(t *testing.T) {
-	conf := bot.BotConfig{
+	conf := bot.Config{
 		ClientID:     "test id",
 		ClientSecret: "test secret",
 		BotToken:     "test token",
@@ -113,12 +114,12 @@ func TestDiscordBot(t *testing.T) {
 	})
 	deps.mh = messagehandler.NewDiscordMessageHandler(deps)
 
-	bot := bot.NewDiscordBot(deps, conf)
-	err := bot.AuthenticateAndConnect()
+	b := bot.NewDiscordBot(deps, conf)
+	err := b.AuthenticateAndConnect()
 	if assert.Nil(t, err) {
-		defer bot.Disconnect()
+		defer deferutil.CheckDefer(b.Disconnect)
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		bot.Run(ctx)
+		_ = b.Run(ctx)
 	}
 }

@@ -3,7 +3,6 @@ package bot
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,14 +16,14 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/util"
-	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/util"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -56,15 +55,15 @@ type DiscordBot interface {
 	Disconnect() error
 	Run(context.Context) error
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
-	SendMessage(context.Context, snowflake.Snowflake, json.Marshaler) (*http.Response, []byte, error)
+	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (*http.Response, []byte, error)
 	UpdateSequence(int) bool
 	ReconfigureHeartbeat(context.Context, int)
 	LastSequence() int
-	Config() BotConfig
+	Config() Config
 }
 
-// BotConfig is the set of configuration options for creating a DiscordBot with NewDiscordBot
-type BotConfig struct {
+// Config is the set of configuration options for creating a DiscordBot with NewDiscordBot
+type Config struct {
 	ClientID     string
 	ClientSecret string
 	BotToken     string
@@ -83,7 +82,7 @@ type hbReconfig struct {
 }
 
 type discordBot struct {
-	config BotConfig
+	config Config
 	deps   dependencies
 
 	heartbeat  *time.Ticker
@@ -94,7 +93,7 @@ type discordBot struct {
 }
 
 // NewDiscordBot creates a new DiscordBot
-func NewDiscordBot(deps dependencies, conf BotConfig) DiscordBot {
+func NewDiscordBot(deps dependencies, conf Config) DiscordBot {
 	d := &discordBot{
 		config: conf,
 		deps:   deps,
@@ -193,11 +192,11 @@ func (d *discordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
 	}
 }
 
-func (d *discordBot) Config() BotConfig {
+func (d *discordBot) Config() Config {
 	return d.config
 }
 
-func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m json.Marshaler) (resp *http.Response, body []byte, err error) {
+func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (resp *http.Response, body []byte, err error) {
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	_ = level.Info(logger).Log("message", "sending message to channel")

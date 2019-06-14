@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
 	"github.com/pkg/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/discordapi"
 )
 
 // Payload represents the data in a etf api payload (both for sending and receiving)
@@ -57,16 +58,16 @@ func (p *Payload) Marshal() ([]byte, error) {
 	b := bytes.Buffer{}
 	b.WriteByte(131)
 
-	len := 2
+	mlen := 2
 	if p.SeqNum != nil {
-		len++
+		mlen++
 	}
 
 	err = b.WriteByte(byte(Map))
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to write outer map label")
 	}
-	if err = writeLength32(&b, len); err != nil {
+	if err = writeLength32(&b, mlen); err != nil {
 		return nil, errors.Wrap(err, "unable to write outer map length")
 	}
 

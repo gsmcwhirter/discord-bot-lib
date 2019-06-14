@@ -14,8 +14,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/util"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/util"
 )
 
 // WSClient is the api for a client that maintains an active websocket connection and hands
@@ -84,7 +84,8 @@ func (c *wsClient) SetHandler(handler MessageHandler) {
 	c.handler = handler
 }
 
-func (c *wsClient) Connect(token string) (err error) {
+func (c *wsClient) Connect(token string) error {
+	var err error
 	ctx := util.NewRequestContext()
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
@@ -118,7 +119,7 @@ func (c *wsClient) Connect(token string) (err error) {
 
 	_ = level.Info(logger).Log("message", "ws connected")
 
-	return
+	return nil
 }
 
 func (c *wsClient) Close() {

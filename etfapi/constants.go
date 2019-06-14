@@ -10,16 +10,16 @@ type ETFCode int
 // These are the ETF type codes that this library knows about
 const (
 	Map       ETFCode = 116
-	Atom              = 100
-	List              = 108
-	Binary            = 109
-	Int8              = 97
-	Int32             = 98
-	Float             = 70
-	String            = 107
-	EmptyList         = 106
-	SmallBig          = 110
-	LargeBig          = 111
+	Atom      ETFCode = 100
+	List      ETFCode = 108
+	Binary    ETFCode = 109
+	Int8      ETFCode = 97
+	Int32     ETFCode = 98
+	Float     ETFCode = 70
+	String    ETFCode = 107
+	EmptyList ETFCode = 106
+	SmallBig  ETFCode = 110
+	LargeBig  ETFCode = 111
 )
 
 func (c ETFCode) String() string {

@@ -9,12 +9,12 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
-	"github.com/gsmcwhirter/discord-bot-lib/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
 )
 
 type dependencies interface {
@@ -44,36 +44,35 @@ func NewDiscordMessageHandler(deps dependencies) bot.DiscordMessageHandler {
 	}
 
 	c.opCodeDispatch = map[discordapi.OpCode]bot.DiscordMessageHandlerFunc{
-		discordapi.Hello:           c.handleHello,
-		discordapi.Heartbeat:       c.handleHeartbeat,
-		discordapi.HeartbeatAck:    noop,
-		discordapi.InvalidSession:  nil,
-		discordapi.InvalidSequence: nil,
-		discordapi.Reconnect:       nil,
-		discordapi.Dispatch:        c.handleDispatch,
+		discordapi.Hello:          c.handleHello,
+		discordapi.Heartbeat:      c.handleHeartbeat,
+		discordapi.HeartbeatAck:   noop,
+		discordapi.InvalidSession: nil,
+		discordapi.Reconnect:      nil,
+		discordapi.Dispatch:       c.handleDispatch,
 	}
 
 	c.eventDispatch = map[string][]bot.DiscordMessageHandlerFunc{
-		"READY":               []bot.DiscordMessageHandlerFunc{c.handleReady},
-		"GUILD_CREATE":        []bot.DiscordMessageHandlerFunc{c.handleGuildCreate},
-		"GUILD_UPDATE":        []bot.DiscordMessageHandlerFunc{c.handleGuildUpdate},
-		"GUILD_DELETE":        []bot.DiscordMessageHandlerFunc{c.handleGuildDelete},
-		"CHANNEL_CREATE":      []bot.DiscordMessageHandlerFunc{c.handleChannelCreate},
-		"CHANNEL_UPDATE":      []bot.DiscordMessageHandlerFunc{c.handleChannelUpdate},
-		"CHANNEL_DELETE":      []bot.DiscordMessageHandlerFunc{c.handleChannelDelete},
-		"GUILD_MEMBER_ADD":    []bot.DiscordMessageHandlerFunc{c.handleGuildMemberCreate},
-		"GUILD_MEMBER_UPDATE": []bot.DiscordMessageHandlerFunc{c.handleGuildMemberUpdate},
-		"GUILD_MEMBER_REMOVE": []bot.DiscordMessageHandlerFunc{c.handleGuildMemberDelete},
-		"GUILD_ROLE_CREATE":   []bot.DiscordMessageHandlerFunc{c.handleGuildRoleCreate},
-		"GUILD_ROLE_UPDATE":   []bot.DiscordMessageHandlerFunc{c.handleGuildRoleUpdate},
-		"GUILD_ROLE_DELETE":   []bot.DiscordMessageHandlerFunc{c.handleGuildRoleDelete},
+		"READY":               {c.handleReady},
+		"GUILD_CREATE":        {c.handleGuildCreate},
+		"GUILD_UPDATE":        {c.handleGuildUpdate},
+		"GUILD_DELETE":        {c.handleGuildDelete},
+		"CHANNEL_CREATE":      {c.handleChannelCreate},
+		"CHANNEL_UPDATE":      {c.handleChannelUpdate},
+		"CHANNEL_DELETE":      {c.handleChannelDelete},
+		"GUILD_MEMBER_ADD":    {c.handleGuildMemberCreate},
+		"GUILD_MEMBER_UPDATE": {c.handleGuildMemberUpdate},
+		"GUILD_MEMBER_REMOVE": {c.handleGuildMemberDelete},
+		"GUILD_ROLE_CREATE":   {c.handleGuildRoleCreate},
+		"GUILD_ROLE_UPDATE":   {c.handleGuildRoleUpdate},
+		"GUILD_ROLE_DELETE":   {c.handleGuildRoleDelete},
 	}
 
 	return &c
 }
 
-func (c *discordMessageHandler) ConnectToBot(bot bot.DiscordBot) {
-	c.bot = bot
+func (c *discordMessageHandler) ConnectToBot(b bot.DiscordBot) {
+	c.bot = b
 }
 
 func (c *discordMessageHandler) AddHandler(event string, handler bot.DiscordMessageHandlerFunc) {

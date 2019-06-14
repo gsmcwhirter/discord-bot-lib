@@ -8,14 +8,14 @@ type OpCode int
 // OpCode names
 const (
 	Heartbeat      OpCode = 1
-	HeartbeatAck          = 11
-	Identify              = 2
-	InvalidSession        = 9
-	Resume                = 6
-	Dispatch              = 0
-	StatusUpdate          = 3
-	Reconnect             = 7
-	Hello                 = 10
+	HeartbeatAck   OpCode = 11
+	Identify       OpCode = 2
+	InvalidSession OpCode = 9
+	Resume         OpCode = 6
+	Dispatch       OpCode = 0
+	StatusUpdate   OpCode = 3
+	Reconnect      OpCode = 7
+	Hello          OpCode = 10
 )
 
 func (c OpCode) String() string {

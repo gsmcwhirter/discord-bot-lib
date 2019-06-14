@@ -3,8 +3,9 @@ package etfapi
 import (
 	"sync"
 
-	"github.com/gsmcwhirter/discord-bot-lib/snowflake"
 	"github.com/pkg/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/snowflake"
 )
 
 // Session represents a discord bot's session with an api gateway
@@ -68,7 +69,7 @@ func (s *Session) ChannelName(cid snowflake.Snowflake) (string, bool) {
 
 // IsGuildAdmin returns true if the user with the given uid has Admin powers in the guild with
 // the given gid. If the guild is not found, this will return false
-func (s *Session) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowflake) bool {
+func (s *Session) IsGuildAdmin(gid, uid snowflake.Snowflake) bool {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -81,79 +82,69 @@ func (s *Session) IsGuildAdmin(gid snowflake.Snowflake, uid snowflake.Snowflake)
 }
 
 // UpsertGuildFromElement updates data in the session state for a guild based on the given Element
-func (s *Session) UpsertGuildFromElement(e Element) (err error) {
+func (s *Session) UpsertGuildFromElement(e Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err = s.state.UpsertGuildFromElement(e)
-	return
+	return s.state.UpsertGuildFromElement(e)
 }
 
 // UpsertGuildFromElementMap updates data in the session state for a guild based on the given data
-func (s *Session) UpsertGuildFromElementMap(eMap map[string]Element) (err error) {
+func (s *Session) UpsertGuildFromElementMap(eMap map[string]Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err = s.state.UpsertGuildFromElementMap(eMap)
-	return
+	return s.state.UpsertGuildFromElementMap(eMap)
 }
 
 // UpsertGuildMemberFromElementMap updates data in the session state for a guild member based on the given data
-func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]Element) (err error) {
+func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err = s.state.UpsertGuildMemberFromElementMap(eMap)
-	return
+	return s.state.UpsertGuildMemberFromElementMap(eMap)
 }
 
 // UpsertGuildRoleFromElementMap updates data in the session state for a guild role based on the given data
-func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]Element) (err error) {
+func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err = s.state.UpsertGuildRoleFromElementMap(eMap)
-	return
+	return s.state.UpsertGuildRoleFromElementMap(eMap)
 }
 
 // UpsertChannelFromElement updates data in the session state for a channel based on the given Element
-func (s *Session) UpsertChannelFromElement(e Element) (err error) {
+func (s *Session) UpsertChannelFromElement(e Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err = s.state.UpsertChannelFromElement(e)
-
-	return
+	return s.state.UpsertChannelFromElement(e)
 }
 
 // UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
-func (s *Session) UpsertChannelFromElementMap(eMap map[string]Element) (err error) {
+func (s *Session) UpsertChannelFromElementMap(eMap map[string]Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err = s.state.UpsertChannelFromElementMap(eMap)
-
-	return
+	return s.state.UpsertChannelFromElementMap(eMap)
 }
 
 // UpdateFromReady updates data in the session state from a session ready message, and updates the session id
-func (s *Session) UpdateFromReady(p *Payload) (err error) {
+func (s *Session) UpdateFromReady(p *Payload) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	var err error
+
 	e, ok := p.Data["session_id"]
 	if !ok {
-		err = errors.Wrap(ErrMissingData, "missing session_id")
-		return
+		return errors.Wrap(ErrMissingData, "missing session_id")
 	}
 
 	s.sessionID, err = e.ToString()
 	if err != nil {
-		err = errors.Wrap(err, "could not inflate session_id")
-		return
+		return errors.Wrap(err, "could not inflate session_id")
 	}
 
-	err = s.state.UpdateFromReady(p)
-
-	return
+	return s.state.UpdateFromReady(p)
 }

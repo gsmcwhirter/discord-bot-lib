@@ -11,7 +11,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
-	"github.com/gsmcwhirter/discord-bot-lib/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/logging"
 )
 
 // HTTPClient is the interface of an http client
@@ -54,12 +54,12 @@ func (c *httpClient) SetHeaders(h http.Header) {
 	addHeaders(&c.headers, h)
 }
 
-func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) (resp *http.Response, err error) {
+func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	addHeaders(&req.Header, c.headers)
@@ -73,29 +73,27 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 	start := time.Now()
-	resp, err = c.deps.HTTPDoer().Do(req)
+	resp, err := c.deps.HTTPDoer().Do(req)
 	_ = level.Info(logger).Log(
 		"message", "http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil {
-		return
+	if err != nil || resp.Body == nil {
+		return resp, err
 	}
-	if resp.Body == nil {
-		return
-	}
-	defer resp.Body.Close() //nolint: errcheck
 
-	return
+	_ = resp.Body.Close()
+
+	return resp, nil
 }
 
-func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Header) (resp *http.Response, body []byte, err error) {
+func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Header) (*http.Response, []byte, error) {
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	addHeaders(&req.Header, c.headers)
@@ -109,30 +107,27 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
 	)
 	start := time.Now()
-	resp, err = c.deps.HTTPDoer().Do(req)
+	resp, err := c.deps.HTTPDoer().Do(req)
 	_ = level.Info(logger).Log(
 		"message", "http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil {
-		return
-	}
-	if resp.Body == nil {
-		return
+	if err != nil || resp.Body == nil {
+		return resp, nil, err
 	}
 	defer resp.Body.Close() //nolint: errcheck
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 
-	return
+	return resp, body, err
 }
 
-func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (resp *http.Response, err error) {
+func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	addHeaders(&req.Header, c.headers)
@@ -147,29 +142,26 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 	)
 
 	start := time.Now()
-	resp, err = c.deps.HTTPDoer().Do(req)
+	resp, err := c.deps.HTTPDoer().Do(req)
 	_ = level.Info(logger).Log(
 		"message", "http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil {
-		return
+	if err != nil || resp.Body == nil {
+		return resp, err
 	}
-	if resp.Body == nil {
-		return
-	}
-	defer resp.Body.Close() //nolint: errcheck
+	_ = resp.Body.Close() //nolint: errcheck
 
-	return
+	return resp, nil
 }
 
-func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (resp *http.Response, respBody []byte, err error) {
+func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	addHeaders(&req.Header, c.headers)
@@ -184,20 +176,18 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 	)
 
 	start := time.Now()
-	resp, err = c.deps.HTTPDoer().Do(req)
+	resp, err := c.deps.HTTPDoer().Do(req)
 	_ = level.Info(logger).Log(
 		"message", "http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil {
-		return
+	if err != nil || resp.Body == nil {
+		return resp, nil, err
 	}
-	if resp.Body == nil {
-		return
-	}
-	defer resp.Body.Close() //nolint: errcheck
-	respBody, err = ioutil.ReadAll(resp.Body)
 
-	return
+	defer resp.Body.Close() //nolint: errcheck
+	respBody, err := ioutil.ReadAll(resp.Body)
+
+	return resp, respBody, err
 }

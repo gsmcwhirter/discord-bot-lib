@@ -3,9 +3,10 @@ package payloads
 import (
 	"context"
 
-	"github.com/gsmcwhirter/discord-bot-lib/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/wsclient"
 	"github.com/pkg/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v6/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v6/wsclient"
 )
 
 // ETFPayload is the interface that a specialized etf api payload conforms to
@@ -14,18 +15,16 @@ type ETFPayload interface {
 }
 
 // ETFPayloadToMessage converts a specialized etf payload to a websocket message
-func ETFPayloadToMessage(ctx context.Context, ep ETFPayload) (m wsclient.WSMessage, err error) {
-	var p etfapi.Payload
+func ETFPayloadToMessage(ctx context.Context, ep ETFPayload) (wsclient.WSMessage, error) {
+	var m wsclient.WSMessage
 
-	p, err = ep.Payload()
+	p, err := ep.Payload()
 	if err != nil {
-		err = errors.Wrap(err, "could not construct Payload")
-		return
+		return m, errors.Wrap(err, "could not construct Payload")
 	}
 
 	m.Ctx = ctx
 	m.MessageType = wsclient.Binary
 	m.MessageContents, err = p.Marshal()
-	err = errors.Wrap(err, "could not marshal payload")
-	return
+	return m, errors.Wrap(err, "could not marshal payload")
 }
