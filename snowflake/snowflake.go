@@ -9,7 +9,7 @@ type Snowflake uint64
 
 // ToString converts the snowflake into a string representation
 func (s Snowflake) ToString() string {
-	return strconv.FormatInt(int64(s), 10)
+	return strconv.FormatUint(uint64(s), 10)
 }
 
 // FromString converts a string representation of a snowflake into a snowflake
