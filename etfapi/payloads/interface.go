@@ -3,10 +3,10 @@ package payloads
 import (
 	"context"
 
-	"github.com/gsmcwhirter/go-util/v3/errors"
+	"github.com/gsmcwhirter/go-util/v4/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
 )
 
 // ETFPayload is the interface that a specialized etf api payload conforms to

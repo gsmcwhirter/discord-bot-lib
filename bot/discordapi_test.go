@@ -8,17 +8,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v3/deferutil"
-	log "github.com/gsmcwhirter/go-util/v3/logging"
+	"github.com/gsmcwhirter/go-util/v4/census"
+	"github.com/gsmcwhirter/go-util/v4/deferutil"
+	log "github.com/gsmcwhirter/go-util/v4/logging"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
 )
 
 type nopLogger struct{}
@@ -83,6 +84,7 @@ type mockdeps struct {
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
 	rep     errreport.Reporter
+	census  *census.OpenCensus
 }
 
 func (d *mockdeps) Logger() log.Logger                               { return d.logger }
@@ -95,6 +97,7 @@ func (d *mockdeps) ConnectRateLimiter() *rate.Limiter                { return d.
 func (d *mockdeps) BotSession() *etfapi.Session                      { return d.session }
 func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 func (d *mockdeps) ErrReporter() errreport.Reporter                  { return d.rep }
+func (d *mockdeps) Census() *census.OpenCensus                       { return d.census }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -117,6 +120,8 @@ func TestDiscordBot(t *testing.T) {
 		session: etfapi.NewSession(),
 		rep:     errreport.NopReporter{},
 	}
+
+	deps.census = census.NewCensus(deps, census.Options{})
 
 	deps.http = httpclient.NewHTTPClient(deps)
 	deps.ws = wsclient.NewWSClient(deps, wsclient.Options{

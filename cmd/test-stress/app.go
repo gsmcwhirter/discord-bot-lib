@@ -6,10 +6,10 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/gsmcwhirter/go-util/v3/deferutil"
-	"github.com/gsmcwhirter/go-util/v3/pprofsidecar"
+	"github.com/gsmcwhirter/go-util/v4/deferutil"
+	"github.com/gsmcwhirter/go-util/v4/pprofsidecar"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
 )
 
 type config struct {

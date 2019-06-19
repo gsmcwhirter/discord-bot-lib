@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gsmcwhirter/go-util/v3/request"
+	"github.com/gsmcwhirter/go-util/v4/request"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
 )
 
 type mockLogger struct {

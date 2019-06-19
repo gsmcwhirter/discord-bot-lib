@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gsmcwhirter/go-util/v3/errors"
+	"github.com/gsmcwhirter/go-util/v4/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
 )
 
 func writeLength16(b io.Writer, n int) error {

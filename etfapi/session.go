@@ -3,9 +3,9 @@ package etfapi
 import (
 	"sync"
 
-	"github.com/gsmcwhirter/go-util/v3/errors"
+	"github.com/gsmcwhirter/go-util/v4/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
 )
 
 // Session represents a discord bot's session with an api gateway

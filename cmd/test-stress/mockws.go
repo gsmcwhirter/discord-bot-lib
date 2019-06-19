@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v3/errors"
+	"github.com/gsmcwhirter/go-util/v4/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
 )
 
 var errDone = errors.New("done")

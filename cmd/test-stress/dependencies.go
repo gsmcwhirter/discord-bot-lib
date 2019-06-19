@@ -6,16 +6,17 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/gsmcwhirter/go-util/v3/logging"
+	"github.com/gsmcwhirter/go-util/v4/census"
+	log "github.com/gsmcwhirter/go-util/v4/logging"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
 )
 
 type dependencies struct {
@@ -29,6 +30,7 @@ type dependencies struct {
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
 	rep     errreport.Reporter
+	census  *census.OpenCensus
 }
 
 func (d *dependencies) Close()                                           {}
@@ -42,6 +44,7 @@ func (d *dependencies) ConnectRateLimiter() *rate.Limiter                { retur
 func (d *dependencies) BotSession() *etfapi.Session                      { return d.session }
 func (d *dependencies) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 func (d *dependencies) ErrReporter() errreport.Reporter                  { return d.rep }
+func (d *dependencies) Census() *census.OpenCensus                       { return d.census }
 
 type mockHTTPDoer struct{}
 
@@ -78,6 +81,8 @@ func createDependencies(c config, conf bot.Config) (*dependencies, error) {
 	logger := log.NewLogfmtLogger()
 	logger = log.With(logger, "timestamp", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 	d.logger = logger
+
+	d.census = census.NewCensus(d, census.Options{})
 
 	d.http = httpclient.NewHTTPClient(d)
 	d.ws = wsclient.NewWSClient(d, wsclient.Options{

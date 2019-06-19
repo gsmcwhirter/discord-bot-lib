@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/gsmcwhirter/go-util/v3/logging"
-	"github.com/gsmcwhirter/go-util/v3/logging/level"
+	"github.com/gsmcwhirter/go-util/v4/census"
+	log "github.com/gsmcwhirter/go-util/v4/logging"
+	"github.com/gsmcwhirter/go-util/v4/logging/level"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
 )
 
 // HTTPClient is the interface of an http client
@@ -25,6 +26,7 @@ type HTTPClient interface {
 
 type dependencies interface {
 	Logger() log.Logger
+	Census() *census.OpenCensus
 	HTTPDoer() Doer
 }
 
@@ -55,12 +57,16 @@ func (c *httpClient) SetHeaders(h http.Header) {
 }
 
 func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.Get")
+	defer span.End()
+
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	addHeaders(&req.Header, c.headers)
 	if headers != nil {
@@ -73,26 +79,33 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 	)
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	level.Info(logger).Message("http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil || resp.Body == nil {
-		return resp, err
-	}
 
-	_ = resp.Body.Close()
+	if resp.Body != nil {
+		_ = resp.Body.Close()
+	}
 
 	return resp, nil
 }
 
 func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Header) (*http.Response, []byte, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.GetBody")
+	defer span.End()
+
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, nil, err
 	}
+	req = req.WithContext(ctx)
 
 	addHeaders(&req.Header, c.headers)
 	if headers != nil {
@@ -105,26 +118,35 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 	)
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	level.Info(logger).Message("http get complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil || resp.Body == nil {
-		return resp, nil, err
+
+	if resp.Body != nil {
+		defer resp.Body.Close() //nolint: errcheck
 	}
-	defer resp.Body.Close() //nolint: errcheck
+
 	body, err := ioutil.ReadAll(resp.Body)
 
 	return resp, body, err
 }
 
 func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.Post")
+	defer span.End()
+
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	addHeaders(&req.Header, c.headers)
 	if headers != nil {
@@ -138,25 +160,33 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	level.Info(logger).Message("http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil || resp.Body == nil {
-		return resp, err
+
+	if resp.Body != nil {
+		_ = resp.Body.Close()
 	}
-	_ = resp.Body.Close()
 
 	return resp, nil
 }
 
 func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.PostBody")
+	defer span.End()
+
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return nil, nil, err
 	}
+	req = req.WithContext(ctx)
 
 	addHeaders(&req.Header, c.headers)
 	if headers != nil {
@@ -170,15 +200,19 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	level.Info(logger).Message("http post complete",
 		"duration_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
-	if err != nil || resp.Body == nil {
-		return resp, nil, err
+
+	if resp.Body != nil {
+		defer resp.Body.Close() //nolint: errcheck
 	}
 
-	defer resp.Body.Close() //nolint: errcheck
 	respBody, err := ioutil.ReadAll(resp.Body)
 
 	return resp, respBody, err

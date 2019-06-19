@@ -4,22 +4,25 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/gsmcwhirter/go-util/v3/logging"
-	"github.com/gsmcwhirter/go-util/v3/logging/level"
+	"github.com/gsmcwhirter/go-util/v4/census"
+	log "github.com/gsmcwhirter/go-util/v4/logging"
+	"github.com/gsmcwhirter/go-util/v4/logging/level"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
 )
 
 type dependencies interface {
 	Logger() log.Logger
 	BotSession() *etfapi.Session
 	MessageRateLimiter() *rate.Limiter
+	Census() *census.OpenCensus
 }
 
 type discordMessageHandler struct {
@@ -83,6 +86,10 @@ func (c *discordMessageHandler) AddHandler(event string, handler bot.DiscordMess
 }
 
 func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.HandleRequest")
+	defer span.End()
+	req.Ctx = ctx
+
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	level.Info(logger).Message("discordapi dispatching request")
 
@@ -99,6 +106,10 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	if err != nil {
 		level.Error(logger).Err("error unmarshaling payload", err, "ws_msg", fmt.Sprintf("%v", req.MessageContents))
 		return
+	}
+
+	if tagCtx, err := census.NewTag(ctx, census.InsertTag(stats.TagOpCode, p.OpCode.String())); err == nil {
+		c.deps.Census().Record(tagCtx, stats.OpCodesCount.M(1))
 	}
 
 	if p.SeqNum != nil {
@@ -123,6 +134,10 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 }
 
 func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleHello")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -204,6 +219,10 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 }
 
 func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleHeartbeat")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -217,6 +236,10 @@ func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.
 }
 
 func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleDispatch")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -224,6 +247,10 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
+
+	if tagCtx, err := census.NewTag(ctx, census.InsertTag(stats.TagEventName, p.EventName)); err == nil {
+		c.deps.Census().Record(tagCtx, stats.RawEventsCount.M(1))
+	}
 
 	level.Info(logger).Message("looking up event dispatch handler", "event_name", p.EventName)
 
@@ -243,6 +270,10 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 }
 
 func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleReady")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -259,6 +290,10 @@ func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMe
 }
 
 func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildCreate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -276,6 +311,10 @@ func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclien
 }
 
 func (c *discordMessageHandler) handleGuildUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildUpdate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -293,6 +332,10 @@ func (c *discordMessageHandler) handleGuildUpdate(p *etfapi.Payload, req wsclien
 }
 
 func (c *discordMessageHandler) handleGuildDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildDelete")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -310,6 +353,10 @@ func (c *discordMessageHandler) handleGuildDelete(p *etfapi.Payload, req wsclien
 }
 
 func (c *discordMessageHandler) handleChannelCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleChannelCreate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -327,6 +374,10 @@ func (c *discordMessageHandler) handleChannelCreate(p *etfapi.Payload, req wscli
 }
 
 func (c *discordMessageHandler) handleChannelUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleChannelUpdate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -344,6 +395,10 @@ func (c *discordMessageHandler) handleChannelUpdate(p *etfapi.Payload, req wscli
 }
 
 func (c *discordMessageHandler) handleChannelDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleChannelDelete")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -361,6 +416,10 @@ func (c *discordMessageHandler) handleChannelDelete(p *etfapi.Payload, req wscli
 }
 
 func (c *discordMessageHandler) handleGuildMemberCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildMemberCreate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -378,6 +437,10 @@ func (c *discordMessageHandler) handleGuildMemberCreate(p *etfapi.Payload, req w
 }
 
 func (c *discordMessageHandler) handleGuildMemberUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildMemberUpdate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -395,6 +458,10 @@ func (c *discordMessageHandler) handleGuildMemberUpdate(p *etfapi.Payload, req w
 }
 
 func (c *discordMessageHandler) handleGuildMemberDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildMemberDelete")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -412,6 +479,10 @@ func (c *discordMessageHandler) handleGuildMemberDelete(p *etfapi.Payload, req w
 }
 
 func (c *discordMessageHandler) handleGuildRoleCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildRoleCreate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -429,6 +500,10 @@ func (c *discordMessageHandler) handleGuildRoleCreate(p *etfapi.Payload, req wsc
 }
 
 func (c *discordMessageHandler) handleGuildRoleUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildRoleUpdate")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return
@@ -446,6 +521,10 @@ func (c *discordMessageHandler) handleGuildRoleUpdate(p *etfapi.Payload, req wsc
 }
 
 func (c *discordMessageHandler) handleGuildRoleDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildRoleDelete")
+	defer span.End()
+	req.Ctx = ctx
+
 	select {
 	case <-req.Ctx.Done():
 		return

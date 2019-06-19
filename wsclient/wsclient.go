@@ -8,14 +8,16 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/gsmcwhirter/go-util/v3/errors"
-	log "github.com/gsmcwhirter/go-util/v3/logging"
-	"github.com/gsmcwhirter/go-util/v3/logging/level"
-	"github.com/gsmcwhirter/go-util/v3/request"
+	"github.com/gsmcwhirter/go-util/v4/census"
+	"github.com/gsmcwhirter/go-util/v4/errors"
+	log "github.com/gsmcwhirter/go-util/v4/logging"
+	"github.com/gsmcwhirter/go-util/v4/logging/level"
+	"github.com/gsmcwhirter/go-util/v4/request"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/stats"
 )
 
 // WSClient is the api for a client that maintains an active websocket connection and hands
@@ -33,6 +35,7 @@ type dependencies interface {
 	Logger() log.Logger
 	WSDialer() Dialer
 	ErrReporter() errreport.Reporter
+	Census() *census.OpenCensus
 }
 
 type wsClient struct {
@@ -163,9 +166,59 @@ func (c *wsClient) HandleRequests(ctx context.Context) error {
 	return err
 }
 
+func (c *wsClient) readMessages(ctx context.Context) error {
+	defer level.Info(c.deps.Logger()).Message("readMessages shutdown complete")
+
+	reader, ctx := errgroup.WithContext(ctx)
+	reader.Go(func() error {
+		defer c.deps.ErrReporter().AutoNotify(ctx)
+		return c.doReads(ctx)
+	})
+
+	// watches for close message
+	reader.Go(func() error {
+		defer c.deps.ErrReporter().AutoNotify(ctx)
+		<-ctx.Done()
+		level.Info(c.deps.Logger()).Message("readMessages shutting down")
+		c.gracefulClose()
+		return ctx.Err()
+	})
+
+	return reader.Wait()
+
+}
+
+func (c *wsClient) doReads(ctx context.Context) error {
+	defer level.Info(c.deps.Logger()).Message("websocket reader done")
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		msgType, msg, err := c.conn.ReadMessage()
+		if err != nil {
+			level.Error(c.deps.Logger()).Err("read error", err,
+				"ws_msg_type", msgType,
+				"ws_content", msg,
+			)
+			return errors.Wrap(err, "read error")
+		}
+
+		c.pool.Add(1)
+		go c.handleMessageRead(ctx, msgType, msg)
+	}
+}
+
 func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byte) {
 	defer c.deps.ErrReporter().Recover(ctx)
 	defer c.pool.Done()
+
+	ctx, span := c.deps.Census().StartSpan(ctx, "wsClient.handleMessageRead")
+	defer span.End()
+	c.deps.Census().Record(ctx, stats.RawMessageCount.M(1))
 
 	select {
 	case <-ctx.Done():
@@ -193,53 +246,11 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	c.handleRequest(wsMsg)
 }
 
-func (c *wsClient) doReads(ctx context.Context) error {
-	defer level.Info(c.deps.Logger()).Message("websocket reader done")
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		msgType, msg, err := c.conn.ReadMessage()
-		if err != nil {
-			level.Error(c.deps.Logger()).Err("read error", err,
-				"ws_msg_type", msgType,
-				"ws_content", msg,
-			)
-			return errors.Wrap(err, "read error")
-		}
-
-		c.pool.Add(1)
-		go c.handleMessageRead(ctx, msgType, msg)
-	}
-}
-
-func (c *wsClient) readMessages(ctx context.Context) error {
-	defer level.Info(c.deps.Logger()).Message("readMessages shutdown complete")
-
-	reader, ctx := errgroup.WithContext(ctx)
-	reader.Go(func() error {
-		defer c.deps.ErrReporter().AutoNotify(ctx)
-		return c.doReads(ctx)
-	})
-
-	// watches for close message
-	reader.Go(func() error {
-		defer c.deps.ErrReporter().AutoNotify(ctx)
-		<-ctx.Done()
-		level.Info(c.deps.Logger()).Message("readMessages shutting down")
-		c.gracefulClose()
-		return ctx.Err()
-	})
-
-	return reader.Wait()
-
-}
-
 func (c *wsClient) handleRequest(req WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "wsClient.handleRequest")
+	defer span.End()
+	req.Ctx = ctx
+
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
 	defer func() {
@@ -254,28 +265,6 @@ func (c *wsClient) handleRequest(req WSMessage) {
 	default:
 		level.Info(logger).Message("handleRequest dispatching request")
 		c.handler.HandleRequest(req, c.responses)
-	}
-}
-
-func (c *wsClient) processResponse(resp WSMessage) {
-	logger := logging.WithContext(resp.Ctx, c.deps.Logger())
-
-	level.Debug(logger).Message("starting sending message",
-		"ws_msg_type", resp.MessageType,
-		"ws_msg_len", len(resp.MessageContents),
-	)
-
-	start := time.Now()
-	err := c.conn.WriteMessage(int(resp.MessageType), resp.MessageContents)
-
-	level.Info(logger).Message("done sending message",
-		"elapsed_ns", time.Since(start).Nanoseconds(),
-		"ws_msg_type", resp.MessageType,
-		"ws_msg_len", len(resp.MessageContents),
-	)
-
-	if err != nil {
-		level.Error(logger).Err("error sending message", err)
 	}
 }
 
@@ -323,7 +312,38 @@ func (c *wsClient) handleResponses(ctx context.Context) error {
 	}
 }
 
+func (c *wsClient) processResponse(resp WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(resp.Ctx, "wsClient.processResponse")
+	defer span.End()
+	resp.Ctx = ctx
+
+	logger := logging.WithContext(resp.Ctx, c.deps.Logger())
+
+	level.Debug(logger).Message("starting sending message",
+		"ws_msg_type", resp.MessageType,
+		"ws_msg_len", len(resp.MessageContents),
+	)
+
+	c.deps.Census().Record(resp.Ctx, stats.RawMessagesSentCount.M(1))
+	start := time.Now()
+	err := c.conn.WriteMessage(int(resp.MessageType), resp.MessageContents)
+
+	level.Info(logger).Message("done sending message",
+		"elapsed_ns", time.Since(start).Nanoseconds(),
+		"ws_msg_type", resp.MessageType,
+		"ws_msg_len", len(resp.MessageContents),
+	)
+
+	if err != nil {
+		level.Error(logger).Err("error sending message", err)
+	}
+}
+
 func (c *wsClient) SendMessage(msg WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(msg.Ctx, "wsClient.SendMessage")
+	defer span.End()
+	msg.Ctx = ctx
+
 	logger := logging.WithContext(msg.Ctx, c.deps.Logger())
 	level.Debug(logger).Message("adding message to response queue",
 		"ws_msg_type", msg.MessageType,

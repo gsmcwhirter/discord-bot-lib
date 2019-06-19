@@ -9,21 +9,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v3/errors"
-	log "github.com/gsmcwhirter/go-util/v3/logging"
-	"github.com/gsmcwhirter/go-util/v3/logging/level"
-	"github.com/gsmcwhirter/go-util/v3/request"
+	"github.com/gsmcwhirter/go-util/v4/census"
+	"github.com/gsmcwhirter/go-util/v4/errors"
+	log "github.com/gsmcwhirter/go-util/v4/logging"
+	"github.com/gsmcwhirter/go-util/v4/logging/level"
+	"github.com/gsmcwhirter/go-util/v4/request"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v8/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v8/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -38,6 +40,7 @@ type dependencies interface {
 	BotSession() *etfapi.Session
 	DiscordMessageHandler() DiscordMessageHandler
 	ErrReporter() errreport.Reporter
+	Census() *census.OpenCensus
 }
 
 // DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
@@ -186,6 +189,9 @@ func (d *discordBot) AuthenticateAndConnect() error {
 }
 
 func (d *discordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.ReconfigureHeartbeat")
+	defer span.End()
+
 	d.heartbeats <- hbReconfig{
 		ctx:      ctx,
 		interval: interval,
@@ -197,6 +203,9 @@ func (d *discordBot) Config() Config {
 }
 
 func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (resp *http.Response, body []byte, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.SendMessage")
+	defer span.End()
+
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	level.Info(logger).Message("sending message to channel")
@@ -223,6 +232,10 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 		return nil, nil, errors.Wrap(err, "could not complete the message send")
 	}
 
+	if tagCtx, err := census.NewTag(ctx, census.InsertTag(stats.TagStatus, fmt.Sprintf("%d", resp.StatusCode))); err == nil {
+		d.deps.Census().Record(tagCtx, stats.MessagesPostedCount.M(1))
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		err = errors.Wrap(ErrResponse, "non-200 response")
 	}
@@ -236,6 +249,10 @@ func (d *discordBot) Disconnect() error {
 }
 
 func (d *discordBot) Run(ctx context.Context) error {
+	if err := stats.Register(); err != nil {
+		return errors.Wrap(err, "could not register stats")
+	}
+
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
@@ -325,6 +342,9 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 }
 
 func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
+	reqCtx, span := d.deps.Census().StartSpan(reqCtx, "discordBot.sendHeartbeat")
+	defer span.End()
+
 	m, err := payloads.ETFPayloadToMessage(reqCtx, &payloads.HeartbeatPayload{
 		Sequence: d.lastSequence,
 	})

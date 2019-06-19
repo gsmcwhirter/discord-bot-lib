@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gsmcwhirter/go-util/v3/cli"
-	"github.com/gsmcwhirter/go-util/v3/errors"
+	"github.com/gsmcwhirter/go-util/v4/cli"
+	"github.com/gsmcwhirter/go-util/v4/errors"
 	"github.com/spf13/viper"
 )
 
