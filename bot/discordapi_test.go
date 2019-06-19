@@ -3,6 +3,7 @@ package bot_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -73,6 +74,23 @@ func (d *mockWSDialer) Dial(string, http.Header) (wsclient.Conn, *http.Response,
 	return &mockWSConn{}, &http.Response{StatusCode: 200}, nil
 }
 
+type customTraceExporter struct{}
+
+func (ce *customTraceExporter) ExportSpan(sd *census.SpanData) {
+	fmt.Printf("Name: %s\nTraceID: %x\nSpanID: %x\nParentSpanID: %x\nStartTime: %s\nEndTime: %s\nAnnotations: %+v\n\n",
+		sd.Name, sd.TraceID, sd.SpanID, sd.ParentSpanID, sd.StartTime, sd.EndTime, sd.Annotations)
+}
+
+type customMetricsExporter struct{}
+
+func (ce *customMetricsExporter) ExportView(vd *census.ViewData) {
+	fmt.Printf("vd.View: %+v\n%#v\n", vd.View, vd.Rows)
+	for i, row := range vd.Rows {
+		fmt.Printf("\tRow: %d: %#v\n", i, row)
+	}
+	fmt.Printf("StartTime: %s EndTime: %s\n\n", vd.Start.Round(0), vd.End.Round(0))
+}
+
 type mockdeps struct {
 	logger  log.Logger
 	doer    httpclient.Doer
@@ -121,7 +139,10 @@ func TestDiscordBot(t *testing.T) {
 		rep:     errreport.NopReporter{},
 	}
 
-	deps.census = census.NewCensus(deps, census.Options{})
+	deps.census = census.NewCensus(deps, census.Options{
+		StatsExporter: new(customMetricsExporter),
+		TraceExporter: new(customTraceExporter),
+	})
 
 	deps.http = httpclient.NewHTTPClient(deps)
 	deps.ws = wsclient.NewWSClient(deps, wsclient.Options{
