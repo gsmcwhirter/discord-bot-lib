@@ -124,13 +124,8 @@ github.com/gostaticanalysis/analysisutil v0.0.0-20190318220348-4088753ea4d3/go.m
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
-github.com/gsmcwhirter/discord-bot-lib v6.1.1+incompatible h1:G7OViqrdvLyAud5ZjbjsZ0zduY8scIB7bFAkOuaTTR4=
-github.com/gsmcwhirter/discord-bot-lib/v8 v8.0.3 h1:7FNs9OCy8HIVxcwRWtzdXPHSuSKk2pM7c0Em89AE6YE=
-github.com/gsmcwhirter/discord-bot-lib/v8 v8.0.3/go.mod h1:viGcYANTCRnEFoMZut8a32NZTF1H/zMzS2xVPze3AOc=
-github.com/gsmcwhirter/go-util/v3 v3.0.0 h1:m4pC1MKSxpt789L3f6v1jZ+jdHJPY5LwpIckUH8TVKY=
-github.com/gsmcwhirter/go-util/v3 v3.0.0/go.mod h1:RMDupl0uhxAd3l0sQqOtIPRu+xwgjRfugQxMgMFTeUI=
-github.com/gsmcwhirter/go-util/v4 v4.1.0 h1:BunechQl+B5h2qJmkM1cZIcgUh1xrhkl7M7GKgMi1d4=
-github.com/gsmcwhirter/go-util/v4 v4.1.0/go.mod h1:XIdkOvJmeH1ffpZvhBNWDCQ5kVkgSC/V2JbGU3y7EbQ=
+github.com/gsmcwhirter/go-util/v4 v4.2.0 h1:/lHSmGouVPI6FZW1FMMMEJSc3IM5zQO4iPmkPbpQo64=
+github.com/gsmcwhirter/go-util/v4 v4.2.0/go.mod h1:XIdkOvJmeH1ffpZvhBNWDCQ5kVkgSC/V2JbGU3y7EbQ=
 github.com/hashicorp/golang-lru v0.5.1 h1:0hERBMJE1eitiLkihrMvRVBYAkpHzc/J3QdDN+dAcgU=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce/go.mod h1:oZtUIOe8dh44I2q6ScRibXws4Ajl+d+nod3AaR9vL5w=
@@ -338,8 +333,6 @@ golang.org/x/tools v0.0.0-20190311215038-5c2858a9cfe5/go.mod h1:LCzVGOaR6xXOjkQ3
 golang.org/x/tools v0.0.0-20190322203728-c1a832b0ad89/go.mod h1:LCzVGOaR6xXOjkQ3onu1FJEFr0SW1gC7cKk1uF8kGRs=
 golang.org/x/tools v0.0.0-20190521203540-521d6ed310dd h1:7E3PabyysDSEjnaANKBgums/hyvMI/HoHQ50qZEzTrg=
 golang.org/x/tools v0.0.0-20190521203540-521d6ed310dd/go.mod h1:RgjU9mgBXZiqYHBnxXauZ1Gv1EHHAz9KjViQ78xBX0Q=
-golang.org/x/tools v0.0.0-20190614152001-1edc8e83c897/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
-golang.org/x/tools v0.0.0-20190614205625-5aca471b1d59/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 golang.org/x/tools v0.0.0-20190618233249-04b924abaa25 h1:waeaOEG3M5B3aL+j+hqXDXpBOqBEYHVNApmp5na1jwQ=
 golang.org/x/tools v0.0.0-20190618233249-04b924abaa25/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
