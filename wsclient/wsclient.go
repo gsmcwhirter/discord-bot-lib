@@ -107,7 +107,7 @@ func (c *wsClient) Connect(token string) error {
 	c.conn, dialResp, err = c.deps.WSDialer().Dial(c.gatewayURL, dialHeader)
 
 	level.Info(logger).Message("ws client dial complete",
-		"duration_ns", time.Since(start).Nanoseconds(),
+		"elapsed_ns", time.Since(start).Nanoseconds(),
 		"status_code", dialResp.StatusCode,
 		"url", c.gatewayURL,
 	)

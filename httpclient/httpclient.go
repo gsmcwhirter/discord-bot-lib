@@ -84,7 +84,7 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 	}
 
 	level.Info(logger).Message("http get complete",
-		"duration_ns", time.Since(start).Nanoseconds(),
+		"elapsed_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 
@@ -123,7 +123,7 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 	}
 
 	level.Info(logger).Message("http get complete",
-		"duration_ns", time.Since(start).Nanoseconds(),
+		"elapsed_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 
@@ -165,7 +165,7 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 	}
 
 	level.Info(logger).Message("http post complete",
-		"duration_ns", time.Since(start).Nanoseconds(),
+		"elapsed_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 
@@ -205,7 +205,7 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 	}
 
 	level.Info(logger).Message("http post complete",
-		"duration_ns", time.Since(start).Nanoseconds(),
+		"elapsed_ns", time.Since(start).Nanoseconds(),
 		"status_code", resp.StatusCode,
 	)
 

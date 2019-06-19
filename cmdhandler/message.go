@@ -65,6 +65,18 @@ func NewWithTokens(m Message, tokens []string, contentErr error) Message {
 	}
 }
 
+func NewWithContext(ctx context.Context, m Message) Message {
+	return &simpleMessage{
+		ctx: ctx,
+		userID: m.UserID(),
+		guildID: m.GuildID(),
+		channelID: m.ChannelID(),
+		messageID: m.MessageID(),
+		contents: m.Contents(),
+		contentErr: m.ContentErr(),
+	}
+} 
+
 func (m *simpleMessage) Context() context.Context {
 	return m.ctx
 }
