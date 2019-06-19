@@ -124,8 +124,8 @@ github.com/gostaticanalysis/analysisutil v0.0.0-20190318220348-4088753ea4d3/go.m
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
-github.com/gsmcwhirter/go-util/v4 v4.2.0 h1:/lHSmGouVPI6FZW1FMMMEJSc3IM5zQO4iPmkPbpQo64=
-github.com/gsmcwhirter/go-util/v4 v4.2.0/go.mod h1:XIdkOvJmeH1ffpZvhBNWDCQ5kVkgSC/V2JbGU3y7EbQ=
+github.com/gsmcwhirter/go-util/v4 v4.3.0 h1:EroRBK6H5hVmR7IrqbVksxXBHOmDPwLx/ee1WQQlRo4=
+github.com/gsmcwhirter/go-util/v4 v4.3.0/go.mod h1:XIdkOvJmeH1ffpZvhBNWDCQ5kVkgSC/V2JbGU3y7EbQ=
 github.com/hashicorp/golang-lru v0.5.1 h1:0hERBMJE1eitiLkihrMvRVBYAkpHzc/J3QdDN+dAcgU=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce/go.mod h1:oZtUIOe8dh44I2q6ScRibXws4Ajl+d+nod3AaR9vL5w=
