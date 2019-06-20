@@ -18,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(in *jlexer.Lexer, out *GatewayResponse) {
+func easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV10Jsonapi(in *jlexer.Lexer, out *GatewayResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -51,28 +51,18 @@ func easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(in *jlexer
 		in.Consumed()
 	}
 }
-func easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(out *jwriter.Writer, in GatewayResponse) {
+func easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV10Jsonapi(out *jwriter.Writer, in GatewayResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
 		const prefix string = ",\"url\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix[1:])
 		out.String(string(in.URL))
 	}
 	{
 		const prefix string = ",\"shards\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int(int(in.Shards))
 	}
 	out.RawByte('}')
@@ -81,23 +71,23 @@ func easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(out *jwrit
 // MarshalJSON supports json.Marshaler interface
 func (v GatewayResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(&w, v)
+	easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV10Jsonapi(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v GatewayResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(w, v)
+	easyjson7375d8c0EncodeGithubComGsmcwhirterDiscordBotLibV10Jsonapi(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *GatewayResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(&r, v)
+	easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV10Jsonapi(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *GatewayResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV9Jsonapi(l, v)
+	easyjson7375d8c0DecodeGithubComGsmcwhirterDiscordBotLibV10Jsonapi(l, v)
 }

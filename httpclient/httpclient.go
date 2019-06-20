@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v4/census"
-	log "github.com/gsmcwhirter/go-util/v4/logging"
-	"github.com/gsmcwhirter/go-util/v4/logging/level"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
+	"github.com/gsmcwhirter/go-util/v5/logging/level"
+	census "github.com/gsmcwhirter/go-util/v5/stats"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
 )
 
 // HTTPClient is the interface of an http client
@@ -26,7 +26,7 @@ type HTTPClient interface {
 
 type dependencies interface {
 	Logger() log.Logger
-	Census() *census.OpenCensus
+	Census() *census.Census
 	HTTPDoer() Doer
 }
 

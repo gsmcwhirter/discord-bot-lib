@@ -9,23 +9,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v4/census"
-	"github.com/gsmcwhirter/go-util/v4/errors"
-	log "github.com/gsmcwhirter/go-util/v4/logging"
-	"github.com/gsmcwhirter/go-util/v4/logging/level"
-	"github.com/gsmcwhirter/go-util/v4/request"
+	"github.com/gsmcwhirter/go-util/v5/errors"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
+	"github.com/gsmcwhirter/go-util/v5/logging/level"
+	"github.com/gsmcwhirter/go-util/v5/request"
+	census "github.com/gsmcwhirter/go-util/v5/stats"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -40,7 +40,7 @@ type dependencies interface {
 	BotSession() *etfapi.Session
 	DiscordMessageHandler() DiscordMessageHandler
 	ErrReporter() errreport.Reporter
-	Census() *census.OpenCensus
+	Census() *census.Census
 }
 
 // DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
@@ -232,8 +232,8 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 		return nil, nil, errors.Wrap(err, "could not complete the message send")
 	}
 
-	if tagCtx, err := census.NewTag(ctx, census.InsertTag(stats.TagStatus, fmt.Sprintf("%d", resp.StatusCode))); err == nil {
-		d.deps.Census().Record(tagCtx, stats.MessagesPostedCount.M(1))
+	if err := d.deps.Census().Record(ctx, []census.Measurement{stats.MessagesPostedCount.M(1)}, census.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {

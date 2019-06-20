@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gsmcwhirter/go-util/v4/errors"
-	"github.com/gsmcwhirter/go-util/v4/parser"
+	"github.com/gsmcwhirter/go-util/v5/errors"
+	"github.com/gsmcwhirter/go-util/v5/parser"
 )
 
 // ErrMissingHandler is the error thrown when an event handler cannot be found

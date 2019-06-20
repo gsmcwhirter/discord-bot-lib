@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gsmcwhirter/go-util/v4/errors"
+	"github.com/gsmcwhirter/go-util/v5/errors"
 )
 
 // Element is a container for arbitrary etf-formatted data

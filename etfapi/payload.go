@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gsmcwhirter/go-util/v4/errors"
+	"github.com/gsmcwhirter/go-util/v5/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/discordapi"
 )
 
 // Payload represents the data in a etf api payload (both for sending and receiving)

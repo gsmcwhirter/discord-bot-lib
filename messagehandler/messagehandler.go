@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gsmcwhirter/go-util/v4/census"
-	log "github.com/gsmcwhirter/go-util/v4/logging"
-	"github.com/gsmcwhirter/go-util/v4/logging/level"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
+	"github.com/gsmcwhirter/go-util/v5/logging/level"
+	census "github.com/gsmcwhirter/go-util/v5/stats"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
 )
 
 type dependencies interface {
 	Logger() log.Logger
 	BotSession() *etfapi.Session
 	MessageRateLimiter() *rate.Limiter
-	Census() *census.OpenCensus
+	Census() *census.Census
 }
 
 type discordMessageHandler struct {
@@ -108,8 +108,8 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 		return
 	}
 
-	if tagCtx, err := census.NewTag(ctx, census.InsertTag(stats.TagOpCode, p.OpCode.String())); err == nil {
-		c.deps.Census().Record(tagCtx, stats.OpCodesCount.M(1))
+	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.OpCodesCount.M(1)}, census.Tag{Key: stats.TagOpCode, Val: p.OpCode.String()}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
 	}
 
 	if p.SeqNum != nil {
@@ -248,8 +248,8 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
-	if tagCtx, err := census.NewTag(ctx, census.InsertTag(stats.TagEventName, p.EventName)); err == nil {
-		c.deps.Census().Record(tagCtx, stats.RawEventsCount.M(1))
+	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.RawEventsCount.M(1)}, census.Tag{Key: stats.TagEventName, Val: p.EventName}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
 	}
 
 	level.Info(logger).Message("looking up event dispatch handler", "event_name", p.EventName)

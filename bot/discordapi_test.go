@@ -9,18 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v4/census"
-	"github.com/gsmcwhirter/go-util/v4/deferutil"
-	log "github.com/gsmcwhirter/go-util/v4/logging"
+	"github.com/gsmcwhirter/go-util/v5/deferutil"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
+	census "github.com/gsmcwhirter/go-util/v5/stats"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
 )
 
 type nopLogger struct{}
@@ -102,7 +102,7 @@ type mockdeps struct {
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
 	rep     errreport.Reporter
-	census  *census.OpenCensus
+	census  *census.Census
 }
 
 func (d *mockdeps) Logger() log.Logger                               { return d.logger }
@@ -115,7 +115,7 @@ func (d *mockdeps) ConnectRateLimiter() *rate.Limiter                { return d.
 func (d *mockdeps) BotSession() *etfapi.Session                      { return d.session }
 func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 func (d *mockdeps) ErrReporter() errreport.Reporter                  { return d.rep }
-func (d *mockdeps) Census() *census.OpenCensus                       { return d.census }
+func (d *mockdeps) Census() *census.Census                           { return d.census }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -139,7 +139,7 @@ func TestDiscordBot(t *testing.T) {
 		rep:     errreport.NopReporter{},
 	}
 
-	deps.census = census.NewCensus(deps, census.Options{
+	deps.census = census.NewCensus(census.Options{
 		StatsExporter: new(customMetricsExporter),
 		TraceExporter: new(customTraceExporter),
 	})

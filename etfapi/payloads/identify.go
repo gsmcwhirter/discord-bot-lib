@@ -1,10 +1,10 @@
 package payloads
 
 import (
-	"github.com/gsmcwhirter/go-util/v4/errors"
+	"github.com/gsmcwhirter/go-util/v5/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
 )
 
 // IdentifyPayloadProperties holds the data about the os, etc. of the bot when identifying

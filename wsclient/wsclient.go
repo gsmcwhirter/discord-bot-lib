@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/gsmcwhirter/go-util/v4/census"
-	"github.com/gsmcwhirter/go-util/v4/errors"
-	log "github.com/gsmcwhirter/go-util/v4/logging"
-	"github.com/gsmcwhirter/go-util/v4/logging/level"
-	"github.com/gsmcwhirter/go-util/v4/request"
+	"github.com/gsmcwhirter/go-util/v5/errors"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
+	"github.com/gsmcwhirter/go-util/v5/logging/level"
+	"github.com/gsmcwhirter/go-util/v5/request"
+	census "github.com/gsmcwhirter/go-util/v5/stats"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/stats"
 )
 
 // WSClient is the api for a client that maintains an active websocket connection and hands
@@ -35,7 +35,7 @@ type dependencies interface {
 	Logger() log.Logger
 	WSDialer() Dialer
 	ErrReporter() errreport.Reporter
-	Census() *census.OpenCensus
+	Census() *census.Census
 }
 
 type wsClient struct {
@@ -216,9 +216,10 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	defer c.deps.ErrReporter().Recover(ctx)
 	defer c.pool.Done()
 
+	reqCtx := request.NewRequestContextFrom(ctx)
+
 	ctx, span := c.deps.Census().StartSpan(ctx, "wsClient.handleMessageRead")
 	defer span.End()
-	c.deps.Census().Record(ctx, stats.RawMessageCount.M(1))
 
 	select {
 	case <-ctx.Done():
@@ -226,12 +227,14 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	default:
 	}
 
-	reqCtx := request.NewRequestContextFrom(ctx)
+	logger := logging.WithContext(reqCtx, c.deps.Logger())
+	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.RawMessageCount.M(1)}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
+	}
+
 	mT := MessageType(msgType)
 	mC := make([]byte, len(msg))
 	copy(mC, msg)
-
-	logger := logging.WithContext(reqCtx, c.deps.Logger())
 
 	wsMsg := WSMessage{Ctx: reqCtx, MessageType: mT, MessageContents: mC}
 	level.Info(logger).Message("received message",
@@ -324,7 +327,10 @@ func (c *wsClient) processResponse(resp WSMessage) {
 		"ws_msg_len", len(resp.MessageContents),
 	)
 
-	c.deps.Census().Record(resp.Ctx, stats.RawMessagesSentCount.M(1))
+	if err := c.deps.Census().Record(resp.Ctx, []census.Measurement{stats.RawMessagesSentCount.M(1)}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
+	}
+
 	start := time.Now()
 	err := c.conn.WriteMessage(int(resp.MessageType), resp.MessageContents)
 

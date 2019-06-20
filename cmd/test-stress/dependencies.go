@@ -6,17 +6,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v4/census"
-	log "github.com/gsmcwhirter/go-util/v4/logging"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
+	"github.com/gsmcwhirter/go-util/v5/stats"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v9/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
 )
 
 type dependencies struct {
@@ -30,7 +30,7 @@ type dependencies struct {
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
 	rep     errreport.Reporter
-	census  *census.OpenCensus
+	census  *stats.Census
 }
 
 func (d *dependencies) Close()                                           {}
@@ -44,7 +44,7 @@ func (d *dependencies) ConnectRateLimiter() *rate.Limiter                { retur
 func (d *dependencies) BotSession() *etfapi.Session                      { return d.session }
 func (d *dependencies) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 func (d *dependencies) ErrReporter() errreport.Reporter                  { return d.rep }
-func (d *dependencies) Census() *census.OpenCensus                       { return d.census }
+func (d *dependencies) Census() *stats.Census                            { return d.census }
 
 type mockHTTPDoer struct{}
 
@@ -82,7 +82,7 @@ func createDependencies(c config, conf bot.Config) (*dependencies, error) {
 	logger = log.With(logger, "timestamp", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 	d.logger = logger
 
-	d.census = census.NewCensus(d, census.Options{})
+	d.census = stats.NewCensus(stats.Options{})
 
 	d.http = httpclient.NewHTTPClient(d)
 	d.ws = wsclient.NewWSClient(d, wsclient.Options{

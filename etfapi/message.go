@@ -3,9 +3,9 @@ package etfapi
 import (
 	"fmt"
 
-	"github.com/gsmcwhirter/go-util/v4/errors"
+	"github.com/gsmcwhirter/go-util/v5/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
 )
 
 // MessageType represents the type of message received in a discord channel

@@ -1,6 +1,6 @@
 package etfapi
 
-import "github.com/gsmcwhirter/go-util/v4/errors"
+import "github.com/gsmcwhirter/go-util/v5/errors"
 
 // ErrBadTarget is the error returned when trying to convert
 // an Element to an incorrect type

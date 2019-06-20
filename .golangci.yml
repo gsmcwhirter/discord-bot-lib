@@ -31,12 +31,12 @@ linters-settings:
     packages:
       # don't use work stuff by accident
       - go.zr.org
-      # Use github.com/gsmcwhirter/go-util/v4/errors instead
+      # Use github.com/gsmcwhirter/go-util/vN/errors instead
       - errors
       - github.com/pkg/errors
       # Use github.com/spf13/pflag instead
       - flag
-      # Use github.com/gsmcwhirter/go-util/v4/logging instead
+      # Use github.com/gsmcwhirter/go-util/vN/logging instead
       - log
       - github.com/go-kit/kit/log
       - github.com/go-kit/kit/log/level

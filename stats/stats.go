@@ -1,8 +1,8 @@
 package stats
 
 import (
-	"github.com/gsmcwhirter/go-util/v4/census"
-	"github.com/gsmcwhirter/go-util/v4/errors"
+	"github.com/gsmcwhirter/go-util/v5/errors"
+	census "github.com/gsmcwhirter/go-util/v5/stats"
 )
 
 var (

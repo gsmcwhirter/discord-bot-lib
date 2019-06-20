@@ -1,9 +1,9 @@
 package logging
 
 import (
-	log "github.com/gsmcwhirter/go-util/v4/logging"
+	log "github.com/gsmcwhirter/go-util/v5/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v9/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/cmdhandler"
 )
 
 var WithContext = log.WithContext
