@@ -14,13 +14,14 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v11/errreport"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/messagehandler"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/wsclient"
 )
 
 type dependencies struct {
-	logger  log.Logger
+	logger  logging.Logger
 	doer    httpclient.Doer
 	http    httpclient.HTTPClient
 	wsd     wsclient.Dialer

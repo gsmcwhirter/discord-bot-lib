@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/gsmcwhirter/go-util/v5/logging"
 	"github.com/gsmcwhirter/go-util/v5/logging/level"
 	census "github.com/gsmcwhirter/go-util/v5/stats"
 
@@ -25,7 +24,7 @@ type HTTPClient interface {
 }
 
 type dependencies interface {
-	Logger() log.Logger
+	Logger() logging.Logger
 	Census() *census.Census
 	HTTPDoer() Doer
 }

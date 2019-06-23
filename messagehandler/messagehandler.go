@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/gsmcwhirter/go-util/v5/logging"
 	"github.com/gsmcwhirter/go-util/v5/logging/level"
 	census "github.com/gsmcwhirter/go-util/v5/stats"
 	"golang.org/x/time/rate"
@@ -20,7 +19,7 @@ import (
 )
 
 type dependencies interface {
-	Logger() log.Logger
+	Logger() logging.Logger
 	BotSession() *etfapi.Session
 	MessageRateLimiter() *rate.Limiter
 	Census() *census.Census

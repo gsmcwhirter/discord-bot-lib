@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gsmcwhirter/go-util/v5/deferutil"
-	log "github.com/gsmcwhirter/go-util/v5/logging"
 	census "github.com/gsmcwhirter/go-util/v5/stats"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
@@ -19,6 +18,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v11/errreport"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/messagehandler"
 	"github.com/gsmcwhirter/discord-bot-lib/v11/wsclient"
 )
@@ -92,7 +92,7 @@ func (ce *customMetricsExporter) ExportView(vd *census.ViewData) {
 }
 
 type mockdeps struct {
-	logger  log.Logger
+	logger  logging.Logger
 	doer    httpclient.Doer
 	http    httpclient.HTTPClient
 	wsd     wsclient.Dialer
@@ -105,7 +105,7 @@ type mockdeps struct {
 	census  *census.Census
 }
 
-func (d *mockdeps) Logger() log.Logger                               { return d.logger }
+func (d *mockdeps) Logger() logging.Logger                           { return d.logger }
 func (d *mockdeps) HTTPDoer() httpclient.Doer                        { return d.doer }
 func (d *mockdeps) HTTPClient() httpclient.HTTPClient                { return d.http }
 func (d *mockdeps) WSDialer() wsclient.Dialer                        { return d.wsd }

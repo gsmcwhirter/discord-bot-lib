@@ -9,6 +9,8 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v11/request"
 )
 
+type Logger = log.Logger
+
 // WithContext wraps a logger with fields from a context
 func WithContext(ctx context.Context, logger log.Logger) log.Logger {
 	logger = log.WithContext(ctx, logger)

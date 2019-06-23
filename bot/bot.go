@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gsmcwhirter/go-util/v5/errors"
-	log "github.com/gsmcwhirter/go-util/v5/logging"
 	"github.com/gsmcwhirter/go-util/v5/logging/level"
 	"github.com/gsmcwhirter/go-util/v5/request"
 	census "github.com/gsmcwhirter/go-util/v5/stats"
@@ -32,7 +31,7 @@ import (
 var ErrResponse = errors.New("error response")
 
 type dependencies interface {
-	Logger() log.Logger
+	Logger() logging.Logger
 	HTTPClient() httpclient.HTTPClient
 	WSClient() wsclient.WSClient
 	MessageRateLimiter() *rate.Limiter

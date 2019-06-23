@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/gsmcwhirter/go-util/v5/errors"
-	log "github.com/gsmcwhirter/go-util/v5/logging"
 	"github.com/gsmcwhirter/go-util/v5/logging/level"
 	"github.com/gsmcwhirter/go-util/v5/request"
 	census "github.com/gsmcwhirter/go-util/v5/stats"
@@ -33,7 +32,7 @@ type WSClient interface {
 }
 
 type dependencies interface {
-	Logger() log.Logger
+	Logger() logging.Logger
 	WSDialer() Dialer
 	ErrReporter() errreport.Reporter
 	Census() *census.Census
