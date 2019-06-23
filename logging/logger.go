@@ -5,8 +5,8 @@ import (
 
 	log "github.com/gsmcwhirter/go-util/v5/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/request"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/request"
 )
 
 // WithContext wraps a logger with fields from a context

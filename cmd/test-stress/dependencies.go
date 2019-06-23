@@ -10,13 +10,13 @@ import (
 	"github.com/gsmcwhirter/go-util/v5/stats"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/wsclient"
 )
 
 type dependencies struct {

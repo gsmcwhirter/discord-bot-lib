@@ -3,7 +3,7 @@ package request
 import (
 	"context"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
 )
 
 // ContextKey is a wrapper type for our keys attached to a context

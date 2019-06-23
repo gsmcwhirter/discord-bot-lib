@@ -17,15 +17,15 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response

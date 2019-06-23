@@ -12,7 +12,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v5/logging/level"
 	census "github.com/gsmcwhirter/go-util/v5/stats"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/logging"
 )
 
 // HTTPClient is the interface of an http client

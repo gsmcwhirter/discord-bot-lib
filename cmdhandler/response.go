@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
 )
 
 const maxLen = 1024

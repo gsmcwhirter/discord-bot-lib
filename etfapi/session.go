@@ -5,7 +5,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v5/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
 )
 
 // Session represents a discord bot's session with an api gateway
