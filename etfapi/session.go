@@ -82,7 +82,7 @@ func (s *Session) IsGuildAdmin(gid, uid snowflake.Snowflake) bool {
 }
 
 // UpsertGuildFromElement updates data in the session state for a guild based on the given Element
-func (s *Session) UpsertGuildFromElement(e Element) error {
+func (s *Session) UpsertGuildFromElement(e Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -90,7 +90,7 @@ func (s *Session) UpsertGuildFromElement(e Element) error {
 }
 
 // UpsertGuildFromElementMap updates data in the session state for a guild based on the given data
-func (s *Session) UpsertGuildFromElementMap(eMap map[string]Element) error {
+func (s *Session) UpsertGuildFromElementMap(eMap map[string]Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -98,7 +98,7 @@ func (s *Session) UpsertGuildFromElementMap(eMap map[string]Element) error {
 }
 
 // UpsertGuildMemberFromElementMap updates data in the session state for a guild member based on the given data
-func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]Element) error {
+func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -106,7 +106,7 @@ func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]Element) error
 }
 
 // UpsertGuildRoleFromElementMap updates data in the session state for a guild role based on the given data
-func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]Element) error {
+func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -114,7 +114,7 @@ func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]Element) error {
 }
 
 // UpsertChannelFromElement updates data in the session state for a channel based on the given Element
-func (s *Session) UpsertChannelFromElement(e Element) error {
+func (s *Session) UpsertChannelFromElement(e Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -122,7 +122,7 @@ func (s *Session) UpsertChannelFromElement(e Element) error {
 }
 
 // UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
-func (s *Session) UpsertChannelFromElementMap(eMap map[string]Element) error {
+func (s *Session) UpsertChannelFromElementMap(eMap map[string]Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

@@ -44,13 +44,13 @@ type dependencies interface {
 }
 
 // DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
-type DiscordMessageHandlerFunc func(*etfapi.Payload, wsclient.WSMessage, chan<- wsclient.WSMessage)
+type DiscordMessageHandlerFunc func(*etfapi.Payload, wsclient.WSMessage, chan<- wsclient.WSMessage) snowflake.Snowflake
 
 // DiscordMessageHandler is the api that a bot expects a handler manager to have
 type DiscordMessageHandler interface {
 	ConnectToBot(DiscordBot)
 	AddHandler(string, DiscordMessageHandlerFunc)
-	HandleRequest(wsclient.WSMessage, chan<- wsclient.WSMessage)
+	HandleRequest(wsclient.WSMessage, chan<- wsclient.WSMessage) snowflake.Snowflake
 }
 
 // DiscordBot is the api for a discord bot object

@@ -17,6 +17,7 @@ import (
 
 	"github.com/gsmcwhirter/discord-bot-lib/v10/errreport"
 	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/v10/stats"
 )
 
@@ -216,10 +217,10 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	defer c.deps.ErrReporter().Recover(ctx)
 	defer c.pool.Done()
 
-	reqCtx := request.NewRequestContextFrom(ctx)
-
 	ctx, span := c.deps.Census().StartSpan(ctx, "wsClient.handleMessageRead")
 	defer span.End()
+
+	reqCtx := request.NewRequestContextFrom(ctx)
 
 	select {
 	case <-ctx.Done():
@@ -246,10 +247,11 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	c.poolTokens <- struct{}{}
 	level.Info(logger).Message("worker token acquired")
 
-	c.handleRequest(wsMsg)
+	gid := c.handleRequest(wsMsg)
+	span.AddAttributes(census.StringAttribute("guild_id", gid.ToString()))
 }
 
-func (c *wsClient) handleRequest(req WSMessage) {
+func (c *wsClient) handleRequest(req WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "wsClient.handleRequest")
 	defer span.End()
 	req.Ctx = ctx
@@ -264,10 +266,12 @@ func (c *wsClient) handleRequest(req WSMessage) {
 	select {
 	case <-req.Ctx.Done():
 		level.Info(logger).Message("handleRequest received interrupt -- shutting down")
-		return
+		return 0
 	default:
 		level.Info(logger).Message("handleRequest dispatching request")
-		c.handler.HandleRequest(req, c.responses)
+		gid := c.handler.HandleRequest(req, c.responses)
+		span.AddAttributes(census.StringAttribute("guild_id", gid.ToString()))
+		return gid
 	}
 }
 

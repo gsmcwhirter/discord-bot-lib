@@ -14,6 +14,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v10/etfapi/payloads"
 	"github.com/gsmcwhirter/discord-bot-lib/v10/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v10/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/v10/stats"
 	"github.com/gsmcwhirter/discord-bot-lib/v10/wsclient"
 )
@@ -34,7 +35,8 @@ type discordMessageHandler struct {
 	eventDispatch  map[string][]bot.DiscordMessageHandlerFunc
 }
 
-func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func noop(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
+	return 0
 }
 
 // NewDiscordMessageHandler creates a new DiscordMessageHandler object with default state and
@@ -85,7 +87,7 @@ func (c *discordMessageHandler) AddHandler(event string, handler bot.DiscordMess
 	c.eventDispatch[event] = append(handlers, handler)
 }
 
-func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.HandleRequest")
 	defer span.End()
 	req.Ctx = ctx
@@ -96,7 +98,7 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	select {
 	case <-req.Ctx.Done():
 		level.Info(logger).Message("discordapi already done. skipping request")
-		return
+		return 0
 	default:
 	}
 
@@ -105,7 +107,7 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	p, err := etfapi.Unmarshal(req.MessageContents)
 	if err != nil {
 		level.Error(logger).Err("error unmarshaling payload", err, "ws_msg", fmt.Sprintf("%v", req.MessageContents))
-		return
+		return 0
 	}
 
 	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.OpCodesCount.M(1)}, census.Tag{Key: stats.TagOpCode, Val: p.OpCode.String()}); err != nil {
@@ -121,26 +123,26 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	opHandler, ok := c.opCodeDispatch[p.OpCode]
 	if !ok {
 		level.Error(logger).Message("unrecognized OpCode", "op_code", p.OpCode)
-		return
+		return 0
 	}
 
 	if opHandler == nil {
 		level.Error(logger).Message("no handler for OpCode", "op_code", p.OpCode)
-		return
+		return 0
 	}
 
 	level.Info(logger).Message("sending to opHandler", "op_code", p.OpCode)
-	opHandler(p, req, resp)
+	return opHandler(p, req, resp)
 }
 
-func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleHello")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
@@ -152,7 +154,7 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 		interval, err := rawInterval.ToInt()
 		if err != nil {
 			level.Error(logger).Err("error handling hello heartbeat config", err)
-			return
+			return 0
 		}
 
 		level.Info(logger).Message("configuring heartbeat", "interval", interval)
@@ -204,28 +206,30 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 
 	if err != nil {
 		level.Error(logger).Err("error generating identify/resume payload", err)
-		return
+		return 0
 	}
 
 	err = c.deps.MessageRateLimiter().Wait(req.Ctx)
 	if err != nil {
 		level.Error(logger).Err("error ratelimiting", err)
-		return
+		return 0
 	}
 
 	level.Info(logger).Message("sending identify/resume to channel")
 	level.Debug(logger).Message("sending response to channel", "resp_message", m, "msg_len", len(m.MessageContents))
 	resp <- m
+
+	return 0
 }
 
-func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleHeartbeat")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
@@ -233,16 +237,18 @@ func (c *discordMessageHandler) handleHeartbeat(p *etfapi.Payload, req wsclient.
 	level.Info(logger).Message("requesting manual heartbeat")
 	c.bot.ReconfigureHeartbeat(req.Ctx, 0)
 	level.Debug(logger).Message("manual heartbeat done")
+
+	return 0
 }
 
-func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleDispatch")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
@@ -260,23 +266,30 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 
 	if !ok {
 		level.Debug(logger).Message("no event dispatch handler found", "event_name", p.EventName)
-		return
+		return 0
 	}
+
+	var guildID snowflake.Snowflake
 
 	level.Info(logger).Message("processing event", "event_name", p.EventName)
 	for _, eventHandler := range eventHandlers {
-		eventHandler(p, req, resp)
+		if gid := eventHandler(p, req, resp); gid != 0 {
+			span.AddAttributes(census.StringAttribute("guild_id", gid.ToString()))
+			guildID = gid
+		}
 	}
+
+	return guildID
 }
 
-func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleReady")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
@@ -285,258 +298,272 @@ func (c *discordMessageHandler) handleReady(p *etfapi.Payload, req wsclient.WSMe
 	err := c.deps.BotSession().UpdateFromReady(p)
 	if err != nil {
 		level.Error(logger).Err("error setting up session", err)
-		return
 	}
+
+	return 0
 }
 
-func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildCreate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild", "event_name", "GUILD_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
 	level.Debug(logger).Message("upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_CREATE")
-	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
+
+	gid, err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild", "event_name", "GUILD_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild create", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild", "event_name", "GUILD_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
 	level.Debug(logger).Message("upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_UPDATE")
-	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild", "event_name", "GUILD_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild update", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildDelete")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild", "event_name", "GUILD_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
 	level.Debug(logger).Message("upserting guild debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_DELETE")
-	err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild", "event_name", "GUILD_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild delete", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleChannelCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleChannelCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleChannelCreate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_CREATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
 	level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_CREATE")
-	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_CREATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing channel create", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleChannelUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleChannelUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleChannelUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_UPDATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
 	level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_UPDATE")
-	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_UPDATE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing channel update", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleChannelDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleChannelDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleChannelDelete")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_DELETE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]))
 	level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "CHANNEL_DELETE")
-	err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertChannelFromElementMap(p.Data)
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_DELETE", "channel_id_elem", fmt.Sprintf("%+v", p.Data["id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing channel delete", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildMemberCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildMemberCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildMemberCreate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_ADD", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
 	level.Debug(logger).Message("upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_ADD")
-	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_ADD", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild member create", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildMemberUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildMemberUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildMemberUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
 	level.Debug(logger).Message("upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_UPDATE")
-	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild member update", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildMemberDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildMemberDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildMemberDelete")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_REMOVE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
 	level.Debug(logger).Message("upserting guild member debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_MEMBER_REMOVE")
-	err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildMemberFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild member", "event_name", "GUILD_MEMBER_REMOVE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild member delete", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildRoleCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildRoleCreate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildRoleCreate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
 	level.Debug(logger).Message("upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_CREATE")
-	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_CREATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild role create", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildRoleUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildRoleUpdate(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildRoleUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
 	level.Debug(logger).Message("upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_UPDATE")
-	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_UPDATE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild role update", err)
-		return
 	}
+
+	return gid
 }
 
-func (c *discordMessageHandler) handleGuildRoleDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) {
+func (c *discordMessageHandler) handleGuildRoleDelete(p *etfapi.Payload, req wsclient.WSMessage, resp chan<- wsclient.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "discordMessageHandler.handleGuildRoleDelete")
 	defer span.End()
 	req.Ctx = ctx
 
 	select {
 	case <-req.Ctx.Done():
-		return
+		return 0
 	default:
 	}
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
-	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]))
 	level.Debug(logger).Message("upserting guild role debug", "pdata", fmt.Sprintf("%+v", p.Data), "event_name", "GUILD_ROLE_DELETE")
-	err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
+	gid, err := c.deps.BotSession().UpsertGuildRoleFromElementMap(p.Data)
+	level.Info(logger).Message("upserting guild role", "event_name", "GUILD_ROLE_DELETE", "guild_id_elem", fmt.Sprintf("%+v", p.Data["guild_id"]), "guild_id", gid)
 	if err != nil {
 		level.Error(logger).Err("error processing guild role delete", err)
-		return
 	}
+
+	return gid
 }
