@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v11/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/wsclient"
 )
 
 type nopLogger struct{}
@@ -151,7 +151,7 @@ func TestDiscordBot(t *testing.T) {
 	})
 	deps.mh = messagehandler.NewDiscordMessageHandler(deps)
 
-	b := bot.NewDiscordBot(deps, conf)
+	b := bot.NewDiscordBot(deps, conf, 0)
 	err := b.AuthenticateAndConnect()
 	if assert.Nil(t, err) {
 		defer deferutil.CheckDefer(b.Disconnect)

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v5/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/snowflake"
 )
 
 // Guild represents the known data about a discord guild

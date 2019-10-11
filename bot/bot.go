@@ -16,15 +16,15 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v11/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v11/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v12/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -88,6 +88,8 @@ type discordBot struct {
 	config Config
 	deps   dependencies
 
+	permissions int
+
 	heartbeat  *time.Ticker
 	heartbeats chan hbReconfig
 
@@ -96,10 +98,12 @@ type discordBot struct {
 }
 
 // NewDiscordBot creates a new DiscordBot
-func NewDiscordBot(deps dependencies, conf Config) DiscordBot {
+func NewDiscordBot(deps dependencies, conf Config, permissions int) DiscordBot {
 	d := &discordBot{
 		config: conf,
 		deps:   deps,
+
+		permissions: permissions,
 
 		heartbeats: make(chan hbReconfig),
 
@@ -173,16 +177,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(err, "could not WSClient().Connect()")
 	}
 
-	// See https://discordapp.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags
-	botPermissions := 0x00000040 // add reactions
-	botPermissions |= 0x00000400 // view channel (including read messages)
-	botPermissions |= 0x00000800 // send messages
-	botPermissions |= 0x00002000 // manage messages
-	botPermissions |= 0x00010000 // read message history
-	botPermissions |= 0x00020000 // mention everyone
-	botPermissions |= 0x04000000 // change own nickname
-
-	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, botPermissions)
+	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, b.permissions)
 
 	return nil
 }
