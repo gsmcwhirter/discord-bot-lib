@@ -177,7 +177,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(err, "could not WSClient().Connect()")
 	}
 
-	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, b.permissions)
+	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, d.permissions)
 
 	return nil
 }
