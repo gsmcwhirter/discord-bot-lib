@@ -9,22 +9,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v5/errors"
-	"github.com/gsmcwhirter/go-util/v5/logging/level"
-	"github.com/gsmcwhirter/go-util/v5/request"
-	census "github.com/gsmcwhirter/go-util/v5/stats"
+	"github.com/gsmcwhirter/go-util/v7/errors"
+	"github.com/gsmcwhirter/go-util/v7/logging/level"
+	"github.com/gsmcwhirter/go-util/v7/request"
+	"github.com/gsmcwhirter/go-util/v7/telemetry"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v12/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/wsclient"
 )
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -39,7 +39,7 @@ type dependencies interface {
 	BotSession() *etfapi.Session
 	DiscordMessageHandler() DiscordMessageHandler
 	ErrReporter() errreport.Reporter
-	Census() *census.Census
+	Census() *telemetry.Census
 }
 
 // DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
@@ -59,6 +59,8 @@ type DiscordBot interface {
 	Run(context.Context) error
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
 	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (*http.Response, []byte, error)
+	GetMessage(context.Context, snowflake.Snowflake, snowflake.Snowflake) (*http.Response, []byte, error)
+	CreateReaction(context.Context, snowflake.Snowflake, snowflake.Snowflake, string) (*http.Response, error)
 	UpdateSequence(int) bool
 	ReconfigureHeartbeat(context.Context, int)
 	LastSequence() int
@@ -226,15 +228,66 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 		return nil, nil, errors.Wrap(err, "could not complete the message send")
 	}
 
-	if err := d.deps.Census().Record(ctx, []census.Measurement{stats.MessagesPostedCount.M(1)}, census.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
+	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errors.Wrap(ErrResponse, "non-200 response")
+		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
 	}
 
 	return resp, body, err
+}
+
+func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (resp *http.Response, body []byte, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.GetMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	level.Info(logger).Message("getting message details")
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	resp, body, err = d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not complete the message get")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+	}
+
+	return resp, body, err
+}
+
+func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.GetMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	level.Info(logger).Message("creating reaction")
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	emoji = url.QueryEscape(emoji)
+	resp, err = d.deps.HTTPClient().Put(ctx, fmt.Sprintf("%s/channels/%d/messages/%d/reactions/%s/@me", d.config.APIURL, cid, mid, emoji), nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not complete the reaction create")
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		err = errors.Wrap(ErrResponse, "non-204 response", "status_code", resp.StatusCode)
+	}
+
+	return resp, err
 }
 
 func (d *discordBot) Disconnect() error {

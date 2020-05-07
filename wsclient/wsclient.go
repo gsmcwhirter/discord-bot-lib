@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/gsmcwhirter/go-util/v5/errors"
-	"github.com/gsmcwhirter/go-util/v5/logging/level"
-	"github.com/gsmcwhirter/go-util/v5/request"
-	census "github.com/gsmcwhirter/go-util/v5/stats"
+	"github.com/gsmcwhirter/go-util/v7/errors"
+	"github.com/gsmcwhirter/go-util/v7/logging/level"
+	"github.com/gsmcwhirter/go-util/v7/request"
+	"github.com/gsmcwhirter/go-util/v7/telemetry"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v12/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/stats"
 )
 
 // WSClient is the api for a client that maintains an active websocket connection and hands
@@ -35,7 +35,7 @@ type dependencies interface {
 	Logger() logging.Logger
 	WSDialer() Dialer
 	ErrReporter() errreport.Reporter
-	Census() *census.Census
+	Census() *telemetry.Census
 }
 
 type wsClient struct {
@@ -228,7 +228,7 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	}
 
 	logger := logging.WithContext(reqCtx, c.deps.Logger())
-	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.RawMessageCount.M(1)}); err != nil {
+	if err := c.deps.Census().Record(ctx, []telemetry.Measurement{stats.RawMessageCount.M(1)}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -247,7 +247,7 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	level.Info(logger).Message("worker token acquired")
 
 	gid := c.handleRequest(wsMsg)
-	span.AddAttributes(census.StringAttribute("guild_id", gid.ToString()))
+	span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
 }
 
 func (c *wsClient) handleRequest(req WSMessage) snowflake.Snowflake {
@@ -269,7 +269,7 @@ func (c *wsClient) handleRequest(req WSMessage) snowflake.Snowflake {
 	default:
 		level.Info(logger).Message("handleRequest dispatching request")
 		gid := c.handler.HandleRequest(req, c.responses)
-		span.AddAttributes(census.StringAttribute("guild_id", gid.ToString()))
+		span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
 		return gid
 	}
 }
@@ -330,7 +330,7 @@ func (c *wsClient) processResponse(resp WSMessage) {
 		"ws_msg_len", len(resp.MessageContents),
 	)
 
-	if err := c.deps.Census().Record(resp.Ctx, []census.Measurement{stats.RawMessagesSentCount.M(1)}); err != nil {
+	if err := c.deps.Census().Record(resp.Ctx, []telemetry.Measurement{stats.RawMessagesSentCount.M(1)}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 

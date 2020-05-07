@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gsmcwhirter/go-util/v5/logging/level"
-	census "github.com/gsmcwhirter/go-util/v5/stats"
+	"github.com/gsmcwhirter/go-util/v7/logging/level"
+	"github.com/gsmcwhirter/go-util/v7/telemetry"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v12/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/wsclient"
 )
 
 type dependencies interface {
 	Logger() logging.Logger
 	BotSession() *etfapi.Session
 	MessageRateLimiter() *rate.Limiter
-	Census() *census.Census
+	Census() *telemetry.Census
 }
 
 type discordMessageHandler struct {
@@ -109,7 +109,7 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 		return 0
 	}
 
-	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.OpCodesCount.M(1)}, census.Tag{Key: stats.TagOpCode, Val: p.OpCode.String()}); err != nil {
+	if err := c.deps.Census().Record(ctx, []telemetry.Measurement{stats.OpCodesCount.M(1)}, telemetry.Tag{Key: stats.TagOpCode, Val: p.OpCode.String()}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -253,7 +253,7 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
-	if err := c.deps.Census().Record(ctx, []census.Measurement{stats.RawEventsCount.M(1)}, census.Tag{Key: stats.TagEventName, Val: p.EventName}); err != nil {
+	if err := c.deps.Census().Record(ctx, []telemetry.Measurement{stats.RawEventsCount.M(1)}, telemetry.Tag{Key: stats.TagEventName, Val: p.EventName}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -273,7 +273,7 @@ func (c *discordMessageHandler) handleDispatch(p *etfapi.Payload, req wsclient.W
 	level.Info(logger).Message("processing event", "event_name", p.EventName)
 	for _, eventHandler := range eventHandlers {
 		if gid := eventHandler(p, req, resp); gid != 0 {
-			span.AddAttributes(census.StringAttribute("guild_id", gid.ToString()))
+			span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
 			guildID = gid
 		}
 	}

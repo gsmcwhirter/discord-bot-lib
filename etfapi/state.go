@@ -1,9 +1,9 @@
 package etfapi
 
 import (
-	"github.com/gsmcwhirter/go-util/v5/errors"
+	"github.com/gsmcwhirter/go-util/v7/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v12/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
 )
 
 // state represents the state of a current bot session

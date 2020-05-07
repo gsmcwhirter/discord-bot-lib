@@ -9,18 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v5/deferutil"
-	census "github.com/gsmcwhirter/go-util/v5/stats"
+	"github.com/gsmcwhirter/go-util/v7/deferutil"
+	"github.com/gsmcwhirter/go-util/v7/telemetry"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v12/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v12/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v13/wsclient"
 )
 
 type nopLogger struct{}
@@ -76,14 +76,14 @@ func (d *mockWSDialer) Dial(string, http.Header) (wsclient.Conn, *http.Response,
 
 type customTraceExporter struct{}
 
-func (ce *customTraceExporter) ExportSpan(sd *census.SpanData) {
+func (ce *customTraceExporter) ExportSpan(sd *telemetry.SpanData) {
 	fmt.Printf("Name: %s\nTraceID: %x\nSpanID: %x\nParentSpanID: %x\nStartTime: %s\nEndTime: %s\nAnnotations: %+v\n\n",
 		sd.Name, sd.TraceID, sd.SpanID, sd.ParentSpanID, sd.StartTime, sd.EndTime, sd.Annotations)
 }
 
 type customMetricsExporter struct{}
 
-func (ce *customMetricsExporter) ExportView(vd *census.ViewData) {
+func (ce *customMetricsExporter) ExportView(vd *telemetry.ViewData) {
 	fmt.Printf("vd.View: %+v\n%#v\n", vd.View, vd.Rows)
 	for i, row := range vd.Rows {
 		fmt.Printf("\tRow: %d: %#v\n", i, row)
@@ -102,7 +102,7 @@ type mockdeps struct {
 	session *etfapi.Session
 	mh      bot.DiscordMessageHandler
 	rep     errreport.Reporter
-	census  *census.Census
+	census  *telemetry.Census
 }
 
 func (d *mockdeps) Logger() logging.Logger                           { return d.logger }
@@ -115,7 +115,7 @@ func (d *mockdeps) ConnectRateLimiter() *rate.Limiter                { return d.
 func (d *mockdeps) BotSession() *etfapi.Session                      { return d.session }
 func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 func (d *mockdeps) ErrReporter() errreport.Reporter                  { return d.rep }
-func (d *mockdeps) Census() *census.Census                           { return d.census }
+func (d *mockdeps) Census() *telemetry.Census                        { return d.census }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -139,7 +139,7 @@ func TestDiscordBot(t *testing.T) {
 		rep:     errreport.NopReporter{},
 	}
 
-	deps.census = census.NewCensus(census.Options{
+	deps.census = telemetry.NewCensus(telemetry.Options{
 		StatsExporter: new(customMetricsExporter),
 		TraceExporter: new(customTraceExporter),
 	})
