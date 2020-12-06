@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/etfapi"
 )
 
 func TestNewCollectionElement(t *testing.T) {

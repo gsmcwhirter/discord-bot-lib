@@ -4,12 +4,10 @@ package jsonapi
 
 import (
 	json "encoding/json"
-
+	snowflake "github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
-
-	snowflake "github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 )
 
 // suppress unused package warning
@@ -20,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer.Lexer, out *GuildMemberResponse) {
+func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(in *jlexer.Lexer, out *GuildMemberResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -47,7 +45,7 @@ func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer
 				if out.User == nil {
 					out.User = new(UserResponse)
 				}
-				(*out.User).UnmarshalEasyJSON(in)
+				easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(in, out.User)
 			}
 		case "nick":
 			out.Nick = string(in.String())
@@ -59,16 +57,16 @@ func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer
 				in.Delim('[')
 				if out.Roles == nil {
 					if !in.IsDelim(']') {
-						out.Roles = make([]snowflake.Snowflake, 0, 8)
+						out.Roles = make([]string, 0, 4)
 					} else {
-						out.Roles = []snowflake.Snowflake{}
+						out.Roles = []string{}
 					}
 				} else {
 					out.Roles = (out.Roles)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 snowflake.Snowflake
-					v1 = snowflake.Snowflake(in.Uint64())
+					var v1 string
+					v1 = string(in.String())
 					out.Roles = append(out.Roles, v1)
 					in.WantComma()
 				}
@@ -82,6 +80,29 @@ func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer
 			out.Deaf = bool(in.Bool())
 		case "mute":
 			out.Mute = bool(in.Bool())
+		case "RoleSnowflakes":
+			if in.IsNull() {
+				in.Skip()
+				out.RoleSnowflakes = nil
+			} else {
+				in.Delim('[')
+				if out.RoleSnowflakes == nil {
+					if !in.IsDelim(']') {
+						out.RoleSnowflakes = make([]snowflake.Snowflake, 0, 8)
+					} else {
+						out.RoleSnowflakes = []snowflake.Snowflake{}
+					}
+				} else {
+					out.RoleSnowflakes = (out.RoleSnowflakes)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v2 snowflake.Snowflake
+					v2 = snowflake.Snowflake(in.Uint64())
+					out.RoleSnowflakes = append(out.RoleSnowflakes, v2)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -92,7 +113,7 @@ func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer
 		in.Consumed()
 	}
 }
-func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwriter.Writer, in GuildMemberResponse) {
+func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(out *jwriter.Writer, in GuildMemberResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -102,7 +123,7 @@ func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwrit
 		if in.User == nil {
 			out.RawString("null")
 		} else {
-			(*in.User).MarshalEasyJSON(out)
+			easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(out, *in.User)
 		}
 	}
 	{
@@ -117,11 +138,11 @@ func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwrit
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v2, v3 := range in.Roles {
-				if v2 > 0 {
+			for v3, v4 := range in.Roles {
+				if v3 > 0 {
 					out.RawByte(',')
 				}
-				out.Uint64(uint64(v3))
+				out.String(string(v4))
 			}
 			out.RawByte(']')
 		}
@@ -146,29 +167,197 @@ func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwrit
 		out.RawString(prefix)
 		out.Bool(bool(in.Mute))
 	}
+	{
+		const prefix string = ",\"RoleSnowflakes\":"
+		out.RawString(prefix)
+		if in.RoleSnowflakes == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.RoleSnowflakes {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				out.Uint64(uint64(v6))
+			}
+			out.RawByte(']')
+		}
+	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
 func (v GuildMemberResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(&w, v)
+	easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v GuildMemberResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(w, v)
+	easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *GuildMemberResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(&r, v)
+	easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *GuildMemberResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(l, v)
+	easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(l, v)
+}
+func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(in *jlexer.Lexer, out *UserResponse) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = string(in.String())
+		case "username":
+			out.Username = string(in.String())
+		case "discriminator":
+			out.Discriminator = string(in.String())
+		case "avatar":
+			out.Avatar = string(in.String())
+		case "bot":
+			out.Bot = bool(in.Bool())
+		case "system":
+			out.System = bool(in.Bool())
+		case "mfa_enabled":
+			out.MFAEnabled = bool(in.Bool())
+		case "locale":
+			out.Locale = string(in.String())
+		case "verified":
+			out.Verified = bool(in.Bool())
+		case "email":
+			out.Email = string(in.String())
+		case "flags":
+			out.Flags = int(in.Int())
+		case "premium_type":
+			out.PremiumType = int(in.Int())
+		case "public_flags":
+			out.PublicFlags = int(in.Int())
+		case "member":
+			if in.IsNull() {
+				in.Skip()
+				out.Member = nil
+			} else {
+				if out.Member == nil {
+					out.Member = new(GuildMemberResponse)
+				}
+				(*out.Member).UnmarshalEasyJSON(in)
+			}
+		case "IDSnowflake":
+			out.IDSnowflake = snowflake.Snowflake(in.Uint64())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(out *jwriter.Writer, in UserResponse) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.ID))
+	}
+	{
+		const prefix string = ",\"username\":"
+		out.RawString(prefix)
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"discriminator\":"
+		out.RawString(prefix)
+		out.String(string(in.Discriminator))
+	}
+	{
+		const prefix string = ",\"avatar\":"
+		out.RawString(prefix)
+		out.String(string(in.Avatar))
+	}
+	{
+		const prefix string = ",\"bot\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.Bot))
+	}
+	{
+		const prefix string = ",\"system\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.System))
+	}
+	{
+		const prefix string = ",\"mfa_enabled\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.MFAEnabled))
+	}
+	{
+		const prefix string = ",\"locale\":"
+		out.RawString(prefix)
+		out.String(string(in.Locale))
+	}
+	{
+		const prefix string = ",\"verified\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.Verified))
+	}
+	{
+		const prefix string = ",\"email\":"
+		out.RawString(prefix)
+		out.String(string(in.Email))
+	}
+	{
+		const prefix string = ",\"flags\":"
+		out.RawString(prefix)
+		out.Int(int(in.Flags))
+	}
+	{
+		const prefix string = ",\"premium_type\":"
+		out.RawString(prefix)
+		out.Int(int(in.PremiumType))
+	}
+	{
+		const prefix string = ",\"public_flags\":"
+		out.RawString(prefix)
+		out.Int(int(in.PublicFlags))
+	}
+	{
+		const prefix string = ",\"member\":"
+		out.RawString(prefix)
+		if in.Member == nil {
+			out.RawString("null")
+		} else {
+			(*in.Member).MarshalEasyJSON(out)
+		}
+	}
+	{
+		const prefix string = ",\"IDSnowflake\":"
+		out.RawString(prefix)
+		out.Uint64(uint64(in.IDSnowflake))
+	}
+	out.RawByte('}')
 }

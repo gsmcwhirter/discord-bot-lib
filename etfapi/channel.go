@@ -5,7 +5,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v7/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
 )
 
 // ChannelType represents the type of a discord channel

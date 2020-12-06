@@ -4,12 +4,10 @@ package jsonapi
 
 import (
 	json "encoding/json"
-
+	snowflake "github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
-
-	snowflake "github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 )
 
 // suppress unused package warning
@@ -20,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer.Lexer, out *UserResponse) {
+func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(in *jlexer.Lexer, out *UserResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -40,7 +38,7 @@ func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexe
 		}
 		switch key {
 		case "id":
-			out.ID = snowflake.Snowflake(in.Uint64())
+			out.ID = string(in.String())
 		case "username":
 			out.Username = string(in.String())
 		case "discriminator":
@@ -75,6 +73,8 @@ func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexe
 				}
 				(*out.Member).UnmarshalEasyJSON(in)
 			}
+		case "IDSnowflake":
+			out.IDSnowflake = snowflake.Snowflake(in.Uint64())
 		default:
 			in.SkipRecursive()
 		}
@@ -85,14 +85,14 @@ func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexe
 		in.Consumed()
 	}
 }
-func easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwriter.Writer, in UserResponse) {
+func easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(out *jwriter.Writer, in UserResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
-		out.Uint64(uint64(in.ID))
+		out.String(string(in.ID))
 	}
 	{
 		const prefix string = ",\"username\":"
@@ -163,29 +163,34 @@ func easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwri
 			(*in.Member).MarshalEasyJSON(out)
 		}
 	}
+	{
+		const prefix string = ",\"IDSnowflake\":"
+		out.RawString(prefix)
+		out.Uint64(uint64(in.IDSnowflake))
+	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
 func (v UserResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(&w, v)
+	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v UserResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(w, v)
+	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *UserResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(&r, v)
+	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *UserResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(l, v)
+	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(l, v)
 }

@@ -3,8 +3,8 @@ package payloads
 import (
 	"github.com/gsmcwhirter/go-util/v7/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/etfapi"
 )
 
 // ResumePayload is the specialized payload for sending "Resume" events to the discord gateway websocket

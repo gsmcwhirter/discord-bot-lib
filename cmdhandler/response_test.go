@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
 )
 
 const longContent = `"""

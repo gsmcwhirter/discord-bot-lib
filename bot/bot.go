@@ -16,15 +16,15 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/wsclient"
 )
 
 type dependencies interface {
@@ -460,6 +460,11 @@ func (d *discordBot) GetGuildMember(ctx context.Context, gid, uid snowflake.Snow
 	err = respData.UnmarshalJSON(body)
 	if err != nil {
 		return respData, errors.Wrap(err, "could not unmarshal guild member information")
+	}
+
+	err = respData.Snowflakify()
+	if err != nil {
+		return respData, errors.Wrap(err, "could not snowflakify guild member information")
 	}
 
 	return respData, nil

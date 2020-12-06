@@ -14,10 +14,10 @@ import (
 	"github.com/gsmcwhirter/go-util/v7/telemetry"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v15/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/stats"
 )
 
 // WSClient is the api for a client that maintains an active websocket connection and hands

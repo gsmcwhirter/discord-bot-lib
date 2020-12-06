@@ -5,7 +5,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v7/parser"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
 )
 
 var quotes = []rune{'"', '“', '”', '«', '»', '„'}
