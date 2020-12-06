@@ -58,6 +58,7 @@ type DiscordBot interface {
 	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (*http.Response, []byte, error)
 	GetMessage(context.Context, snowflake.Snowflake, snowflake.Snowflake) (*http.Response, []byte, error)
 	CreateReaction(context.Context, snowflake.Snowflake, snowflake.Snowflake, string) (*http.Response, error)
+	GetGuildMember(context.Context, snowflake.Snowflake, snowflake.Snowflake) (jsonapi.GuildMemberResponse, error)
 	UpdateSequence(int) bool
 	ReconfigureHeartbeat(context.Context, int)
 	LastSequence() int
