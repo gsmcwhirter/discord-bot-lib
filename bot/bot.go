@@ -27,9 +27,6 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v13/wsclient"
 )
 
-// ErrResponse is the error that is wrapped and returned when there is a non-200 api response
-var ErrResponse = errors.New("error response")
-
 type dependencies interface {
 	Logger() logging.Logger
 	HTTPClient() httpclient.HTTPClient
@@ -99,6 +96,8 @@ type discordBot struct {
 	lastSequence int
 }
 
+var _ DiscordBot = (*discordBot)(nil)
+
 // NewDiscordBot creates a new DiscordBot
 func NewDiscordBot(deps dependencies, conf Config, permissions int) DiscordBot {
 	d := &discordBot{
@@ -131,31 +130,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(err, "connection rate limit error")
 	}
 
-	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/gateway/bot", d.config.APIURL), nil)
-	if err != nil {
-		return errors.Wrap(err, "could not get gateway information")
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrResponse, "non-200 response")
-	}
-
-	level.Debug(logger).Message("response stats",
-		"response_body", body,
-		"response_bytes", len(body),
-	)
-
-	respData := jsonapi.GatewayResponse{}
-	err = respData.UnmarshalJSON(body)
-	if err != nil {
-		return errors.Wrap(err, "could not unmarshal gateway information")
-	}
-
-	level.Debug(logger).Message("gateway response",
-		"gateway_url", respData.URL,
-		"gateway_shards", respData.Shards,
-	)
-
-	level.Info(logger).Message("acquired gateway url")
+	respData, err := d.GetGateway(ctx)
 
 	connectURL, err := url.Parse(respData.URL)
 	if err != nil {
@@ -196,98 +171,6 @@ func (d *discordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
 
 func (d *discordBot) Config() Config {
 	return d.config
-}
-
-func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (resp *http.Response, body []byte, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.SendMessage")
-	defer span.End()
-
-	logger := logging.WithContext(ctx, d.deps.Logger())
-
-	level.Info(logger).Message("sending message to channel")
-
-	var b []byte
-
-	b, err = m.MarshalJSON()
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not marshal message as json")
-	}
-
-	level.Info(logger).Message("sending message", "payload", string(b))
-	r := bytes.NewReader(b)
-
-	err = d.deps.MessageRateLimiter().Wait(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
-	}
-
-	header := http.Header{}
-	header.Add("Content-Type", "application/json")
-	resp, body, err = d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not complete the message send")
-	}
-
-	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
-		level.Error(logger).Err("could not record stat", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
-	}
-
-	return resp, body, err
-}
-
-func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (resp *http.Response, body []byte, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.GetMessage")
-	defer span.End()
-
-	logger := logging.WithContext(ctx, d.deps.Logger())
-
-	level.Info(logger).Message("getting message details")
-
-	err = d.deps.MessageRateLimiter().Wait(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
-	}
-
-	resp, body, err = d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not complete the message get")
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
-	}
-
-	return resp, body, err
-}
-
-func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.GetMessage")
-	defer span.End()
-
-	logger := logging.WithContext(ctx, d.deps.Logger())
-
-	level.Info(logger).Message("creating reaction")
-
-	err = d.deps.MessageRateLimiter().Wait(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "error waiting for rate limiter")
-	}
-
-	emoji = url.QueryEscape(emoji)
-	resp, err = d.deps.HTTPClient().Put(ctx, fmt.Sprintf("%s/channels/%d/messages/%d/reactions/%s/@me", d.config.APIURL, cid, mid, emoji), nil, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not complete the reaction create")
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		err = errors.Wrap(ErrResponse, "non-204 response", "status_code", resp.StatusCode)
-	}
-
-	return resp, err
 }
 
 func (d *discordBot) Disconnect() error {
@@ -408,4 +291,165 @@ func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
 	d.deps.WSClient().SendMessage(m)
 
 	return nil
+}
+
+// ErrResponse is the error that is wrapped and returned when there is a non-200 api response
+var ErrResponse = errors.New("error response")
+
+func (d *discordBot) GetGateway(ctx context.Context) (jsonapi.GatewayResponse, error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapiclient.GetGateway")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	respData := jsonapi.GatewayResponse{}
+
+	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/gateway/bot", d.config.APIURL), nil)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not get gateway information")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return respData, errors.Wrap(ErrResponse, "non-200 response")
+	}
+
+	level.Debug(logger).Message("response stats",
+		"response_body", body,
+		"response_bytes", len(body),
+	)
+
+	err = respData.UnmarshalJSON(body)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not unmarshal gateway information")
+	}
+
+	level.Debug(logger).Message("gateway response",
+		"gateway_url", respData.URL,
+		"gateway_shards", respData.Shards,
+	)
+
+	level.Info(logger).Message("acquired gateway url")
+
+	return respData, nil
+}
+
+func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (resp *http.Response, body []byte, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.SendMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	level.Info(logger).Message("sending message to channel")
+
+	var b []byte
+
+	b, err = m.MarshalJSON()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not marshal message as json")
+	}
+
+	level.Info(logger).Message("sending message", "payload", string(b))
+	r := bytes.NewReader(b)
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	header := http.Header{}
+	header.Add("Content-Type", "application/json")
+	resp, body, err = d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not complete the message send")
+	}
+
+	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+	}
+
+	return resp, body, err
+}
+
+func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (resp *http.Response, body []byte, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	level.Info(logger).Message("getting message details")
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	resp, body, err = d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not complete the message get")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+	}
+
+	return resp, body, err
+}
+
+func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	level.Info(logger).Message("creating reaction")
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	emoji = url.QueryEscape(emoji)
+	resp, err = d.deps.HTTPClient().Put(ctx, fmt.Sprintf("%s/channels/%d/messages/%d/reactions/%s/@me", d.config.APIURL, cid, mid, emoji), nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not complete the reaction create")
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		err = errors.Wrap(ErrResponse, "non-204 response", "status_code", resp.StatusCode)
+	}
+
+	return resp, err
+}
+
+func (d *discordBot) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData jsonapi.GuildMemberResponse, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetGuildMember")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	level.Info(logger).Message("getting guild member data")
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return respData, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/guilds/%d/members/%d", d.config.APIURL, gid, uid), nil)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not complete the guild member get")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+	}
+
+	err = respData.UnmarshalJSON(body)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not unmarshal guild member information")
+	}
+
+	return respData, nil
 }

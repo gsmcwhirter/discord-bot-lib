@@ -20,7 +20,7 @@ run:
 # Run "golangci-lint linters" for a list of available linters.  Don't enable
 # any linters here, or they can't be disabled on the commandline.
 linters:
-  disable-all: true
+  disable-all: false
   fast: false
 
 # all available settings of specific linters

@@ -22,6 +22,7 @@ type Response interface {
 	ToMessage() JSONMarshaler
 	Channel() snowflake.Snowflake
 	Split() []Response
+	MessageReactions() []string
 }
 
 // SimpleResponse is a Response that is intended to present plain text
@@ -29,9 +30,13 @@ type SimpleResponse struct {
 	To        string
 	Content   string
 	ToChannel snowflake.Snowflake
+	Reactions []string
 
 	errors []error
 }
+
+// ensure that SimpleResponse is a Response
+var _ Response = (*SimpleResponse)(nil)
 
 // SetColor is included for the Response API but is a no-op
 func (r *SimpleResponse) SetColor(color int) {}
@@ -105,6 +110,10 @@ func (r *SimpleResponse) Split() []Response {
 	return resps
 }
 
+func (r *SimpleResponse) MessageReactions() []string {
+	return r.Reactions
+}
+
 // SimpleEmbedResponse is a Response that is intended to present
 // text in an discord embed box but not include any embed fields
 type SimpleEmbedResponse struct {
@@ -114,9 +123,13 @@ type SimpleEmbedResponse struct {
 	Color       int
 	FooterText  string
 	ToChannel   snowflake.Snowflake
+	Reactions   []string
 
 	errors []error
 }
+
+// ensure that SimpleEmbedResponse is a Response
+var _ Response = (*SimpleEmbedResponse)(nil)
 
 // SetColor sets the side color of the embed box
 func (r *SimpleEmbedResponse) SetColor(color int) {
@@ -235,6 +248,10 @@ func (r *SimpleEmbedResponse) Split() []Response {
 	return resps
 }
 
+func (r *SimpleEmbedResponse) MessageReactions() []string {
+	return r.Reactions
+}
+
 // EmbedField is part of an EmbedResponse that represents
 // an embed field
 type EmbedField struct {
@@ -252,9 +269,13 @@ type EmbedResponse struct {
 	Fields      []EmbedField
 	FooterText  string
 	ToChannel   snowflake.Snowflake
+	Reactions   []string
 
 	errors []error
 }
+
+// ensure that EmbedResponse is a response
+var _ Response = (*EmbedResponse)(nil)
 
 // SetColor sets the side color of the embed box
 func (r *EmbedResponse) SetColor(color int) {
@@ -484,6 +505,10 @@ func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSpli
 	}
 
 	return newResps, resp
+}
+
+func (r *EmbedResponse) MessageReactions() []string {
+	return r.Reactions
 }
 
 // func (r *EmbedResponse) fillResp(resps []Response, resp *EmbedResponse, nextField int, nextFieldSplits []string, existingLen int) (resps []Response, nextResp *EmbedResponse, newNext int, newNextSplits []string) {
