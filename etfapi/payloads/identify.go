@@ -37,6 +37,7 @@ type IdentifyPayloadPresence struct {
 // IdentifyPayload is the specialized payload for sending "Identify" events to the discord gateway websocket
 type IdentifyPayload struct {
 	Token          string
+	Intents        int
 	Properties     IdentifyPayloadProperties
 	LargeThreshold int
 	Shard          IdentifyPayloadShard
@@ -56,6 +57,11 @@ func (ip *IdentifyPayload) Payload() (etfapi.Payload, error) {
 	p.Data["token"], err = etfapi.NewStringElement(ip.Token)
 	if err != nil {
 		return p, errors.Wrap(err, "could not create Element for token")
+	}
+
+	p.Data["intents"], err = etfapi.NewInt32Element(ip.Intents)
+	if err != nil {
+		return p, errors.Wrap(err, "could not create Element for intents")
 	}
 
 	// PROPERTIES

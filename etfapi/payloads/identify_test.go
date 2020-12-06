@@ -12,6 +12,7 @@ func TestIdentifyPayload_Payload(t *testing.T) {
 
 	type fields struct {
 		Token          string
+		Intents        int
 		Properties     IdentifyPayloadProperties
 		LargeThreshold int
 		Shard          IdentifyPayloadShard
@@ -26,7 +27,8 @@ func TestIdentifyPayload_Payload(t *testing.T) {
 		{
 			name: "basic",
 			fields: fields{
-				Token: "token",
+				Token:   "token",
+				Intents: 0,
 				Properties: IdentifyPayloadProperties{
 					OS:      "golang",
 					Browser: "eso-discord bot",
@@ -53,6 +55,7 @@ func TestIdentifyPayload_Payload(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ip := IdentifyPayload{
 				Token:          tt.fields.Token,
+				Intents:        tt.fields.Intents,
 				Properties:     tt.fields.Properties,
 				LargeThreshold: tt.fields.LargeThreshold,
 				Shard:          tt.fields.Shard,

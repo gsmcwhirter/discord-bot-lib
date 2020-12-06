@@ -4,10 +4,12 @@ package jsonapi
 
 import (
 	json "encoding/json"
-	snowflake "github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
+
+	snowflake "github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
 )
 
 // suppress unused package warning

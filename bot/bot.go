@@ -62,6 +62,7 @@ type DiscordBot interface {
 	ReconfigureHeartbeat(context.Context, int)
 	LastSequence() int
 	Config() Config
+	Intents() int
 }
 
 // Config is the set of configuration options for creating a DiscordBot with NewDiscordBot
@@ -88,6 +89,7 @@ type discordBot struct {
 	deps   dependencies
 
 	permissions int
+	intents     int
 
 	heartbeat  *time.Ticker
 	heartbeats chan hbReconfig
@@ -99,12 +101,13 @@ type discordBot struct {
 var _ DiscordBot = (*discordBot)(nil)
 
 // NewDiscordBot creates a new DiscordBot
-func NewDiscordBot(deps dependencies, conf Config, permissions int) DiscordBot {
+func NewDiscordBot(deps dependencies, conf Config, permissions, intents int) DiscordBot {
 	d := &discordBot{
 		config: conf,
 		deps:   deps,
 
 		permissions: permissions,
+		intents:     intents,
 
 		heartbeats: make(chan hbReconfig),
 
@@ -115,6 +118,10 @@ func NewDiscordBot(deps dependencies, conf Config, permissions int) DiscordBot {
 	d.deps.DiscordMessageHandler().ConnectToBot(d)
 
 	return d
+}
+
+func (d *discordBot) Intents() int {
+	return d.intents
 }
 
 func (d *discordBot) AddMessageHandler(event string, handler DiscordMessageHandlerFunc) {
@@ -131,6 +138,9 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	}
 
 	respData, err := d.GetGateway(ctx)
+	if err != nil {
+		return errors.Wrap(err, "could not get gateway information")
+	}
 
 	connectURL, err := url.Parse(respData.URL)
 	if err != nil {

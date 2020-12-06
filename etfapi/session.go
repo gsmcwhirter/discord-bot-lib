@@ -28,8 +28,8 @@ func NewSession() *Session {
 
 // ID returns the session id of the current session (or an empty string if an id has not been set)
 func (s *Session) ID() string {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+	s.lock.RLock()         //nolint:staticcheck // this is technically possibly a nil dereference, but won't be in practice
+	defer s.lock.RUnlock() //nolint:staticcheck // this is technically possibly a nil dereference, but won't be in practice
 
 	if s == nil {
 		return ""

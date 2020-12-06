@@ -4,10 +4,12 @@ package jsonapi
 
 import (
 	json "encoding/json"
-	snowflake "github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
+
+	snowflake "github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
 )
 
 // suppress unused package warning
@@ -45,7 +47,7 @@ func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(in *jlexer
 				if out.User == nil {
 					out.User = new(UserResponse)
 				}
-				easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi1(in, out.User)
+				(*out.User).UnmarshalEasyJSON(in)
 			}
 		case "nick":
 			out.Nick = string(in.String())
@@ -100,7 +102,7 @@ func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(out *jwrit
 		if in.User == nil {
 			out.RawString("null")
 		} else {
-			easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi1(out, *in.User)
+			(*in.User).MarshalEasyJSON(out)
 		}
 	}
 	{
@@ -169,149 +171,4 @@ func (v *GuildMemberResponse) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *GuildMemberResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(l, v)
-}
-func easyjson76b0dc3DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi1(in *jlexer.Lexer, out *UserResponse) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.ID = snowflake.Snowflake(in.Uint64())
-		case "username":
-			out.Username = string(in.String())
-		case "discriminator":
-			out.Discriminator = string(in.String())
-		case "avatar":
-			out.Avatar = string(in.String())
-		case "bot":
-			out.Bot = bool(in.Bool())
-		case "system":
-			out.System = bool(in.Bool())
-		case "mfa_enabled":
-			out.MFAEnabled = bool(in.Bool())
-		case "locale":
-			out.Locale = string(in.String())
-		case "verified":
-			out.Verified = bool(in.Bool())
-		case "email":
-			out.Email = string(in.String())
-		case "flags":
-			out.Flags = int(in.Int())
-		case "premium_type":
-			out.PremiumType = int(in.Int())
-		case "public_flags":
-			out.PublicFlags = int(in.Int())
-		case "member":
-			if in.IsNull() {
-				in.Skip()
-				out.Member = nil
-			} else {
-				if out.Member == nil {
-					out.Member = new(GuildMemberResponse)
-				}
-				(*out.Member).UnmarshalEasyJSON(in)
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson76b0dc3EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi1(out *jwriter.Writer, in UserResponse) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.Uint64(uint64(in.ID))
-	}
-	{
-		const prefix string = ",\"username\":"
-		out.RawString(prefix)
-		out.String(string(in.Username))
-	}
-	{
-		const prefix string = ",\"discriminator\":"
-		out.RawString(prefix)
-		out.String(string(in.Discriminator))
-	}
-	{
-		const prefix string = ",\"avatar\":"
-		out.RawString(prefix)
-		out.String(string(in.Avatar))
-	}
-	{
-		const prefix string = ",\"bot\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.Bot))
-	}
-	{
-		const prefix string = ",\"system\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.System))
-	}
-	{
-		const prefix string = ",\"mfa_enabled\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.MFAEnabled))
-	}
-	{
-		const prefix string = ",\"locale\":"
-		out.RawString(prefix)
-		out.String(string(in.Locale))
-	}
-	{
-		const prefix string = ",\"verified\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.Verified))
-	}
-	{
-		const prefix string = ",\"email\":"
-		out.RawString(prefix)
-		out.String(string(in.Email))
-	}
-	{
-		const prefix string = ",\"flags\":"
-		out.RawString(prefix)
-		out.Int(int(in.Flags))
-	}
-	{
-		const prefix string = ",\"premium_type\":"
-		out.RawString(prefix)
-		out.Int(int(in.PremiumType))
-	}
-	{
-		const prefix string = ",\"public_flags\":"
-		out.RawString(prefix)
-		out.Int(int(in.PublicFlags))
-	}
-	{
-		const prefix string = ",\"member\":"
-		out.RawString(prefix)
-		if in.Member == nil {
-			out.RawString("null")
-		} else {
-			(*in.Member).MarshalEasyJSON(out)
-		}
-	}
-	out.RawByte('}')
 }

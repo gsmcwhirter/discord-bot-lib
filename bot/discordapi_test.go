@@ -151,7 +151,7 @@ func TestDiscordBot(t *testing.T) {
 	})
 	deps.mh = messagehandler.NewDiscordMessageHandler(deps)
 
-	b := bot.NewDiscordBot(deps, conf, 0)
+	b := bot.NewDiscordBot(deps, conf, 0, 0)
 	err := b.AuthenticateAndConnect()
 	if assert.Nil(t, err) {
 		defer deferutil.CheckDefer(b.Disconnect)
