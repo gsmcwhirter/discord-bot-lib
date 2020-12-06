@@ -116,7 +116,7 @@ func (c *wsClient) Connect(token string) error {
 		return err
 	}
 	if dialResp.Body != nil {
-		defer dialResp.Body.Close() // nolint: errcheck
+		defer dialResp.Body.Close() // nolint:errcheck // not a real issue here
 	}
 
 	level.Info(logger).Message("ws connected")

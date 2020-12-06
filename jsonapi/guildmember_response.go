@@ -11,7 +11,7 @@ type GuildMemberResponse struct {
 	Nick         string                `json:"nick"`
 	Roles        []snowflake.Snowflake `json:"roles"`
 	JoinedAt     string                `json:"joined_at"`     // ISO8601
-	PremiumSince string                `json:"premium_since"` //ISO8601
+	PremiumSince string                `json:"premium_since"` // ISO8601
 	Deaf         bool                  `json:"deaf"`
 	Mute         bool                  `json:"mute"`
 }

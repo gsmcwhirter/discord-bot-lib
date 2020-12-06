@@ -178,7 +178,8 @@ func (c *discordMessageHandler) handleHello(p *etfapi.Payload, req wsclient.WSMe
 	} else {
 		level.Info(logger).Message("generating identify payload")
 		ip := &payloads.IdentifyPayload{
-			Token: c.bot.Config().BotToken,
+			Token:   c.bot.Config().BotToken,
+			Intents: c.bot.Intents(),
 			Properties: payloads.IdentifyPayloadProperties{
 				OS:      c.bot.Config().OS,
 				Browser: c.bot.Config().BotName,

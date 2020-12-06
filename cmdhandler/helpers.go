@@ -13,9 +13,9 @@ import (
 // ErrNotUserMention is the error returned when a user mention string is required but not provided
 var ErrNotUserMention = errors.New("not a user mention")
 
-var userMentionRe = regexp.MustCompile(`^<@[!]?([0-9]+)>$`)
-var channelMentionRe = regexp.MustCompile(`^<#[0-9]+>$`)
-var roleMentionRe = regexp.MustCompile(`^<@&[0-9]+>|@everyone|@here$`)
+var userMentionRe = regexp.MustCompile(`^<@!?(\d+)>$`)
+var channelMentionRe = regexp.MustCompile(`^<#\d+>$`)
+var roleMentionRe = regexp.MustCompile(`^<@&\d+>|@everyone|@here$`)
 
 // UserMentionString generates a string that discord interprets as a mention of a user
 // by their server nickname

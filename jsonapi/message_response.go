@@ -96,7 +96,7 @@ type EmbedResponse struct {
 	Type        string                `json:"type"`
 	Description string                `json:"description"`
 	URL         string                `json:"url"`
-	Timestamp   string                `json:"timestamp"` //ISO8601
+	Timestamp   string                `json:"timestamp"` // ISO8601
 	Color       int                   `json:"color"`
 	Footer      EmbedFooterResponse   `json:"footer"`
 	Image       EmbedImageResponse    `json:"image"`
