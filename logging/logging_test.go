@@ -8,8 +8,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v7/request"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v13/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 )
 
 type mockLogger struct {

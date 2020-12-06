@@ -9,7 +9,7 @@ import (
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
 
-	snowflake "github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	snowflake "github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 )
 
 // suppress unused package warning
@@ -20,7 +20,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(in *jlexer.Lexer, out *UserResponse) {
+func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(in *jlexer.Lexer, out *UserResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -85,7 +85,7 @@ func easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(in *jlexe
 		in.Consumed()
 	}
 }
-func easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(out *jwriter.Writer, in UserResponse) {
+func easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(out *jwriter.Writer, in UserResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -169,23 +169,23 @@ func easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(out *jwri
 // MarshalJSON supports json.Marshaler interface
 func (v UserResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(&w, v)
+	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v UserResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(w, v)
+	easyjson36e32773EncodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *UserResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(&r, v)
+	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *UserResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV13Jsonapi(l, v)
+	easyjson36e32773DecodeGithubComGsmcwhirterDiscordBotLibV15Jsonapi(l, v)
 }

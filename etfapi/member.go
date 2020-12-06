@@ -3,7 +3,7 @@ package etfapi
 import (
 	"github.com/gsmcwhirter/go-util/v7/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 )
 
 // GuildMember represents the information about a known guild membership

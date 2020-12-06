@@ -1,6 +1,6 @@
 package jsonapi
 
-import "github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+import "github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 
 //go:generate easyjson -all
 

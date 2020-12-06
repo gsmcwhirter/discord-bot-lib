@@ -1,7 +1,7 @@
 package wsclient
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/v13/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/snowflake"
 )
 
 // MessageHandlerFunc is the api of a handler that processes a WSMessage

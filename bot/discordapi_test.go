@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v13/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v13/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v15/wsclient"
 )
 
 type nopLogger struct{}

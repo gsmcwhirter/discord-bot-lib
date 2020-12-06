@@ -1,6 +1,6 @@
-module github.com/gsmcwhirter/discord-bot-lib/v14
+module github.com/gsmcwhirter/discord-bot-lib/v15
 
-go 1.14
+go 1.15
 
 require (
 	github.com/golangci/golangci-lint v1.31.0
