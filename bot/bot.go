@@ -55,7 +55,7 @@ type DiscordBot interface {
 	Disconnect() error
 	Run(context.Context) error
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
-	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (*http.Response, []byte, error)
+	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (jsonapi.MessageResponse, error)
 	GetMessage(context.Context, snowflake.Snowflake, snowflake.Snowflake) (*http.Response, []byte, error)
 	CreateReaction(context.Context, snowflake.Snowflake, snowflake.Snowflake, string) (*http.Response, error)
 	GetGuildMember(context.Context, snowflake.Snowflake, snowflake.Snowflake) (jsonapi.GuildMemberResponse, error)
@@ -343,7 +343,7 @@ func (d *discordBot) GetGateway(ctx context.Context) (jsonapi.GatewayResponse, e
 	return respData, nil
 }
 
-func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (resp *http.Response, body []byte, err error) {
+func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (respData jsonapi.MessageResponse, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.SendMessage")
 	defer span.End()
 
@@ -355,7 +355,7 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 
 	b, err = m.MarshalJSON()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not marshal message as json")
+		return respData, errors.Wrap(err, "could not marshal message as json")
 	}
 
 	level.Info(logger).Message("sending message", "payload", string(b))
@@ -363,14 +363,14 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
+		return respData, errors.Wrap(err, "error waiting for rate limiter")
 	}
 
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
-	resp, body, err = d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r)
+	resp, body, err := d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not complete the message send")
+		return respData, errors.Wrap(err, "could not complete the message send")
 	}
 
 	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
@@ -381,7 +381,17 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
 	}
 
-	return resp, body, err
+	err = respData.UnmarshalJSON(body)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not unmarshal message response information")
+	}
+
+	err = respData.Snowflakify()
+	if err != nil {
+		return respData, errors.Wrap(err, "could not snowflakify message response information")
+	}
+
+	return respData, err
 }
 
 func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (resp *http.Response, body []byte, err error) {
