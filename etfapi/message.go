@@ -93,7 +93,15 @@ func MessageFromElementMap(eMap map[string]Element) (Message, error) {
 	var m Message
 	var err error
 
-	e2, ok := eMap["channel_id"]
+	e2, ok := eMap["id"]
+	if ok {
+		m.id, err = SnowflakeFromElement(e2)
+		if err != nil {
+			return m, errors.Wrap(err, "could not get message_id snowflake.Snowflake")
+		}
+	}
+
+	e2, ok = eMap["channel_id"]
 	if ok && !e2.IsNil() {
 		m.channelID, err = SnowflakeFromElement(e2)
 		if err != nil {
@@ -124,15 +132,12 @@ func MessageFromElementMap(eMap map[string]Element) (Message, error) {
 
 // MessageFromElement generates a new Message object from the given Element
 func MessageFromElement(e Element) (Message, error) {
-	eMap, id, err := MapAndIDFromElement(e)
+	eMap, _, err := MapAndIDFromElement(e)
 	if err != nil {
 		return Message{}, err
 	}
 
-	fmt.Printf("*** %#v\n", eMap)
-
 	m, err := MessageFromElementMap(eMap)
-	m.id = id
 
 	return m, err
 }
