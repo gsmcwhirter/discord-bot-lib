@@ -3,7 +3,7 @@ package jsonapi
 import (
 	"github.com/gsmcwhirter/go-util/v7/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/snowflake"
 )
 
 //go:generate easyjson -all
@@ -11,7 +11,7 @@ import (
 // UserResponse is the data about a user recevied from the json api
 //easyjson:json
 type UserResponse struct {
-	ID            string  `json:"id"`
+	ID            string               `json:"id"`
 	Username      string               `json:"username"`
 	Discriminator string               `json:"discriminator"`
 	Avatar        string               `json:"avatar"`

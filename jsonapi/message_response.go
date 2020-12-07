@@ -2,8 +2,8 @@ package jsonapi
 
 import (
 	"github.com/gsmcwhirter/go-util/v7/errors"
-	
-	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v17/snowflake"
 )
 
 //go:generate easyjson -all
@@ -11,9 +11,9 @@ import (
 // MessageResponse is the data that is received back from the discord api
 //easyjson:json
 type MessageResponse struct {
-	ID              string      `json:"id"`
-	ChannelID       string      `json:"channel_id"`
-	GuildID         string      `json:"guild_id"`
+	ID              string                   `json:"id"`
+	ChannelID       string                   `json:"channel_id"`
+	GuildID         string                   `json:"guild_id"`
 	Author          UserResponse             `json:"author"`
 	Member          GuildMemberResponse      `json:"member"`
 	Content         string                   `json:"content"`
@@ -28,7 +28,7 @@ type MessageResponse struct {
 	Embeds          []EmbedResponse          `json:"embeds"`
 	Reactions       []ReactionResponse       `json:"reactions"`
 	Pinned          bool                     `json:"pinned"`
-	WebhookID       string      `json:"webhook_id"`
+	WebhookID       string                   `json:"webhook_id"`
 	Type            int                      `json:"type"`
 	Flags           int                      `json:"flags"`
 
@@ -37,9 +37,9 @@ type MessageResponse struct {
 	// Application is skipped
 	// MessageReference is skipped
 
-	IDSnowflake snowflake.Snowflake
+	IDSnowflake        snowflake.Snowflake
 	ChannelIDSnowflake snowflake.Snowflake
-	GuildIDSnowflake snowflake.Snowflake
+	GuildIDSnowflake   snowflake.Snowflake
 	WebhookIDSnowflake snowflake.Snowflake
 }
 
@@ -69,7 +69,7 @@ func (mr *MessageResponse) Snowflakify() error {
 	if err = mr.Member.Snowflakify(); err != nil {
 		return errors.Wrap(err, "could not snowflakify Member")
 	}
-	
+
 	for i := range mr.Mentions {
 		m := mr.Mentions[i]
 		if err = m.Snowflakify(); err != nil {
@@ -125,13 +125,13 @@ func (mr *MessageResponse) Snowflakify() error {
 //easyjson:json
 type RoleResponse struct {
 	ID          string `json:"id"`
-	Name        string              `json:"name"`
-	Color       int                 `json:"color"`
-	Hoist       bool                `json:"hoist"`
-	Position    int                 `json:"position"`
-	Permissions int                 `json:"permissions"`
-	Managed     bool                `json:"managed"`
-	Mentionable bool                `json:"mentionable"`
+	Name        string `json:"name"`
+	Color       int    `json:"color"`
+	Hoist       bool   `json:"hoist"`
+	Position    int    `json:"position"`
+	Permissions int    `json:"permissions"`
+	Managed     bool   `json:"managed"`
+	Mentionable bool   `json:"mentionable"`
 
 	IDSnowflake snowflake.Snowflake
 }
@@ -151,10 +151,10 @@ func (rr *RoleResponse) Snowflakify() error {
 type ChannelMentionResponse struct {
 	ID      string `json:"id"`
 	GuildID string `json:"guild_id"`
-	Type    int                 `json:"type"`
-	Name    string              `json:"name"`
+	Type    int    `json:"type"`
+	Name    string `json:"name"`
 
-	IDSnowflake snowflake.Snowflake
+	IDSnowflake      snowflake.Snowflake
 	GuildIDSnowflake snowflake.Snowflake
 }
 
@@ -176,12 +176,12 @@ func (cmr *ChannelMentionResponse) Snowflakify() error {
 //easyjson:json
 type AttachmentResponse struct {
 	ID       string `json:"id"`
-	Filename string              `json:"filename"`
-	Size     int                 `json:"size"`
-	URL      string              `json:"url"`
-	ProxyURL string              `json:"proxy_url"`
-	Height   int                 `json:"height"`
-	Width    int                 `json:"width"`
+	Filename string `json:"filename"`
+	Size     int    `json:"size"`
+	URL      string `json:"url"`
+	ProxyURL string `json:"proxy_url"`
+	Height   int    `json:"height"`
+	Width    int    `json:"width"`
 
 	IDSnowflake snowflake.Snowflake
 }
@@ -214,16 +214,16 @@ func (rr *ReactionResponse) Snowflakify() error {
 // EmojiResponse is the data about an emoji recevied from the json api
 //easyjson:json
 type EmojiResponse struct {
-	ID            string `json:"id"`
-	Name          string              `json:"name"`
-	Roles         []RoleResponse      `json:"roles"`
-	User          UserResponse        `json:"user"`
-	RequireColons bool                `json:"require_colons"`
-	Managed       bool                `json:"managed"`
-	Animated      bool                `json:"animated"`
-	Available     bool                `json:"available"`
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	Roles         []RoleResponse `json:"roles"`
+	User          UserResponse   `json:"user"`
+	RequireColons bool           `json:"require_colons"`
+	Managed       bool           `json:"managed"`
+	Animated      bool           `json:"animated"`
+	Available     bool           `json:"available"`
 
-	IDSnowflake snowflake.Snowflake 
+	IDSnowflake snowflake.Snowflake
 }
 
 func (er *EmojiResponse) Snowflakify() error {

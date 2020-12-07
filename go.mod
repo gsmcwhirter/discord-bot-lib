@@ -1,4 +1,4 @@
-module github.com/gsmcwhirter/discord-bot-lib/v16
+module github.com/gsmcwhirter/discord-bot-lib/v17
 
 go 1.15
 
@@ -10,5 +10,5 @@ require (
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20201204222352-654352759326
+	golang.org/x/tools v0.0.0-20201206230334-368bee879bfd
 )

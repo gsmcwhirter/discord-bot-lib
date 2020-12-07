@@ -4,10 +4,12 @@ package jsonapi
 
 import (
 	json "encoding/json"
-	snowflake "github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
+
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
+
+	snowflake "github.com/gsmcwhirter/discord-bot-lib/v17/snowflake"
 )
 
 // suppress unused package warning
@@ -18,7 +20,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(in *jlexer.Lexer, out *RoleResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi(in *jlexer.Lexer, out *RoleResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -65,7 +67,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(in *jlexe
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(out *jwriter.Writer, in RoleResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi(out *jwriter.Writer, in RoleResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -120,27 +122,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(out *jwri
 // MarshalJSON supports json.Marshaler interface
 func (v RoleResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v RoleResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *RoleResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *RoleResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(in *jlexer.Lexer, out *ReactionResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi1(in *jlexer.Lexer, out *ReactionResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -175,7 +177,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(out *jwriter.Writer, in ReactionResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi1(out *jwriter.Writer, in ReactionResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -200,27 +202,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v ReactionResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ReactionResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ReactionResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ReactionResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi1(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi1(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(in *jlexer.Lexer, out *MessageResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi2(in *jlexer.Lexer, out *MessageResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -246,7 +248,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(in *jlex
 		case "guild_id":
 			out.GuildID = string(in.String())
 		case "author":
-			easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(in, &out.Author)
+			(out.Author).UnmarshalEasyJSON(in)
 		case "member":
 			(out.Member).UnmarshalEasyJSON(in)
 		case "content":
@@ -276,7 +278,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(in *jlex
 				}
 				for !in.IsDelim(']') {
 					var v1 UserResponse
-					easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(in, &v1)
+					(v1).UnmarshalEasyJSON(in)
 					out.Mentions = append(out.Mentions, v1)
 					in.WantComma()
 				}
@@ -423,7 +425,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(out *jwriter.Writer, in MessageResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi2(out *jwriter.Writer, in MessageResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -445,7 +447,7 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(out *jwr
 	{
 		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(out, in.Author)
+		(in.Author).MarshalEasyJSON(out)
 	}
 	{
 		const prefix string = ",\"member\":"
@@ -488,7 +490,7 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(out *jwr
 				if v7 > 0 {
 					out.RawByte(',')
 				}
-				easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(out, v8)
+				(v8).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -619,179 +621,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v MessageResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v MessageResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *MessageResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *MessageResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi2(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi2(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(in *jlexer.Lexer, out *UserResponse) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.ID = string(in.String())
-		case "username":
-			out.Username = string(in.String())
-		case "discriminator":
-			out.Discriminator = string(in.String())
-		case "avatar":
-			out.Avatar = string(in.String())
-		case "bot":
-			out.Bot = bool(in.Bool())
-		case "system":
-			out.System = bool(in.Bool())
-		case "mfa_enabled":
-			out.MFAEnabled = bool(in.Bool())
-		case "locale":
-			out.Locale = string(in.String())
-		case "verified":
-			out.Verified = bool(in.Bool())
-		case "email":
-			out.Email = string(in.String())
-		case "flags":
-			out.Flags = int(in.Int())
-		case "premium_type":
-			out.PremiumType = int(in.Int())
-		case "public_flags":
-			out.PublicFlags = int(in.Int())
-		case "member":
-			if in.IsNull() {
-				in.Skip()
-				out.Member = nil
-			} else {
-				if out.Member == nil {
-					out.Member = new(GuildMemberResponse)
-				}
-				(*out.Member).UnmarshalEasyJSON(in)
-			}
-		case "IDSnowflake":
-			out.IDSnowflake = snowflake.Snowflake(in.Uint64())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(out *jwriter.Writer, in UserResponse) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.ID))
-	}
-	{
-		const prefix string = ",\"username\":"
-		out.RawString(prefix)
-		out.String(string(in.Username))
-	}
-	{
-		const prefix string = ",\"discriminator\":"
-		out.RawString(prefix)
-		out.String(string(in.Discriminator))
-	}
-	{
-		const prefix string = ",\"avatar\":"
-		out.RawString(prefix)
-		out.String(string(in.Avatar))
-	}
-	{
-		const prefix string = ",\"bot\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.Bot))
-	}
-	{
-		const prefix string = ",\"system\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.System))
-	}
-	{
-		const prefix string = ",\"mfa_enabled\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.MFAEnabled))
-	}
-	{
-		const prefix string = ",\"locale\":"
-		out.RawString(prefix)
-		out.String(string(in.Locale))
-	}
-	{
-		const prefix string = ",\"verified\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.Verified))
-	}
-	{
-		const prefix string = ",\"email\":"
-		out.RawString(prefix)
-		out.String(string(in.Email))
-	}
-	{
-		const prefix string = ",\"flags\":"
-		out.RawString(prefix)
-		out.Int(int(in.Flags))
-	}
-	{
-		const prefix string = ",\"premium_type\":"
-		out.RawString(prefix)
-		out.Int(int(in.PremiumType))
-	}
-	{
-		const prefix string = ",\"public_flags\":"
-		out.RawString(prefix)
-		out.Int(int(in.PublicFlags))
-	}
-	{
-		const prefix string = ",\"member\":"
-		out.RawString(prefix)
-		if in.Member == nil {
-			out.RawString("null")
-		} else {
-			(*in.Member).MarshalEasyJSON(out)
-		}
-	}
-	{
-		const prefix string = ",\"IDSnowflake\":"
-		out.RawString(prefix)
-		out.Uint64(uint64(in.IDSnowflake))
-	}
-	out.RawByte('}')
-}
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(in *jlexer.Lexer, out *EmojiResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi3(in *jlexer.Lexer, out *EmojiResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -838,7 +688,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(in *jlex
 				in.Delim(']')
 			}
 		case "user":
-			easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(in, &out.User)
+			(out.User).UnmarshalEasyJSON(in)
 		case "require_colons":
 			out.RequireColons = bool(in.Bool())
 		case "managed":
@@ -859,7 +709,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(out *jwriter.Writer, in EmojiResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi3(out *jwriter.Writer, in EmojiResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -892,7 +742,7 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(out *jwr
 	{
 		const prefix string = ",\"user\":"
 		out.RawString(prefix)
-		easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi3(out, in.User)
+		(in.User).MarshalEasyJSON(out)
 	}
 	{
 		const prefix string = ",\"require_colons\":"
@@ -925,27 +775,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v EmojiResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmojiResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmojiResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmojiResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi4(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi3(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(in *jlexer.Lexer, out *EmbedResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi4(in *jlexer.Lexer, out *EmbedResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1021,7 +871,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(out *jwriter.Writer, in EmbedResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi4(out *jwriter.Writer, in EmbedResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1107,27 +957,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v EmbedResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmbedResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmbedResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmbedResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi5(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi4(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(in *jlexer.Lexer, out *EmbedProviderResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi5(in *jlexer.Lexer, out *EmbedProviderResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1160,7 +1010,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(out *jwriter.Writer, in EmbedProviderResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi5(out *jwriter.Writer, in EmbedProviderResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1180,27 +1030,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v EmbedProviderResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmbedProviderResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmbedProviderResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmbedProviderResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi6(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi5(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(in *jlexer.Lexer, out *EmbedImageResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi6(in *jlexer.Lexer, out *EmbedImageResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1237,7 +1087,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(out *jwriter.Writer, in EmbedImageResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi6(out *jwriter.Writer, in EmbedImageResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1267,27 +1117,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v EmbedImageResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi6(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmbedImageResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi6(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmbedImageResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi6(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmbedImageResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi7(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi6(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(in *jlexer.Lexer, out *EmbedFooterResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi7(in *jlexer.Lexer, out *EmbedFooterResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1322,7 +1172,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(out *jwriter.Writer, in EmbedFooterResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi7(out *jwriter.Writer, in EmbedFooterResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1347,27 +1197,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v EmbedFooterResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi7(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmbedFooterResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi7(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmbedFooterResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi7(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmbedFooterResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi8(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi7(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(in *jlexer.Lexer, out *EmbedFieldResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi8(in *jlexer.Lexer, out *EmbedFieldResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1402,7 +1252,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(out *jwriter.Writer, in EmbedFieldResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi8(out *jwriter.Writer, in EmbedFieldResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1427,27 +1277,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v EmbedFieldResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi8(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmbedFieldResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi8(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmbedFieldResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi8(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmbedFieldResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi9(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi8(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(in *jlexer.Lexer, out *EmbedAuthorResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi9(in *jlexer.Lexer, out *EmbedAuthorResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1484,7 +1334,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(in *jle
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(out *jwriter.Writer, in EmbedAuthorResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi9(out *jwriter.Writer, in EmbedAuthorResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1514,27 +1364,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(out *jw
 // MarshalJSON supports json.Marshaler interface
 func (v EmbedAuthorResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi9(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EmbedAuthorResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi9(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EmbedAuthorResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi9(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EmbedAuthorResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi10(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi9(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(in *jlexer.Lexer, out *ChannelMentionResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi10(in *jlexer.Lexer, out *ChannelMentionResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1575,7 +1425,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(in *jle
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(out *jwriter.Writer, in ChannelMentionResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi10(out *jwriter.Writer, in ChannelMentionResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1615,27 +1465,27 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(out *jw
 // MarshalJSON supports json.Marshaler interface
 func (v ChannelMentionResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi10(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ChannelMentionResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi10(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ChannelMentionResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi10(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ChannelMentionResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi11(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi10(l, v)
 }
-func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(in *jlexer.Lexer, out *AttachmentResponse) {
+func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi11(in *jlexer.Lexer, out *AttachmentResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1680,7 +1530,7 @@ func easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(in *jle
 		in.Consumed()
 	}
 }
-func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(out *jwriter.Writer, in AttachmentResponse) {
+func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi11(out *jwriter.Writer, in AttachmentResponse) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1730,23 +1580,23 @@ func easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(out *jw
 // MarshalJSON supports json.Marshaler interface
 func (v AttachmentResponse) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(&w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi11(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v AttachmentResponse) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(w, v)
+	easyjson6462a441EncodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi11(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *AttachmentResponse) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(&r, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi11(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *AttachmentResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV16Jsonapi12(l, v)
+	easyjson6462a441DecodeGithubComGsmcwhirterDiscordBotLibV17Jsonapi11(l, v)
 }

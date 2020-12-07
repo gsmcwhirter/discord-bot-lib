@@ -16,15 +16,15 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v16/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v16/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/etfapi/payloads"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/wsclient"
 )
 
 type dependencies interface {

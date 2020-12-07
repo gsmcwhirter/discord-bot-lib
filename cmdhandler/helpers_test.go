@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v16/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v17/snowflake"
 )
 
 func TestUserMentionString(t *testing.T) {
