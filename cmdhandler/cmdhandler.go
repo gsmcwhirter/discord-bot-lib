@@ -93,8 +93,10 @@ func (ch *CommandHandler) calculateHelpCmd() {
 
 func (ch *CommandHandler) showHelp(msg Message) (Response, error) {
 	r := &EmbedResponse{
-		To: UserMentionString(msg.UserID()),
+		// To: UserMentionString(msg.UserID()),
 	}
+
+	r.SetReplyTo(msg)
 
 	if ch.preCommand != "" {
 		r.Description = fmt.Sprintf("Usage: %s [%s]\n\n", ch.preCommand, ch.placeholder)
@@ -143,8 +145,10 @@ func (ch *CommandHandler) getHandler(cmd string) (MessageHandler, bool) {
 // HandleMessage dispatches a Message to the relevant handler
 func (ch *CommandHandler) HandleMessage(msg Message) (Response, error) {
 	r := &SimpleEmbedResponse{
-		To: UserMentionString(msg.UserID()),
+		// To: UserMentionString(msg.UserID()),
 	}
+
+	r.SetReplyTo(msg)
 
 	var cmd string
 	var err error

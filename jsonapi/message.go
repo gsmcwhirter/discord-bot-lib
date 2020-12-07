@@ -2,21 +2,29 @@ package jsonapi
 
 //go:generate easyjson -all
 
+type MessageReference struct {
+	MessageID string `json:"message_id,omitempty"`
+	ChannelID string `json:"channel_id,omitempty"`
+	GuildID   string `json:"guild_id,omitempty"`
+}
+
 // Message is the json object that is sent to the discord api
 // to post a plain-text message to a server
 //easyjson:json
 type Message struct {
-	Content string `json:"content"`
-	Tts     bool   `json:"tts"`
+	Content string           `json:"content"`
+	Tts     bool             `json:"tts"`
+	ReplyTo MessageReference `json:"message_reference,omitempty"`
 }
 
 // MessageWithEmbed is the json object that is sent to the discord api
 // to post an embed message to a server
 //easyjson:json
 type MessageWithEmbed struct {
-	Content string `json:"content"`
-	Tts     bool   `json:"tts"`
-	Embed   Embed  `json:"embed"`
+	Content string           `json:"content"`
+	Tts     bool             `json:"tts"`
+	Embed   Embed            `json:"embed"`
+	ReplyTo MessageReference `json:"message_reference,omitempty"`
 }
 
 // Embed is a json object that represents an embed in a MessageWithEmbed

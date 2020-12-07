@@ -25,18 +25,34 @@ type Response interface {
 	MessageReactions() []string
 }
 
+// ReplyTo is the information required to create a message as a reply
+type ReplyTo struct {
+	MessageID snowflake.Snowflake
+	ChannelID snowflake.Snowflake
+	GuildID   snowflake.Snowflake
+}
+
 // SimpleResponse is a Response that is intended to present plain text
 type SimpleResponse struct {
 	To        string
 	Content   string
 	ToChannel snowflake.Snowflake
 	Reactions []string
+	ReplyTo   *ReplyTo
 
 	errors []error
 }
 
 // ensure that SimpleResponse is a Response
 var _ Response = (*SimpleResponse)(nil)
+
+func (r *SimpleResponse) SetReplyTo(m Message) {
+	r.ReplyTo = &ReplyTo{
+		MessageID: m.MessageID(),
+		ChannelID: m.ChannelID(),
+		GuildID:   m.GuildID(),
+	}
+}
 
 // SetColor is included for the Response API but is a no-op
 func (r *SimpleResponse) SetColor(color int) {}
@@ -80,10 +96,25 @@ func (r *SimpleResponse) ToString() string {
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
 func (r *SimpleResponse) ToMessage() JSONMarshaler {
-	return jsonapi.Message{
+	resp := jsonapi.Message{
 		Content: r.ToString(),
 		Tts:     false,
 	}
+
+	if r.ReplyTo != nil {
+		resp.ReplyTo = jsonapi.MessageReference{}
+		if r.ReplyTo.MessageID != 0 {
+			resp.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
+		}
+		if r.ReplyTo.ChannelID != 0 {
+			resp.ReplyTo.ChannelID = r.ReplyTo.ChannelID.ToString()
+		}
+		if r.ReplyTo.GuildID != 0 {
+			resp.ReplyTo.GuildID = r.ReplyTo.GuildID.ToString()
+		}
+	}
+
+	return resp
 }
 
 // Split separates the current response into possibly-several to account for response length limits
@@ -104,6 +135,8 @@ func (r *SimpleResponse) Split() []Response {
 			To:        r.To,
 			Content:   s,
 			ToChannel: r.ToChannel,
+			Reactions: r.Reactions,
+			ReplyTo:   r.ReplyTo,
 		})
 	}
 
@@ -124,12 +157,21 @@ type SimpleEmbedResponse struct {
 	FooterText  string
 	ToChannel   snowflake.Snowflake
 	Reactions   []string
+	ReplyTo     *ReplyTo
 
 	errors []error
 }
 
 // ensure that SimpleEmbedResponse is a Response
 var _ Response = (*SimpleEmbedResponse)(nil)
+
+func (r *SimpleEmbedResponse) SetReplyTo(m Message) {
+	r.ReplyTo = &ReplyTo{
+		MessageID: m.MessageID(),
+		ChannelID: m.ChannelID(),
+		GuildID:   m.GuildID(),
+	}
+}
 
 // SetColor sets the side color of the embed box
 func (r *SimpleEmbedResponse) SetColor(color int) {
@@ -213,6 +255,19 @@ func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
 		m.Embed.Description += "\n"
 	}
 
+	if r.ReplyTo != nil {
+		m.ReplyTo = jsonapi.MessageReference{}
+		if r.ReplyTo.MessageID != 0 {
+			m.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
+		}
+		if r.ReplyTo.ChannelID != 0 {
+			m.ReplyTo.ChannelID = r.ReplyTo.ChannelID.ToString()
+		}
+		if r.ReplyTo.GuildID != 0 {
+			m.ReplyTo.GuildID = r.ReplyTo.GuildID.ToString()
+		}
+	}
+
 	return m
 }
 
@@ -242,6 +297,8 @@ func (r *SimpleEmbedResponse) Split() []Response {
 			Color:       r.Color,
 			FooterText:  r.FooterText,
 			ToChannel:   r.ToChannel,
+			Reactions:   r.Reactions,
+			ReplyTo:     r.ReplyTo,
 		})
 	}
 
@@ -270,12 +327,21 @@ type EmbedResponse struct {
 	FooterText  string
 	ToChannel   snowflake.Snowflake
 	Reactions   []string
+	ReplyTo     *ReplyTo
 
 	errors []error
 }
 
 // ensure that EmbedResponse is a response
 var _ Response = (*EmbedResponse)(nil)
+
+func (r *EmbedResponse) SetReplyTo(m Message) {
+	r.ReplyTo = &ReplyTo{
+		MessageID: m.MessageID(),
+		ChannelID: m.ChannelID(),
+		GuildID:   m.GuildID(),
+	}
+}
 
 // SetColor sets the side color of the embed box
 func (r *EmbedResponse) SetColor(color int) {
@@ -375,11 +441,26 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 		m.Embed.Description += "\n"
 	}
 
+	if r.ReplyTo != nil {
+		m.ReplyTo = jsonapi.MessageReference{}
+		if r.ReplyTo.MessageID != 0 {
+			m.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
+		}
+		if r.ReplyTo.ChannelID != 0 {
+			m.ReplyTo.ChannelID = r.ReplyTo.ChannelID.ToString()
+		}
+		if r.ReplyTo.GuildID != 0 {
+			m.ReplyTo.GuildID = r.ReplyTo.GuildID.ToString()
+		}
+	}
+
 	return m
 }
 
 // Split separates the current response into possibly-several to account for response length limits
 func (r *EmbedResponse) Split() []Response {
+
+	// TODO: handle limit on number of EmbedFields
 
 	if len(r.ToString()) < maxLen {
 		return []Response{r}
@@ -406,6 +487,8 @@ func (r *EmbedResponse) Split() []Response {
 				Color:       r.Color,
 				FooterText:  r.FooterText,
 				ToChannel:   r.ToChannel,
+				Reactions:   r.Reactions,
+				ReplyTo:     r.ReplyTo,
 			})
 		}
 	}
@@ -419,6 +502,8 @@ func (r *EmbedResponse) Split() []Response {
 		Color:       r.Color,
 		FooterText:  r.FooterText,
 		ToChannel:   r.ToChannel,
+		Reactions:   r.Reactions,
+		ReplyTo:     r.ReplyTo,
 	}
 	descRespLen := len(desc) + len(r.FooterText)
 
@@ -494,6 +579,7 @@ func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSpli
 			Color:       r.Color,
 			FooterText:  r.FooterText,
 			ToChannel:   r.ToChannel,
+			ReplyTo:     r.ReplyTo,
 		}
 
 		resp.Fields = append(resp.Fields, EmbedField{
