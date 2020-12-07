@@ -50,16 +50,22 @@ func (mr *MessageResponse) Snowflakify() error {
 		return errors.Wrap(err, "could not snowflakify ID")
 	}
 
-	if mr.ChannelIDSnowflake, err = snowflake.FromString(mr.ChannelID); err != nil {
-		return errors.Wrap(err, "could not snowflakify ChannelID")
+	if mr.ChannelID != "" {
+		if mr.ChannelIDSnowflake, err = snowflake.FromString(mr.ChannelID); err != nil {
+			return errors.Wrap(err, "could not snowflakify ChannelID")
+		}
 	}
 
-	if mr.GuildIDSnowflake, err = snowflake.FromString(mr.GuildID); err != nil {
-		return errors.Wrap(err, "could not snowflakify GuildID")
+	if mr.GuildID != "" {
+		if mr.GuildIDSnowflake, err = snowflake.FromString(mr.GuildID); err != nil {
+			return errors.Wrap(err, "could not snowflakify GuildID")
+		}
 	}
 
-	if mr.WebhookIDSnowflake, err = snowflake.FromString(mr.WebhookID); err != nil {
-		return errors.Wrap(err, "could not snowflakify WebhookID")
+	if mr.WebhookID != "" {
+		if mr.WebhookIDSnowflake, err = snowflake.FromString(mr.WebhookID); err != nil {
+			return errors.Wrap(err, "could not snowflakify WebhookID")
+		}
 	}
 
 	if err = mr.Author.Snowflakify(); err != nil {
