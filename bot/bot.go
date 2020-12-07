@@ -378,7 +378,7 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", body)
 	}
 
 	err = respData.UnmarshalJSON(body)

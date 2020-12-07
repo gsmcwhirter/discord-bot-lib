@@ -129,6 +129,8 @@ func MessageFromElement(e Element) (Message, error) {
 		return Message{}, err
 	}
 
+	fmt.Printf("*** %#v\n", eMap)
+
 	m, err := MessageFromElementMap(eMap)
 	m.id = id
 
