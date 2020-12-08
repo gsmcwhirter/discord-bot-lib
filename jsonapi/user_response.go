@@ -32,8 +32,10 @@ type UserResponse struct {
 func (ur *UserResponse) Snowflakify() error {
 	var err error
 
-	if ur.IDSnowflake, err = snowflake.FromString(ur.ID); err != nil {
-		return errors.Wrap(err, "could not snowflakify ID")
+	if ur.ID != "" {
+		if ur.IDSnowflake, err = snowflake.FromString(ur.ID); err != nil {
+			return errors.Wrap(err, "could not snowflakify ID")
+		}
 	}
 
 	if ur.Member != nil {
