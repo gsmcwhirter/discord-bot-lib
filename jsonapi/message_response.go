@@ -234,8 +234,11 @@ type EmojiResponse struct {
 
 func (er *EmojiResponse) Snowflakify() error {
 	var err error
-	if er.IDSnowflake, err = snowflake.FromString(er.ID); err != nil {
-		return errors.Wrap(err, "could not snowflakify ID")
+
+	if er.ID != "" {
+		if er.IDSnowflake, err = snowflake.FromString(er.ID); err != nil {
+			return errors.Wrap(err, "could not snowflakify ID")
+		}
 	}
 
 	if err = er.User.Snowflakify(); err != nil {
