@@ -56,9 +56,9 @@ type DiscordBot interface {
 	Run(context.Context) error
 	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
 	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (jsonapi.MessageResponse, error)
-	GetMessage(context.Context, snowflake.Snowflake, snowflake.Snowflake) (*http.Response, []byte, error)
-	CreateReaction(context.Context, snowflake.Snowflake, snowflake.Snowflake, string) (*http.Response, error)
-	GetGuildMember(context.Context, snowflake.Snowflake, snowflake.Snowflake) (jsonapi.GuildMemberResponse, error)
+	GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (jsonapi.MessageResponse, error)
+	CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (*http.Response, error)
+	GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (jsonapi.GuildMemberResponse, error)
 	UpdateSequence(int) bool
 	ReconfigureHeartbeat(context.Context, int)
 	LastSequence() int
@@ -394,7 +394,7 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 	return respData, err
 }
 
-func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (resp *http.Response, body []byte, err error) {
+func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData jsonapi.MessageResponse, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetMessage")
 	defer span.End()
 
@@ -404,19 +404,29 @@ func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflak
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error waiting for rate limiter")
+		return respData, errors.Wrap(err, "error waiting for rate limiter")
 	}
 
-	resp, body, err = d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil)
+	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not complete the message get")
+		return respData, errors.Wrap(err, "could not complete the message get")
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
 	}
 
-	return resp, body, err
+	err = respData.UnmarshalJSON(body)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not unmarshal message information")
+	}
+
+	err = respData.Snowflakify()
+	if err != nil {
+		return respData, errors.Wrap(err, "could not snowflakify message information")
+	}
+
+	return respData, nil
 }
 
 func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
