@@ -5,8 +5,8 @@ import (
 
 	log "github.com/gsmcwhirter/go-util/v7/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v17/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v17/request"
+	"github.com/gsmcwhirter/discord-bot-lib/v18/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v18/request"
 )
 
 type Logger = log.Logger

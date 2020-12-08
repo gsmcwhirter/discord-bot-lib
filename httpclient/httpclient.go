@@ -11,7 +11,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v7/logging/level"
 	"github.com/gsmcwhirter/go-util/v7/telemetry"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v17/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v18/logging"
 )
 
 // HTTPClient is the interface of an http client
