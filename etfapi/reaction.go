@@ -83,9 +83,17 @@ func ReactionFromElementMap(eMap map[string]Element) (Reaction, error) {
 
 	e2, ok = eMap["emoji"]
 	if ok {
-		r.emoji, err = e2.ToString()
+		eMap2, err := e2.ToMap()
 		if err != nil {
-			return r, errors.Wrap(err, "could not get emoji")
+			return r, errors.Wrap(err, "could not get emoji map")
+		}
+
+		e3, ok := eMap2["name"]
+		if ok {
+			r.emoji, err = e3.ToString()
+			if err != nil {
+				return r, errors.Wrap(err, "could not get emoji")
+			}
 		}
 	}
 
