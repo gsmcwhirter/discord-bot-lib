@@ -443,13 +443,13 @@ func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snow
 	}
 
 	emoji = url.QueryEscape(emoji)
-	resp, err = d.deps.HTTPClient().Put(ctx, fmt.Sprintf("%s/channels/%d/messages/%d/reactions/%s/@me", d.config.APIURL, cid, mid, emoji), nil, nil)
+	resp, body, err := d.deps.HTTPClient().PutBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d/reactions/%s/@me", d.config.APIURL, cid, mid, emoji), nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not complete the reaction create")
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		err = errors.Wrap(ErrResponse, "non-204 response", "status_code", resp.StatusCode)
+		err = errors.Wrap(ErrResponse, "non-204 response", "status_code", resp.StatusCode, "emoji", emoji, "response_body", string(body))
 	}
 
 	return resp, err
