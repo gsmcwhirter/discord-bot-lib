@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -436,6 +437,8 @@ func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snow
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	level.Info(logger).Message("creating reaction")
+
+	emoji = strings.TrimSuffix(emoji, ">")
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
