@@ -360,6 +360,16 @@ func (s *state) Guild(gid snowflake.Snowflake) (Guild, bool) {
 	return g, ok
 }
 
+// GuildIDs returns the ids of all the guilds in the current session state
+func (s *state) GuildIDs() []snowflake.Snowflake {
+	gids := make([]snowflake.Snowflake, 0, len(s.guilds))
+	for gid := range s.guilds {
+		gids = append(gids, gid)
+	}
+
+	return gids
+}
+
 // ChannelName returns the name of the channel with the provided id, if one is known
 //
 // The second return value will be alse if not such channel was found

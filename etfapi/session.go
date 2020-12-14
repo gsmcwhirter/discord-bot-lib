@@ -47,6 +47,14 @@ func (s *Session) Guild(gid snowflake.Snowflake) (Guild, bool) {
 	return s.state.Guild(gid)
 }
 
+// GuildIDs finds all the currently stored guild ids in the session state
+func (s *Session) GuildIDs() []snowflake.Snowflake {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return s.state.GuildIDs()
+}
+
 // GuildOfChannel returns the id of the guild that owns the channel with the provided id, if one is known
 //
 // The second return value will be false if no such guild was found
