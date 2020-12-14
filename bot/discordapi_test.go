@@ -20,6 +20,7 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v18/httpclient"
 	"github.com/gsmcwhirter/discord-bot-lib/v18/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v18/messagehandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v18/stats"
 	"github.com/gsmcwhirter/discord-bot-lib/v18/wsclient"
 )
 
@@ -103,6 +104,7 @@ type mockdeps struct {
 	mh      bot.DiscordMessageHandler
 	rep     errreport.Reporter
 	census  *telemetry.Census
+	actRec  *stats.ActivityRecorder
 }
 
 func (d *mockdeps) Logger() logging.Logger                           { return d.logger }
@@ -116,6 +118,7 @@ func (d *mockdeps) BotSession() *etfapi.Session                      { return d.
 func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
 func (d *mockdeps) ErrReporter() errreport.Reporter                  { return d.rep }
 func (d *mockdeps) Census() *telemetry.Census                        { return d.census }
+func (d *mockdeps) MessageHandlerRecorder() *stats.ActivityRecorder  { return d.actRec }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -137,6 +140,7 @@ func TestDiscordBot(t *testing.T) {
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
 		session: etfapi.NewSession(),
 		rep:     errreport.NopReporter{},
+		actRec:  stats.NewActivityRecorder(30.0),
 	}
 
 	deps.census = telemetry.NewCensus(telemetry.Options{

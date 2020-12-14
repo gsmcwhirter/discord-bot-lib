@@ -23,6 +23,8 @@ type dependencies interface {
 	BotSession() *etfapi.Session
 	MessageRateLimiter() *rate.Limiter
 	Census() *telemetry.Census
+
+	MessageHandlerRecorder() *stats.ActivityRecorder
 }
 
 type discordMessageHandler struct {
