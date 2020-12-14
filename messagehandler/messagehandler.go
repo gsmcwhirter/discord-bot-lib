@@ -93,6 +93,8 @@ func (c *discordMessageHandler) HandleRequest(req wsclient.WSMessage, resp chan<
 	defer span.End()
 	req.Ctx = ctx
 
+	c.deps.MessageHandlerRecorder().Incr(1)
+
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	level.Info(logger).Message("discordapi dispatching request")
 
