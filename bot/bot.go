@@ -321,7 +321,7 @@ func (d *discordBot) GetGateway(ctx context.Context) (jsonapi.GatewayResponse, e
 		return respData, errors.Wrap(err, "could not get gateway information")
 	}
 	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response")
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
 	}
 
 	level.Debug(logger).Message("response stats",
@@ -379,7 +379,7 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", body)
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
 	}
 
 	err = respData.UnmarshalJSON(body)
@@ -414,7 +414,7 @@ func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflak
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
 	}
 
 	err = respData.UnmarshalJSON(body)
@@ -477,7 +477,7 @@ func (d *discordBot) GetGuildMember(ctx context.Context, gid, uid snowflake.Snow
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode)
+		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
 	}
 
 	err = respData.UnmarshalJSON(body)
