@@ -3,9 +3,9 @@ package cmdhandler
 import (
 	"context"
 
-	"github.com/gsmcwhirter/go-util/v7/parser"
+	"github.com/gsmcwhirter/go-util/v8/parser"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
 )
 
 var quotes = []rune{'"', '“', '”', '«', '»', '„'}

@@ -8,22 +8,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v7/logging/level"
-	"github.com/gsmcwhirter/go-util/v7/telemetry"
+	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/json"
+	"github.com/gsmcwhirter/go-util/v8/logging/level"
+	"github.com/gsmcwhirter/go-util/v8/telemetry"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
 )
-
-// HTTPClient is the interface of an http client
-type HTTPClient interface {
-	SetHeaders(http.Header)
-	Get(context.Context, string, *http.Header) (*http.Response, error)
-	GetBody(context.Context, string, *http.Header) (*http.Response, []byte, error)
-	Post(context.Context, string, *http.Header, io.Reader) (*http.Response, error)
-	PostBody(context.Context, string, *http.Header, io.Reader) (*http.Response, []byte, error)
-	Put(context.Context, string, *http.Header, io.Reader) (*http.Response, error)
-	PutBody(context.Context, string, *http.Header, io.Reader) (*http.Response, []byte, error)
-}
 
 type dependencies interface {
 	Logger() logging.Logger
@@ -31,14 +22,17 @@ type dependencies interface {
 	HTTPDoer() Doer
 }
 
-type httpClient struct {
+// ErrResponse is the error that is wrapped and returned when there is a non-200 api response
+var ErrResponse = errors.New("error response")
+
+type HTTPClient struct {
 	deps    dependencies
 	headers http.Header
 }
 
 // NewHTTPClient creates a new http client
-func NewHTTPClient(deps dependencies) HTTPClient {
-	return &httpClient{
+func NewHTTPClient(deps dependencies) *HTTPClient {
+	return &HTTPClient{
 		deps:    deps,
 		headers: http.Header{},
 	}
@@ -53,7 +47,7 @@ func addHeaders(to *http.Header, from http.Header) {
 	}
 }
 
-func (c *httpClient) doRequest(ctx context.Context, logger logging.Logger, method, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
+func (c *HTTPClient) doRequest(ctx context.Context, logger logging.Logger, method, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err
@@ -83,12 +77,12 @@ func (c *httpClient) doRequest(ctx context.Context, logger logging.Logger, metho
 	return resp, nil
 }
 
-func (c *httpClient) SetHeaders(h http.Header) {
+func (c *HTTPClient) SetHeaders(h http.Header) {
 	addHeaders(&c.headers, h)
 }
 
-func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.Get")
+func (c *HTTPClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Get")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -105,8 +99,8 @@ func (c *httpClient) Get(ctx context.Context, url string, headers *http.Header) 
 	return resp, nil
 }
 
-func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Header) (*http.Response, []byte, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.GetBody")
+func (c *HTTPClient) GetBody(ctx context.Context, url string, headers *http.Header) (*http.Response, []byte, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.GetBody")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -125,8 +119,39 @@ func (c *httpClient) GetBody(ctx context.Context, url string, headers *http.Head
 	return resp, body, err
 }
 
-func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.Post")
+func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Header, t interface{}) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.GetJSON")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, c.deps.Logger())
+
+	resp, err := c.doRequest(ctx, logger, "GET", url, headers, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close() //nolint:errcheck // not a real issue here
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var body []byte
+		var err error
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			err = errors.WithDetails(ErrResponse, "read_error", err.Error())
+		} else {
+			err = ErrResponse
+		}
+		return resp, errors.Wrap(err, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
+	}
+
+	err = json.UnmarshalFromReader(resp.Body, t)
+	return resp, errors.Wrap(err, "could not unmarshal json")
+}
+
+func (c *HTTPClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Post")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -143,8 +168,8 @@ func (c *httpClient) Post(ctx context.Context, url string, headers *http.Header,
 	return resp, nil
 }
 
-func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.PostBody")
+func (c *HTTPClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PostBody")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -163,8 +188,39 @@ func (c *httpClient) PostBody(ctx context.Context, url string, headers *http.Hea
 	return resp, respBody, err
 }
 
-func (c *httpClient) Put(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.Put")
+func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Header, body io.Reader, t interface{}) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PostBody")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, c.deps.Logger())
+
+	resp, err := c.doRequest(ctx, logger, "POST", url, headers, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close() //nolint:errcheck // not a real issue here
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var body []byte
+		var err error
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			err = errors.WithDetails(ErrResponse, "read_error", err.Error())
+		} else {
+			err = ErrResponse
+		}
+		return resp, errors.Wrap(err, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
+	}
+
+	err = json.UnmarshalFromReader(resp.Body, t)
+	return resp, errors.Wrap(err, "could not unmarshal json")
+}
+
+func (c *HTTPClient) Put(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Put")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -181,8 +237,8 @@ func (c *httpClient) Put(ctx context.Context, url string, headers *http.Header, 
 	return resp, nil
 }
 
-func (c *httpClient) PutBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "httpClient.PutBody")
+func (c *HTTPClient) PutBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PutBody")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -199,4 +255,35 @@ func (c *httpClient) PutBody(ctx context.Context, url string, headers *http.Head
 	respBody, err := ioutil.ReadAll(resp.Body)
 
 	return resp, respBody, err
+}
+
+func (c *HTTPClient) PutJSON(ctx context.Context, url string, headers *http.Header, body io.Reader, t interface{}) (*http.Response, error) {
+	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PutJSON")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, c.deps.Logger())
+
+	resp, err := c.doRequest(ctx, logger, "PUT", url, headers, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close() //nolint:errcheck // not a real issue here
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var body []byte
+		var err error
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			err = errors.WithDetails(ErrResponse, "read_error", err.Error())
+		} else {
+			err = ErrResponse
+		}
+		return resp, errors.Wrap(err, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
+	}
+
+	err = json.UnmarshalFromReader(resp.Body, t)
+	return resp, errors.Wrap(err, "could not unmarshal json")
 }

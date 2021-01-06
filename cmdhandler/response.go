@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/json"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
 )
 
 const maxLen = 1024
@@ -96,13 +96,13 @@ func (r *SimpleResponse) ToString() string {
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
 func (r *SimpleResponse) ToMessage() JSONMarshaler {
-	resp := jsonapi.Message{
+	resp := json.Message{
 		Content: r.ToString(),
 		Tts:     false,
 	}
 
 	if r.ReplyTo != nil {
-		resp.ReplyTo = jsonapi.MessageReference{}
+		resp.ReplyTo = json.MessageReference{}
 		if r.ReplyTo.MessageID != 0 {
 			resp.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
 		}
@@ -224,10 +224,10 @@ func (r *SimpleEmbedResponse) ToString() string {
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
 func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
-	m := jsonapi.MessageWithEmbed{
+	m := json.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
 		Tts:     false,
-		Embed: jsonapi.Embed{
+		Embed: json.Embed{
 			Timestamp: time.Now().Format(time.RFC3339),
 		},
 	}
@@ -256,7 +256,7 @@ func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
 	}
 
 	if r.ReplyTo != nil {
-		m.ReplyTo = jsonapi.MessageReference{}
+		m.ReplyTo = json.MessageReference{}
 		if r.ReplyTo.MessageID != 0 {
 			m.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
 		}
@@ -402,10 +402,10 @@ func (r *EmbedResponse) ToString() string {
 // ToMessage generates an object that can be marshaled as json and sent to
 // the discord http API
 func (r *EmbedResponse) ToMessage() JSONMarshaler {
-	m := jsonapi.MessageWithEmbed{
+	m := json.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
 		Tts:     false,
-		Embed: jsonapi.Embed{
+		Embed: json.Embed{
 			Timestamp: time.Now().Format(time.RFC3339),
 		},
 	}
@@ -426,9 +426,9 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 		m.Embed.Footer.Text = r.FooterText
 	}
 
-	m.Embed.Fields = make([]jsonapi.EmbedField, 0, len(r.Fields))
+	m.Embed.Fields = make([]json.EmbedField, 0, len(r.Fields))
 	for _, ef := range r.Fields {
-		m.Embed.Fields = append(m.Embed.Fields, jsonapi.EmbedField{
+		m.Embed.Fields = append(m.Embed.Fields, json.EmbedField{
 			Name:  ef.Name,
 			Value: ef.Val,
 		})
@@ -442,7 +442,7 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 	}
 
 	if r.ReplyTo != nil {
-		m.ReplyTo = jsonapi.MessageReference{}
+		m.ReplyTo = json.MessageReference{}
 		if r.ReplyTo.MessageID != 0 {
 			m.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
 		}

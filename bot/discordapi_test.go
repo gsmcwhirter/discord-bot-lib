@@ -9,19 +9,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v7/deferutil"
-	"github.com/gsmcwhirter/go-util/v7/telemetry"
+	"github.com/gsmcwhirter/go-util/v8/deferutil"
+	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/messagehandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/dispatcher"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/wsclient"
 )
 
 type nopLogger struct{}
@@ -95,30 +96,30 @@ func (ce *customMetricsExporter) ExportView(vd *telemetry.ViewData) {
 type mockdeps struct {
 	logger  logging.Logger
 	doer    httpclient.Doer
-	http    httpclient.HTTPClient
+	http    *httpclient.HTTPClient
 	wsd     wsclient.Dialer
-	ws      wsclient.WSClient
+	ws      *wsclient.WSClient
 	msgrl   *rate.Limiter
 	cnxrl   *rate.Limiter
-	session *etfapi.Session
-	mh      bot.DiscordMessageHandler
+	session *session.Session
+	mh      bot.Dispatcher
 	rep     errreport.Reporter
 	census  *telemetry.Census
 	actRec  *stats.ActivityRecorder
 }
 
-func (d *mockdeps) Logger() logging.Logger                           { return d.logger }
-func (d *mockdeps) HTTPDoer() httpclient.Doer                        { return d.doer }
-func (d *mockdeps) HTTPClient() httpclient.HTTPClient                { return d.http }
-func (d *mockdeps) WSDialer() wsclient.Dialer                        { return d.wsd }
-func (d *mockdeps) WSClient() wsclient.WSClient                      { return d.ws }
-func (d *mockdeps) MessageRateLimiter() *rate.Limiter                { return d.msgrl }
-func (d *mockdeps) ConnectRateLimiter() *rate.Limiter                { return d.cnxrl }
-func (d *mockdeps) BotSession() *etfapi.Session                      { return d.session }
-func (d *mockdeps) DiscordMessageHandler() bot.DiscordMessageHandler { return d.mh }
-func (d *mockdeps) ErrReporter() errreport.Reporter                  { return d.rep }
-func (d *mockdeps) Census() *telemetry.Census                        { return d.census }
-func (d *mockdeps) MessageHandlerRecorder() *stats.ActivityRecorder  { return d.actRec }
+func (d *mockdeps) Logger() logging.Logger                          { return d.logger }
+func (d *mockdeps) HTTPDoer() httpclient.Doer                       { return d.doer }
+func (d *mockdeps) HTTPClient() bot.HTTPClient                      { return d.http }
+func (d *mockdeps) WSDialer() wsclient.Dialer                       { return d.wsd }
+func (d *mockdeps) WSClient() wsapi.WSClient                        { return d.ws }
+func (d *mockdeps) MessageRateLimiter() *rate.Limiter               { return d.msgrl }
+func (d *mockdeps) ConnectRateLimiter() *rate.Limiter               { return d.cnxrl }
+func (d *mockdeps) BotSession() *session.Session                    { return d.session }
+func (d *mockdeps) Dispatcher() bot.Dispatcher                      { return d.mh }
+func (d *mockdeps) ErrReporter() errreport.Reporter                 { return d.rep }
+func (d *mockdeps) Census() *telemetry.Census                       { return d.census }
+func (d *mockdeps) MessageHandlerRecorder() *stats.ActivityRecorder { return d.actRec }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -138,7 +139,7 @@ func TestDiscordBot(t *testing.T) {
 		wsd:     &mockWSDialer{},
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
-		session: etfapi.NewSession(),
+		session: session.NewSession(),
 		rep:     errreport.NopReporter{},
 		actRec:  stats.NewActivityRecorder(30.0),
 	}
@@ -150,10 +151,9 @@ func TestDiscordBot(t *testing.T) {
 
 	deps.http = httpclient.NewHTTPClient(deps)
 	deps.ws = wsclient.NewWSClient(deps, wsclient.Options{
-		GatewayURL:            conf.APIURL,
 		MaxConcurrentHandlers: conf.NumWorkers,
 	})
-	deps.mh = messagehandler.NewDiscordMessageHandler(deps)
+	deps.mh = dispatcher.NewDispatcher(deps)
 
 	b := bot.NewDiscordBot(deps, conf, 0, 0)
 	err := b.AuthenticateAndConnect()

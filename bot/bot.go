@@ -10,61 +10,32 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v7/errors"
-	"github.com/gsmcwhirter/go-util/v7/logging/level"
-	"github.com/gsmcwhirter/go-util/v7/request"
-	"github.com/gsmcwhirter/go-util/v7/telemetry"
+	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/logging/level"
+	"github.com/gsmcwhirter/go-util/v8/request"
+	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/etfapi/payloads"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/json"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/wsapi"
 )
 
 type dependencies interface {
 	Logger() logging.Logger
-	HTTPClient() httpclient.HTTPClient
-	WSClient() wsclient.WSClient
+	HTTPClient() HTTPClient
+	WSClient() wsapi.WSClient
 	MessageRateLimiter() *rate.Limiter
 	ConnectRateLimiter() *rate.Limiter
-	BotSession() *etfapi.Session
-	DiscordMessageHandler() DiscordMessageHandler
+	BotSession() *session.Session
+	Dispatcher() Dispatcher
 	ErrReporter() errreport.Reporter
 	Census() *telemetry.Census
-}
-
-// DiscordMessageHandlerFunc is the api that a bot expects a handler function to have
-type DiscordMessageHandlerFunc func(*etfapi.Payload, wsclient.WSMessage, chan<- wsclient.WSMessage) snowflake.Snowflake
-
-// DiscordMessageHandler is the api that a bot expects a handler manager to have
-type DiscordMessageHandler interface {
-	ConnectToBot(DiscordBot)
-	AddHandler(string, DiscordMessageHandlerFunc)
-	HandleRequest(wsclient.WSMessage, chan<- wsclient.WSMessage) snowflake.Snowflake
-}
-
-// DiscordBot is the api for a discord bot object
-type DiscordBot interface {
-	AuthenticateAndConnect() error
-	Disconnect() error
-	Run(context.Context) error
-	AddMessageHandler(event string, handler DiscordMessageHandlerFunc)
-	SendMessage(context.Context, snowflake.Snowflake, JSONMarshaler) (jsonapi.MessageResponse, error)
-	GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (jsonapi.MessageResponse, error)
-	CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (*http.Response, error)
-	GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (jsonapi.GuildMemberResponse, error)
-	UpdateSequence(int) bool
-	ReconfigureHeartbeat(context.Context, int)
-	LastSequence() int
-	Config() Config
-	Intents() int
 }
 
 // Config is the set of configuration options for creating a DiscordBot with NewDiscordBot
@@ -86,7 +57,7 @@ type hbReconfig struct {
 	interval int
 }
 
-type discordBot struct {
+type DiscordBot struct {
 	config Config
 	deps   dependencies
 
@@ -100,11 +71,9 @@ type discordBot struct {
 	lastSequence int
 }
 
-var _ DiscordBot = (*discordBot)(nil)
-
 // NewDiscordBot creates a new DiscordBot
-func NewDiscordBot(deps dependencies, conf Config, permissions, intents int) DiscordBot {
-	d := &discordBot{
+func NewDiscordBot(deps dependencies, conf Config, permissions, intents int) *DiscordBot {
+	d := &DiscordBot{
 		config: conf,
 		deps:   deps,
 
@@ -117,20 +86,20 @@ func NewDiscordBot(deps dependencies, conf Config, permissions, intents int) Dis
 		lastSequence: -1,
 	}
 
-	d.deps.DiscordMessageHandler().ConnectToBot(d)
+	d.deps.Dispatcher().ConnectToBot(d)
 
 	return d
 }
 
-func (d *discordBot) Intents() int {
+func (d *DiscordBot) Intents() int {
 	return d.intents
 }
 
-func (d *discordBot) AddMessageHandler(event string, handler DiscordMessageHandlerFunc) {
-	d.deps.DiscordMessageHandler().AddHandler(event, handler)
+func (d *DiscordBot) AddMessageHandler(event string, handler DispatchHandlerFunc) {
+	d.deps.Dispatcher().AddHandler(event, handler)
 }
 
-func (d *discordBot) AuthenticateAndConnect() error {
+func (d *DiscordBot) AuthenticateAndConnect() error {
 	ctx := request.NewRequestContext()
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
@@ -158,10 +127,7 @@ func (d *discordBot) AuthenticateAndConnect() error {
 		"gateway_url", connectURL.String(),
 	)
 
-	d.deps.WSClient().SetGateway(connectURL.String())
-	d.deps.WSClient().SetHandler(d.deps.DiscordMessageHandler())
-
-	err = d.deps.WSClient().Connect(d.config.BotToken)
+	err = d.deps.WSClient().Connect(connectURL.String(), d.config.BotToken)
 	if err != nil {
 		return errors.Wrap(err, "could not WSClient().Connect()")
 	}
@@ -171,8 +137,8 @@ func (d *discordBot) AuthenticateAndConnect() error {
 	return nil
 }
 
-func (d *discordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "discordBot.ReconfigureHeartbeat")
+func (d *DiscordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.ReconfigureHeartbeat")
 	defer span.End()
 
 	d.heartbeats <- hbReconfig{
@@ -181,16 +147,16 @@ func (d *discordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
 	}
 }
 
-func (d *discordBot) Config() Config {
+func (d *DiscordBot) Config() Config {
 	return d.config
 }
 
-func (d *discordBot) Disconnect() error {
+func (d *DiscordBot) Disconnect() error {
 	d.deps.WSClient().Close()
 	return nil
 }
 
-func (d *discordBot) Run(ctx context.Context) error {
+func (d *DiscordBot) Run(ctx context.Context) error {
 	if err := stats.Register(); err != nil {
 		return errors.Wrap(err, "could not register stats")
 	}
@@ -204,20 +170,20 @@ func (d *discordBot) Run(ctx context.Context) error {
 
 	g.Go(func() error {
 		defer d.deps.ErrReporter().AutoNotify(ctx)
-		return d.deps.WSClient().HandleRequests(ctx)
+		return d.deps.WSClient().HandleRequests(ctx, d.deps.Dispatcher())
 	})
 
 	return g.Wait()
 }
 
-func (d *discordBot) LastSequence() int {
+func (d *DiscordBot) LastSequence() int {
 	d.seqLock.Lock()
 	defer d.seqLock.Unlock()
 
 	return d.lastSequence
 }
 
-func (d *discordBot) UpdateSequence(seq int) bool {
+func (d *DiscordBot) UpdateSequence(seq int) bool {
 	d.seqLock.Lock()
 	defer d.seqLock.Unlock()
 
@@ -228,7 +194,7 @@ func (d *discordBot) UpdateSequence(seq int) bool {
 	return true
 }
 
-func (d *discordBot) heartbeatHandler(ctx context.Context) error {
+func (d *DiscordBot) heartbeatHandler(ctx context.Context) error {
 	level.Info(d.deps.Logger()).Message("waiting for heartbeat config")
 
 	// wait for init
@@ -283,16 +249,14 @@ func (d *discordBot) heartbeatHandler(ctx context.Context) error {
 	}
 }
 
-func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
+func (d *DiscordBot) sendHeartbeat(reqCtx context.Context) error {
 	reqCtx, span := d.deps.Census().StartSpan(reqCtx, "discordBot.sendHeartbeat")
 	defer span.End()
 
-	m, err := payloads.ETFPayloadToMessage(reqCtx, &payloads.HeartbeatPayload{
-		Sequence: d.lastSequence,
-	})
+	m, err := d.deps.Dispatcher().GenerateHeartbeat(reqCtx, d.lastSequence)
 	if err != nil {
-		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error formatting heartbeat", err)
-		return errors.Wrap(err, "error formatting heartbeat")
+		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error generating heartbeat", err)
+		return errors.Wrap(err, "error generating heartbeat")
 	}
 
 	err = d.deps.MessageRateLimiter().Wait(m.Ctx)
@@ -308,30 +272,17 @@ func (d *discordBot) sendHeartbeat(reqCtx context.Context) error {
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
 var ErrResponse = errors.New("error response")
 
-func (d *discordBot) GetGateway(ctx context.Context) (jsonapi.GatewayResponse, error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapiclient.GetGateway")
+func (d *DiscordBot) GetGateway(ctx context.Context) (json.GatewayResponse, error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGateway")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
-	respData := jsonapi.GatewayResponse{}
+	respData := json.GatewayResponse{}
 
-	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/gateway/bot", d.config.APIURL), nil)
+	_, err := d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/gateway/bot", d.config.APIURL), nil, &respData)
 	if err != nil {
 		return respData, errors.Wrap(err, "could not get gateway information")
-	}
-	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
-	}
-
-	level.Debug(logger).Message("response stats",
-		"response_body", body,
-		"response_bytes", len(body),
-	)
-
-	err = respData.UnmarshalJSON(body)
-	if err != nil {
-		return respData, errors.Wrap(err, "could not unmarshal gateway information")
 	}
 
 	level.Debug(logger).Message("gateway response",
@@ -344,8 +295,8 @@ func (d *discordBot) GetGateway(ctx context.Context) (jsonapi.GatewayResponse, e
 	return respData, nil
 }
 
-func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (respData jsonapi.MessageResponse, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.SendMessage")
+func (d *DiscordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m JSONMarshaler) (respData json.MessageResponse, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -369,22 +320,13 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
-	resp, body, err := d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r)
+	resp, err := d.deps.HTTPClient().PostJSON(ctx, fmt.Sprintf("%s/channels/%d/messages", d.config.APIURL, cid), &header, r, &respData)
 	if err != nil {
 		return respData, errors.Wrap(err, "could not complete the message send")
 	}
 
 	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
-	}
-
-	err = respData.UnmarshalJSON(body)
-	if err != nil {
-		return respData, errors.Wrap(err, "could not unmarshal message response information")
 	}
 
 	err = respData.Snowflakify()
@@ -395,8 +337,8 @@ func (d *discordBot) SendMessage(ctx context.Context, cid snowflake.Snowflake, m
 	return respData, err
 }
 
-func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData jsonapi.MessageResponse, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetMessage")
+func (d *DiscordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData json.MessageResponse, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -408,18 +350,9 @@ func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflak
 		return respData, errors.Wrap(err, "error waiting for rate limiter")
 	}
 
-	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil)
+	_, err = d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/channels/%d/messages/%d", d.config.APIURL, cid, mid), nil, &respData)
 	if err != nil {
 		return respData, errors.Wrap(err, "could not complete the message get")
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
-	}
-
-	err = respData.UnmarshalJSON(body)
-	if err != nil {
-		return respData, errors.Wrap(err, "could not unmarshal message information")
 	}
 
 	err = respData.Snowflakify()
@@ -430,8 +363,8 @@ func (d *discordBot) GetMessage(ctx context.Context, cid, mid snowflake.Snowflak
 	return respData, nil
 }
 
-func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetMessage")
+func (d *DiscordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -458,8 +391,8 @@ func (d *discordBot) CreateReaction(ctx context.Context, cid, mid snowflake.Snow
 	return resp, err
 }
 
-func (d *discordBot) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData jsonapi.GuildMemberResponse, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "jsonapi.GetGuildMember")
+func (d *DiscordBot) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData json.GuildMemberResponse, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildMember")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -471,18 +404,9 @@ func (d *discordBot) GetGuildMember(ctx context.Context, gid, uid snowflake.Snow
 		return respData, errors.Wrap(err, "error waiting for rate limiter")
 	}
 
-	resp, body, err := d.deps.HTTPClient().GetBody(ctx, fmt.Sprintf("%s/guilds/%d/members/%d", d.config.APIURL, gid, uid), nil)
+	_, err = d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/guilds/%d/members/%d", d.config.APIURL, gid, uid), nil, &respData)
 	if err != nil {
 		return respData, errors.Wrap(err, "could not complete the guild member get")
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return respData, errors.Wrap(ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
-	}
-
-	err = respData.UnmarshalJSON(body)
-	if err != nil {
-		return respData, errors.Wrap(err, "could not unmarshal guild member information")
 	}
 
 	err = respData.Snowflakify()

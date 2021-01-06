@@ -8,28 +8,18 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/gsmcwhirter/go-util/v7/errors"
-	"github.com/gsmcwhirter/go-util/v7/logging/level"
-	"github.com/gsmcwhirter/go-util/v7/request"
-	"github.com/gsmcwhirter/go-util/v7/telemetry"
+	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/logging/level"
+	"github.com/gsmcwhirter/go-util/v8/request"
+	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/wsapi"
 )
-
-// WSClient is the api for a client that maintains an active websocket connection and hands
-// off messages to be processed.
-type WSClient interface {
-	SetGateway(string)
-	SetHandler(MessageHandler)
-	Connect(string) error
-	Close()
-	HandleRequests(context.Context) error
-	SendMessage(msg WSMessage)
-}
 
 type dependencies interface {
 	Logger() logging.Logger
@@ -38,14 +28,13 @@ type dependencies interface {
 	Census() *telemetry.Census
 }
 
-type wsClient struct {
+type WSClient struct {
 	deps dependencies
 
-	gatewayURL string
-	conn       Conn
-	handler    MessageHandler
+	conn    Conn
+	handler wsapi.MessageHandler
 
-	responses chan WSMessage
+	responses chan wsapi.WSMessage
 
 	pool       *sync.WaitGroup
 	poolTokens chan struct{}
@@ -54,41 +43,33 @@ type wsClient struct {
 	isClosed  bool
 }
 
+var _ wsapi.WSClient = (*WSClient)(nil)
+
 // Options enables setting up a WSClient with the desired connection settings
 type Options struct {
-	GatewayURL            string
 	MaxConcurrentHandlers int
 }
 
 // NewWSClient creates a new WSClient
-func NewWSClient(deps dependencies, options Options) WSClient {
-	c := &wsClient{
-		deps:       deps,
-		gatewayURL: options.GatewayURL,
-		closeLock:  &sync.Mutex{},
+func NewWSClient(deps dependencies, options Options) *WSClient {
+	c := &WSClient{
+		deps:      deps,
+		closeLock: &sync.Mutex{},
 	}
 
 	c.pool = &sync.WaitGroup{}
 	if options.MaxConcurrentHandlers <= 0 {
 		c.poolTokens = make(chan struct{}, 20)
-		c.responses = make(chan WSMessage, 20)
+		c.responses = make(chan wsapi.WSMessage, 20)
 	} else {
 		c.poolTokens = make(chan struct{}, options.MaxConcurrentHandlers)
-		c.responses = make(chan WSMessage, options.MaxConcurrentHandlers)
+		c.responses = make(chan wsapi.WSMessage, options.MaxConcurrentHandlers)
 	}
 
 	return c
 }
 
-func (c *wsClient) SetGateway(url string) {
-	c.gatewayURL = url
-}
-
-func (c *wsClient) SetHandler(handler MessageHandler) {
-	c.handler = handler
-}
-
-func (c *wsClient) Connect(token string) error {
+func (c *WSClient) Connect(gatewayURL, token string) error {
 	var err error
 	ctx := request.NewRequestContext()
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -100,16 +81,16 @@ func (c *wsClient) Connect(token string) error {
 	var dialResp *http.Response
 
 	level.Debug(logger).Message("ws client dial start",
-		"url", c.gatewayURL,
+		"url", gatewayURL,
 	)
 
 	start := time.Now()
-	c.conn, dialResp, err = c.deps.WSDialer().Dial(c.gatewayURL, dialHeader)
+	c.conn, dialResp, err = c.deps.WSDialer().Dial(gatewayURL, dialHeader)
 
 	level.Info(logger).Message("ws client dial complete",
 		"elapsed_ns", time.Since(start).Nanoseconds(),
 		"status_code", dialResp.StatusCode,
-		"url", c.gatewayURL,
+		"url", gatewayURL,
 	)
 
 	if err != nil {
@@ -124,14 +105,14 @@ func (c *wsClient) Connect(token string) error {
 	return nil
 }
 
-func (c *wsClient) Close() {
+func (c *WSClient) Close() {
 	c.pool.Wait()
 	if c.conn != nil {
 		_ = c.conn.Close()
 	}
 }
 
-func (c *wsClient) gracefulClose() {
+func (c *WSClient) gracefulClose() {
 	c.closeLock.Lock()
 	defer c.closeLock.Unlock()
 
@@ -144,8 +125,10 @@ func (c *wsClient) gracefulClose() {
 	_ = c.conn.SetReadDeadline(time.Now())
 }
 
-func (c *wsClient) HandleRequests(ctx context.Context) error {
+func (c *WSClient) HandleRequests(ctx context.Context, handler wsapi.MessageHandler) error {
 	controls, ctx := errgroup.WithContext(ctx)
+
+	c.handler = handler
 
 	controls.Go(func() error {
 		defer c.deps.ErrReporter().AutoNotify(ctx)
@@ -166,7 +149,7 @@ func (c *wsClient) HandleRequests(ctx context.Context) error {
 	return err
 }
 
-func (c *wsClient) readMessages(ctx context.Context) error {
+func (c *WSClient) readMessages(ctx context.Context) error {
 	defer level.Info(c.deps.Logger()).Message("readMessages shutdown complete")
 
 	reader, ctx := errgroup.WithContext(ctx)
@@ -188,7 +171,7 @@ func (c *wsClient) readMessages(ctx context.Context) error {
 
 }
 
-func (c *wsClient) doReads(ctx context.Context) error {
+func (c *WSClient) doReads(ctx context.Context) error {
 	defer level.Info(c.deps.Logger()).Message("websocket reader done")
 
 	for {
@@ -212,11 +195,11 @@ func (c *wsClient) doReads(ctx context.Context) error {
 	}
 }
 
-func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byte) {
+func (c *WSClient) handleMessageRead(ctx context.Context, msgType int, msg []byte) {
 	defer c.deps.ErrReporter().Recover(ctx)
 	defer c.pool.Done()
 
-	ctx, span := c.deps.Census().StartSpan(ctx, "wsClient.handleMessageRead")
+	ctx, span := c.deps.Census().StartSpan(ctx, "WSClient.handleMessageRead")
 	defer span.End()
 
 	reqCtx := request.NewRequestContextFrom(ctx)
@@ -232,11 +215,11 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 		level.Error(logger).Err("could not record stat", err)
 	}
 
-	mT := MessageType(msgType)
+	mT := wsapi.MessageType(msgType)
 	mC := make([]byte, len(msg))
 	copy(mC, msg)
 
-	wsMsg := WSMessage{Ctx: reqCtx, MessageType: mT, MessageContents: mC}
+	wsMsg := wsapi.WSMessage{Ctx: reqCtx, MessageType: mT, MessageContents: mC}
 	level.Info(logger).Message("received message",
 		"ws_msg_type", mT,
 		"ws_msg_len", len(mC),
@@ -250,8 +233,8 @@ func (c *wsClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
 }
 
-func (c *wsClient) handleRequest(req WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "wsClient.handleRequest")
+func (c *WSClient) handleRequest(req wsapi.WSMessage) snowflake.Snowflake {
+	ctx, span := c.deps.Census().StartSpan(req.Ctx, "WSClient.handleRequest")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -274,7 +257,7 @@ func (c *wsClient) handleRequest(req WSMessage) snowflake.Snowflake {
 	}
 }
 
-func (c *wsClient) handleResponses(ctx context.Context) error {
+func (c *WSClient) handleResponses(ctx context.Context) error {
 	defer func() {
 		level.Info(c.deps.Logger()).Message("handleResponses shutdown complete")
 	}()
@@ -318,8 +301,8 @@ func (c *wsClient) handleResponses(ctx context.Context) error {
 	}
 }
 
-func (c *wsClient) processResponse(resp WSMessage) {
-	ctx, span := c.deps.Census().StartSpan(resp.Ctx, "wsClient.processResponse")
+func (c *WSClient) processResponse(resp wsapi.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(resp.Ctx, "WSClient.processResponse")
 	defer span.End()
 	resp.Ctx = ctx
 
@@ -348,8 +331,8 @@ func (c *wsClient) processResponse(resp WSMessage) {
 	}
 }
 
-func (c *wsClient) SendMessage(msg WSMessage) {
-	ctx, span := c.deps.Census().StartSpan(msg.Ctx, "wsClient.SendMessage")
+func (c *WSClient) SendMessage(msg wsapi.WSMessage) {
+	ctx, span := c.deps.Census().StartSpan(msg.Ctx, "WSClient.SendMessage")
 	defer span.End()
 	msg.Ctx = ctx
 

@@ -3,10 +3,10 @@ package logging
 import (
 	"context"
 
-	log "github.com/gsmcwhirter/go-util/v7/logging"
+	log "github.com/gsmcwhirter/go-util/v8/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v18/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v18/request"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/request"
 )
 
 type Logger = log.Logger

@@ -19,7 +19,6 @@ build-stress: version generate
 deps:  ## download dependencies
 	$Q GOPROXY=$(GOPROXY) go mod download
 	$Q GOPROXY=$(GOPROXY) go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0
-	$Q GOPROXY=$(GOPROXY) go get github.com/mailru/easyjson/easyjson
 	$Q GOPROXY=$(GOPROXY) go get golang.org/x/tools/cmd/stringer
 	$Q GOPROXY=$(GOPROXY) go get golang.org/x/tools/cmd/goimports
 

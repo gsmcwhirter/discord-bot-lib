@@ -1,8 +1,8 @@
 package stats
 
 import (
-	"github.com/gsmcwhirter/go-util/v7/errors"
-	"github.com/gsmcwhirter/go-util/v7/telemetry"
+	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/telemetry"
 )
 
 var (
