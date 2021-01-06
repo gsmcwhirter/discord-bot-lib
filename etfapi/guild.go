@@ -73,6 +73,16 @@ func (g *Guild) HasRole(uid, rid snowflake.Snowflake) bool {
 	return false
 }
 
+// RoleIsAdministrator determines if a role has admin powers in the guild
+func (g *Guild) RoleIsAdministrator(rid snowflake.Snowflake) bool {
+	r, ok := g.roles[rid]
+	if !ok {
+		return false
+	}
+
+	return r.IsAdmin()
+}
+
 // IsAdmin determines if the user with the provided ID has administrator powers
 // in the guild
 func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
@@ -86,12 +96,7 @@ func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
 	}
 
 	for _, rid := range gm.roles {
-		r, ok := g.roles[rid]
-		if !ok {
-			continue
-		}
-
-		if r.IsAdmin() {
+		if g.RoleIsAdministrator(rid) {
 			return true
 		}
 	}

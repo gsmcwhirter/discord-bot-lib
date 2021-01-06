@@ -10,5 +10,5 @@ require (
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20201211185031-d93e913c1a58
+	golang.org/x/tools v0.0.0-20210105210202-9ed45478a130
 )
