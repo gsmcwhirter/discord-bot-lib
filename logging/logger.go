@@ -5,11 +5,19 @@ import (
 
 	log "github.com/gsmcwhirter/go-util/v8/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/cmdhandler"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/request"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
 )
 
-type Logger = log.Logger
+type Message interface {
+	Context() context.Context
+	UserID() snowflake.Snowflake
+	GuildID() snowflake.Snowflake
+	ChannelID() snowflake.Snowflake
+	MessageID() snowflake.Snowflake
+	Contents() []string
+	ContentErr() error
+}
 
 // WithContext wraps a logger with fields from a context
 func WithContext(ctx context.Context, logger log.Logger) log.Logger {
@@ -23,7 +31,7 @@ func WithContext(ctx context.Context, logger log.Logger) log.Logger {
 }
 
 // WithMessage wraps a logger with fields from a cmdhandler.Message
-func WithMessage(msg cmdhandler.Message, logger log.Logger) log.Logger {
+func WithMessage(msg Message, logger log.Logger) log.Logger {
 	logger = log.WithContext(msg.Context(), logger)
 	logger = log.With(logger, "user_id", msg.UserID().ToString(), "channel_id", msg.ChannelID().ToString(), "guild_id", msg.GuildID().ToString(), "message_id", msg.MessageID().ToString())
 	return logger

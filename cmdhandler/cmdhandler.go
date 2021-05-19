@@ -36,6 +36,8 @@ type CommandHandler struct {
 	preCommand            string
 	helpOnUnknownCommands bool
 	caseSensitive         bool
+
+	helpHandler MessageHandler
 }
 
 // NewCommandHandler creates a new CommandHandler from the given parser
@@ -61,10 +63,19 @@ func NewCommandHandler(p parser.Parser, opts Options) (*CommandHandler, error) {
 	}
 
 	if opts.HelpOnEmptyCommands {
-		ch.SetHandler("", NewMessageHandler(ch.showHelp))
+		ch.SetHandler("", ch.showHelpHandler())
 	}
-	ch.SetHandler("help", NewMessageHandler(ch.showHelp))
+	ch.SetHandler("help", ch.showHelpHandler())
 	return &ch, nil
+}
+
+func mustNewCommandHandler(p parser.Parser, opts Options) *CommandHandler {
+	ch, err := NewCommandHandler(p, opts)
+	if err != nil {
+		panic(err)
+	}
+
+	return ch
 }
 
 // CommandIndicator returns the string prefix required for commands
@@ -121,6 +132,14 @@ func (ch *CommandHandler) showHelp(msg Message) (Response, error) {
 	return r, nil
 }
 
+func (ch *CommandHandler) showHelpHandler() MessageHandler {
+	if ch.helpHandler == nil {
+		ch.helpHandler = NewMessageHandler(ch.showHelp)
+	}
+
+	return ch.helpHandler
+}
+
 // SetHandler adds a handler function for the given command, overwriting any
 // previously set ones
 func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
@@ -128,8 +147,9 @@ func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
 
 	if ch.caseSensitive {
 		ch.commands[cmd] = handler
+	} else {
+		ch.commands[strings.ToLower(cmd)] = handler
 	}
-	ch.commands[strings.ToLower(cmd)] = handler
 }
 
 func (ch *CommandHandler) getHandler(cmd string) (MessageHandler, bool) {

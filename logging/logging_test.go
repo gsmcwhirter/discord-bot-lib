@@ -1,4 +1,4 @@
-package logging
+package logging_test
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/request"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v19/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
 )
 
@@ -42,7 +43,7 @@ func TestWithMessage(t *testing.T) {
 	ctx := request.NewRequestContext()
 	msg := cmdhandler.NewSimpleMessage(ctx, snowflake.Snowflake(1), snowflake.Snowflake(2), snowflake.Snowflake(3), snowflake.Snowflake(4), "test")
 
-	logger := WithMessage(msg, mock)
+	logger := logging.WithMessage(msg, mock)
 
 	logger.Log("message", "foo")
 

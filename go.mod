@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/gsmcwhirter/go-util/v8 v8.0.0
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20210106201324-f9b4b89af82d
+	golang.org/x/tools v0.1.1
 )

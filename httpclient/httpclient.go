@@ -17,9 +17,16 @@ import (
 )
 
 type dependencies interface {
-	Logger() logging.Logger
+	Logger() Logger
 	Census() *telemetry.Census
 	HTTPDoer() Doer
+}
+
+type Logger = interface {
+	Log(keyvals ...interface{}) error
+	Message(string, ...interface{})
+	Err(string, error, ...interface{})
+	Printf(string, ...interface{})
 }
 
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
@@ -47,7 +54,7 @@ func addHeaders(to *http.Header, from http.Header) {
 	}
 }
 
-func (c *HTTPClient) doRequest(ctx context.Context, logger logging.Logger, method, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
+func (c *HTTPClient) doRequest(ctx context.Context, logger Logger, method, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err

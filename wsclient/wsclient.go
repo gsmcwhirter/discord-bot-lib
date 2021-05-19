@@ -22,10 +22,17 @@ import (
 )
 
 type dependencies interface {
-	Logger() logging.Logger
+	Logger() Logger
 	WSDialer() Dialer
 	ErrReporter() errreport.Reporter
 	Census() *telemetry.Census
+}
+
+type Logger = interface {
+	Log(keyvals ...interface{}) error
+	Message(string, ...interface{})
+	Err(string, error, ...interface{})
+	Printf(string, ...interface{})
 }
 
 type WSClient struct {

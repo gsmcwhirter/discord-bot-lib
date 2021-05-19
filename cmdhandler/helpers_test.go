@@ -17,7 +17,13 @@ func TestUserMentionString(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "basic test",
+			args: args{
+				uid: snowflake.Snowflake(1234),
+			},
+			want: "<@!1234>",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -37,7 +43,26 @@ func TestIsUserMention(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "yes",
+			args: args{
+				v: "<@!1234>",
+			},
+			want: true,
+		},
+		{
+			name: "no",
+			args: args{
+				v: "<?!1234>",
+			},
+		},
+		{
+			name: "degenerate",
+			args: args{
+				v: "<@!>",
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -58,7 +83,30 @@ func TestForceUserNicknameMention(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "nothing to do",
+			args: args{
+				v: "<@!1234>",
+			},
+			want:    "<@!1234>",
+			wantErr: false,
+		},
+		{
+			name: "do convert",
+			args: args{
+				v: "<@1234>",
+			},
+			want:    "<@!1234>",
+			wantErr: false,
+		},
+		{
+			name: "not a mention",
+			args: args{
+				v: "<?!1234>",
+			},
+			want:    "",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -84,7 +132,30 @@ func TestForceUserAccountMention(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "nothing to do",
+			args: args{
+				v: "<@1234>",
+			},
+			want:    "<@1234>",
+			wantErr: false,
+		},
+		{
+			name: "do convert",
+			args: args{
+				v: "<@!1234>",
+			},
+			want:    "<@1234>",
+			wantErr: false,
+		},
+		{
+			name: "not a mention",
+			args: args{
+				v: "<?!1234>",
+			},
+			want:    "",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -109,7 +180,13 @@ func TestChannelMentionString(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "basic",
+			args: args{
+				cid: snowflake.Snowflake(5678),
+			},
+			want: "<#5678>",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -129,7 +206,20 @@ func TestIsChannelMention(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "is",
+			args: args{
+				v: "<#5678>",
+			},
+			want: true,
+		},
+		{
+			name: "not",
+			args: args{
+				v: "<?5678>",
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -149,7 +239,13 @@ func TestRoleMentionString(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "basic",
+			args: args{
+				rid: snowflake.Snowflake(9012),
+			},
+			want: "<@&9012>",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -169,7 +265,20 @@ func TestIsRoleMention(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "is",
+			args: args{
+				v: "<@&9012>",
+			},
+			want: true,
+		},
+		{
+			name: "not",
+			args: args{
+				v: "<?9012>",
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

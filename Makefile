@@ -30,6 +30,10 @@ setup: deps generate  ## attempt to get everything set up to do a build (deps an
 test:  ## run go test
 	$Q GOPROXY=$(GOPROXY) go test ./...
 
+test-coverage:
+	$Q GOPROXY=$(GOPROXY) go test -coverprofile=coverage.out ./...
+	$Q go tool cover -html=coverage.out
+
 version:  ## Print the version string and git sha that would be recorded if a release was built now
 	$Q echo $(VERSION) $(GIT_SHA)
 

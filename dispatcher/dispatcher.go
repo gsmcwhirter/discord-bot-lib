@@ -21,12 +21,19 @@ import (
 )
 
 type dependencies interface {
-	Logger() logging.Logger
+	Logger() Logger
 	BotSession() *session.Session
 	MessageRateLimiter() *rate.Limiter
 	Census() *telemetry.Census
 
 	MessageHandlerRecorder() *stats.ActivityRecorder
+}
+
+type Logger = interface {
+	Log(keyvals ...interface{}) error
+	Message(string, ...interface{})
+	Err(string, error, ...interface{})
+	Printf(string, ...interface{})
 }
 
 type Dispatcher struct {

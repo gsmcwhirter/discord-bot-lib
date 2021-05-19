@@ -16,10 +16,10 @@ import (
 
 	"github.com/gsmcwhirter/discord-bot-lib/v19/bot"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/json"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/dispatcher"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/errreport"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/stats"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/wsapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v19/wsclient"
@@ -40,23 +40,6 @@ func (d *mockHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 		Body:       ioutil.NopCloser(bytes.NewReader([]byte("{}"))),
 	}, nil
 }
-
-// type mockHTTPClient struct {
-// }
-
-// func (c *mockHTTPClient) SetHeaders(http.Header) {}
-// func (c *mockHTTPClient) Get(ctx context.Context, url string, h *http.Header) (*http.Response, error) {
-// 	return &http.Response{StatusCode: 200}, nil
-// }
-// func (c *mockHTTPClient) GetBody(ctx context.Context, url string, h *http.Header) (*http.Response, []byte, error) {
-// 	return &http.Response{StatusCode: 200}, nil, nil
-// }
-// func (c *mockHTTPClient) Post(ctx context.Context, url string, h *http.Header, b io.Reader) (*http.Response, error) {
-// 	return &http.Response{StatusCode: 200}, nil
-// }
-// func (c *mockHTTPClient) PostBody(ctx context.Context, url string, h *http.Header, b io.Reader) (*http.Response, []byte, error) {
-// 	return &http.Response{StatusCode: 200}, nil, nil
-// }
 
 type mockWSConn struct{}
 
@@ -94,7 +77,7 @@ func (ce *customMetricsExporter) ExportView(vd *telemetry.ViewData) {
 }
 
 type mockdeps struct {
-	logger  logging.Logger
+	logger  bot.Logger
 	doer    httpclient.Doer
 	http    *httpclient.HTTPClient
 	wsd     wsclient.Dialer
@@ -106,11 +89,12 @@ type mockdeps struct {
 	rep     errreport.Reporter
 	census  *telemetry.Census
 	actRec  *stats.ActivityRecorder
+	jsc     *json.DiscordJSONClient
 }
 
-func (d *mockdeps) Logger() logging.Logger                          { return d.logger }
+func (d *mockdeps) Logger() bot.Logger                              { return d.logger }
 func (d *mockdeps) HTTPDoer() httpclient.Doer                       { return d.doer }
-func (d *mockdeps) HTTPClient() bot.HTTPClient                      { return d.http }
+func (d *mockdeps) HTTPClient() json.HTTPClient                     { return d.http }
 func (d *mockdeps) WSDialer() wsclient.Dialer                       { return d.wsd }
 func (d *mockdeps) WSClient() wsapi.WSClient                        { return d.ws }
 func (d *mockdeps) MessageRateLimiter() *rate.Limiter               { return d.msgrl }
@@ -120,6 +104,7 @@ func (d *mockdeps) Dispatcher() bot.Dispatcher                      { return d.m
 func (d *mockdeps) ErrReporter() errreport.Reporter                 { return d.rep }
 func (d *mockdeps) Census() *telemetry.Census                       { return d.census }
 func (d *mockdeps) MessageHandlerRecorder() *stats.ActivityRecorder { return d.actRec }
+func (d *mockdeps) DiscordJSONClient() *json.DiscordJSONClient      { return d.jsc }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -149,11 +134,13 @@ func TestDiscordBot(t *testing.T) {
 		TraceExporter: new(customTraceExporter),
 	})
 
-	deps.http = httpclient.NewHTTPClient(deps)
 	deps.ws = wsclient.NewWSClient(deps, wsclient.Options{
 		MaxConcurrentHandlers: conf.NumWorkers,
 	})
 	deps.mh = dispatcher.NewDispatcher(deps)
+
+	deps.http = httpclient.NewHTTPClient(deps)
+	deps.jsc = json.NewDiscordJSONClient(deps, conf.APIURL)
 
 	b := bot.NewDiscordBot(deps, conf, 0, 0)
 	err := b.AuthenticateAndConnect()
