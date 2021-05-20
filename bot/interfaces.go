@@ -15,13 +15,13 @@ type Logger = interface {
 	Printf(string, ...interface{})
 }
 
-type Payload interface {
+type Payload = interface {
 	EventName() string
 	Contents() map[string]etf.Element
 }
 
 // DispatcherFunc is the api that a bot expects a handler function to have
-type DispatchHandlerFunc func(Payload, wsapi.WSMessage, chan<- wsapi.WSMessage) snowflake.Snowflake
+type DispatchHandlerFunc = func(Payload, wsapi.WSMessage, chan<- wsapi.WSMessage) snowflake.Snowflake
 
 // Dispatcher is the api that a bot expects a handler manager to have
 type Dispatcher interface {

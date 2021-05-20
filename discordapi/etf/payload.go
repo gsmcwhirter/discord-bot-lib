@@ -11,19 +11,22 @@ import (
 
 // Payload represents the data in a etf api payload (both for sending and receiving)
 type Payload struct {
-	OpCode    discordapi.OpCode
-	SeqNum    *int
-	EventName string
+	OpCode discordapi.OpCode
+	SeqNum *int
+	EName  string
 
 	Data     map[string]Element
 	DataList []Element
 }
 
+func (p *Payload) Contents() map[string]Element { return p.Data }
+func (p *Payload) EventName() string            { return p.EName }
+
 func (p Payload) String() string {
 	if p.DataList != nil {
-		return fmt.Sprintf("Payload{OpCode: %v, DataList: %v, SeqNum: %v, EventName: %v}", p.OpCode, p.DataList, p.SeqNum, p.EventName)
+		return fmt.Sprintf("Payload{OpCode: %v, DataList: %v, SeqNum: %v, EventName: %v}", p.OpCode, p.DataList, p.SeqNum, p.EName)
 	}
-	return fmt.Sprintf("Payload{OpCode: %v, Data: %+v, SeqNum: %v, EventName: %v}", p.OpCode, p.Data, p.SeqNum, p.EventName)
+	return fmt.Sprintf("Payload{OpCode: %v, Data: %+v, SeqNum: %v, EventName: %v}", p.OpCode, p.Data, p.SeqNum, p.EName)
 }
 
 var opElement Element
@@ -123,7 +126,7 @@ func (p *Payload) unmarshal(key string, val Element) error {
 				return errors.Wrap(err, "bad payload")
 			}
 
-			p.EventName = eName
+			p.EName = eName
 		}
 
 	case "s":

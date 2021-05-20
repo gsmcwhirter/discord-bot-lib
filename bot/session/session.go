@@ -32,7 +32,7 @@ func (s *Session) ID() string {
 	s.lock.RLock()         //nolint:staticcheck // this is technically possibly a nil dereference, but won't be in practice
 	defer s.lock.RUnlock() //nolint:staticcheck // this is technically possibly a nil dereference, but won't be in practice
 
-	if s == nil {
+	if s == nil { //nolint:staticcheck // safety measure
 		return ""
 	}
 	return s.sessionID

@@ -44,11 +44,11 @@ func TestPayload_Marshal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &etf.Payload{
-				OpCode:    tt.fields.OpCode,
-				SeqNum:    tt.fields.SeqNum,
-				EventName: tt.fields.EventName,
-				Data:      tt.fields.Data,
-				DataList:  tt.fields.DataList,
+				OpCode:   tt.fields.OpCode,
+				SeqNum:   tt.fields.SeqNum,
+				EName:    tt.fields.EventName,
+				Data:     tt.fields.Data,
+				DataList: tt.fields.DataList,
 			}
 			got, err := p.Marshal()
 			if (err != nil) != tt.wantErr {

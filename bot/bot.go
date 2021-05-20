@@ -91,8 +91,8 @@ func (d *DiscordBot) Intents() int {
 	return d.intents
 }
 
-func (d *DiscordBot) AddMessageHandler(event string, handler DispatchHandlerFunc) {
-	d.deps.Dispatcher().AddHandler(event, handler)
+func (d *DiscordBot) Dispatcher() Dispatcher {
+	return d.deps.Dispatcher()
 }
 
 func (d *DiscordBot) AuthenticateAndConnect() error {

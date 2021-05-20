@@ -39,15 +39,15 @@ type Logger = interface {
 type Dispatcher struct {
 	deps           dependencies
 	bot            *bot.DiscordBot
-	opCodeDispatch map[discordapi.OpCode]bot.DispatchHandlerFunc
+	opCodeDispatch map[discordapi.OpCode]DispatchHandlerFunc
 
 	dispatcherLock *sync.Mutex
-	eventDispatch  map[string][]bot.DispatchHandlerFunc
+	eventDispatch  map[string][]DispatchHandlerFunc
 }
 
 var _ bot.Dispatcher = (*Dispatcher)(nil)
 
-func noop(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func noop(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	return 0
 }
 
@@ -59,7 +59,7 @@ func NewDispatcher(deps dependencies) *Dispatcher {
 		dispatcherLock: &sync.Mutex{},
 	}
 
-	c.opCodeDispatch = map[discordapi.OpCode]bot.DispatchHandlerFunc{
+	c.opCodeDispatch = map[discordapi.OpCode]DispatchHandlerFunc{
 		discordapi.Hello:          c.handleHello,
 		discordapi.Heartbeat:      c.handleHeartbeat,
 		discordapi.HeartbeatAck:   noop,
@@ -68,7 +68,7 @@ func NewDispatcher(deps dependencies) *Dispatcher {
 		discordapi.Dispatch:       c.handleDispatch,
 	}
 
-	c.eventDispatch = map[string][]bot.DispatchHandlerFunc{
+	c.eventDispatch = map[string][]DispatchHandlerFunc{
 		"READY":               {c.handleReady},
 		"GUILD_CREATE":        {c.handleGuildCreate},
 		"GUILD_UPDATE":        {c.handleGuildUpdate},
@@ -114,7 +114,7 @@ func (c *Dispatcher) GenerateHeartbeat(reqCtx context.Context, seqNum int) (wsap
 	return m, nil
 }
 
-func (c *Dispatcher) AddHandler(event string, handler bot.DispatchHandlerFunc) {
+func (c *Dispatcher) AddHandler(event string, handler DispatchHandlerFunc) {
 	c.dispatcherLock.Lock()
 	defer c.dispatcherLock.Unlock()
 
@@ -168,13 +168,11 @@ func (c *Dispatcher) HandleRequest(req wsapi.WSMessage, resp chan<- wsapi.WSMess
 		return 0
 	}
 
-	pl := NewPayload(p)
-
 	level.Info(logger).Message("sending to opHandler", "op_code", p.OpCode)
-	return opHandler(pl, req, resp)
+	return opHandler(p, req, resp)
 }
 
-func (c *Dispatcher) handleHello(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleHello(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleHello")
 	defer span.End()
 	req.Ctx = ctx
@@ -263,7 +261,7 @@ func (c *Dispatcher) handleHello(p bot.Payload, req wsapi.WSMessage, resp chan<-
 	return 0
 }
 
-func (c *Dispatcher) handleHeartbeat(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleHeartbeat(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleHeartbeat")
 	defer span.End()
 	req.Ctx = ctx
@@ -282,7 +280,7 @@ func (c *Dispatcher) handleHeartbeat(p bot.Payload, req wsapi.WSMessage, resp ch
 	return 0
 }
 
-func (c *Dispatcher) handleDispatch(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleDispatch(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleDispatch")
 	defer span.End()
 	req.Ctx = ctx
@@ -323,7 +321,7 @@ func (c *Dispatcher) handleDispatch(p bot.Payload, req wsapi.WSMessage, resp cha
 	return guildID
 }
 
-func (c *Dispatcher) handleReady(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleReady(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleReady")
 	defer span.End()
 	req.Ctx = ctx
@@ -344,7 +342,7 @@ func (c *Dispatcher) handleReady(p bot.Payload, req wsapi.WSMessage, resp chan<-
 	return 0
 }
 
-func (c *Dispatcher) handleGuildCreate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildCreate")
 	defer span.End()
 	req.Ctx = ctx
@@ -368,7 +366,7 @@ func (c *Dispatcher) handleGuildCreate(p bot.Payload, req wsapi.WSMessage, resp 
 	return gid
 }
 
-func (c *Dispatcher) handleGuildUpdate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildUpdate")
 	defer span.End()
 	req.Ctx = ctx
@@ -391,7 +389,7 @@ func (c *Dispatcher) handleGuildUpdate(p bot.Payload, req wsapi.WSMessage, resp 
 	return gid
 }
 
-func (c *Dispatcher) handleGuildDelete(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildDelete")
 	defer span.End()
 	req.Ctx = ctx
@@ -414,7 +412,7 @@ func (c *Dispatcher) handleGuildDelete(p bot.Payload, req wsapi.WSMessage, resp 
 	return gid
 }
 
-func (c *Dispatcher) handleChannelCreate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleChannelCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleChannelCreate")
 	defer span.End()
 	req.Ctx = ctx
@@ -437,7 +435,7 @@ func (c *Dispatcher) handleChannelCreate(p bot.Payload, req wsapi.WSMessage, res
 	return gid
 }
 
-func (c *Dispatcher) handleChannelUpdate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleChannelUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleChannelUpdate")
 	defer span.End()
 	req.Ctx = ctx
@@ -460,7 +458,7 @@ func (c *Dispatcher) handleChannelUpdate(p bot.Payload, req wsapi.WSMessage, res
 	return gid
 }
 
-func (c *Dispatcher) handleChannelDelete(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleChannelDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleChannelDelete")
 	defer span.End()
 	req.Ctx = ctx
@@ -483,7 +481,7 @@ func (c *Dispatcher) handleChannelDelete(p bot.Payload, req wsapi.WSMessage, res
 	return gid
 }
 
-func (c *Dispatcher) handleGuildMemberCreate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildMemberCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildMemberCreate")
 	defer span.End()
 	req.Ctx = ctx
@@ -506,7 +504,7 @@ func (c *Dispatcher) handleGuildMemberCreate(p bot.Payload, req wsapi.WSMessage,
 	return gid
 }
 
-func (c *Dispatcher) handleGuildMemberUpdate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildMemberUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildMemberUpdate")
 	defer span.End()
 	req.Ctx = ctx
@@ -529,7 +527,7 @@ func (c *Dispatcher) handleGuildMemberUpdate(p bot.Payload, req wsapi.WSMessage,
 	return gid
 }
 
-func (c *Dispatcher) handleGuildMemberDelete(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildMemberDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildMemberDelete")
 	defer span.End()
 	req.Ctx = ctx
@@ -552,7 +550,7 @@ func (c *Dispatcher) handleGuildMemberDelete(p bot.Payload, req wsapi.WSMessage,
 	return gid
 }
 
-func (c *Dispatcher) handleGuildRoleCreate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildRoleCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildRoleCreate")
 	defer span.End()
 	req.Ctx = ctx
@@ -575,7 +573,7 @@ func (c *Dispatcher) handleGuildRoleCreate(p bot.Payload, req wsapi.WSMessage, r
 	return gid
 }
 
-func (c *Dispatcher) handleGuildRoleUpdate(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildRoleUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildRoleUpdate")
 	defer span.End()
 	req.Ctx = ctx
@@ -598,7 +596,7 @@ func (c *Dispatcher) handleGuildRoleUpdate(p bot.Payload, req wsapi.WSMessage, r
 	return gid
 }
 
-func (c *Dispatcher) handleGuildRoleDelete(p bot.Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
+func (c *Dispatcher) handleGuildRoleDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildRoleDelete")
 	defer span.End()
 	req.Ctx = ctx
