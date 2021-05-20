@@ -147,9 +147,9 @@ func (ch *CommandHandler) SetHandler(cmd string, handler MessageHandler) {
 
 	if ch.caseSensitive {
 		ch.commands[cmd] = handler
-	} else {
-		ch.commands[strings.ToLower(cmd)] = handler
 	}
+
+	ch.commands[strings.ToLower(cmd)] = handler
 }
 
 func (ch *CommandHandler) getHandler(cmd string) (MessageHandler, bool) {
