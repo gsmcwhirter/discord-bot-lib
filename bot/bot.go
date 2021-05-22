@@ -65,6 +65,8 @@ type DiscordBot struct {
 
 	seqLock      *sync.Mutex
 	lastSequence int
+
+	debug bool
 }
 
 // NewDiscordBot creates a new DiscordBot
@@ -85,6 +87,10 @@ func NewDiscordBot(deps dependencies, conf Config, permissions, intents int) *Di
 	d.deps.Dispatcher().ConnectToBot(d)
 
 	return d
+}
+
+func (d *DiscordBot) SetDebug(val bool) {
+	d.debug = val
 }
 
 func (d *DiscordBot) Intents() int {
@@ -235,7 +241,9 @@ func (d *DiscordBot) heartbeatHandler(ctx context.Context) error {
 			}
 
 		case <-d.heartbeat.C: // tick
-			level.Debug(d.deps.Logger()).Message("bum-bum")
+			if d.debug {
+				level.Debug(d.deps.Logger()).Message("bum-bum")
+			}
 			reqCtx := request.NewRequestContextFrom(ctx)
 			err := d.sendHeartbeat(reqCtx)
 			if err != nil {

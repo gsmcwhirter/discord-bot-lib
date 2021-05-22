@@ -35,6 +35,8 @@ var ErrResponse = errors.New("error response")
 type HTTPClient struct {
 	deps    dependencies
 	headers http.Header
+
+	debug bool
 }
 
 // NewHTTPClient creates a new http client
@@ -54,6 +56,10 @@ func addHeaders(to *http.Header, from http.Header) {
 	}
 }
 
+func (c *HTTPClient) SetDebug(val bool) {
+	c.debug = val
+}
+
 func (c *HTTPClient) doRequest(ctx context.Context, logger Logger, method, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
@@ -65,21 +71,25 @@ func (c *HTTPClient) doRequest(ctx context.Context, logger Logger, method, url s
 		addHeaders(&req.Header, *headers)
 	}
 
-	level.Debug(logger).Message("http request start",
-		"method", method,
-		"url", url,
-		"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
-	)
+	if c.debug {
+		level.Debug(logger).Message("http request start",
+			"method", method,
+			"url", url,
+			"headers", fmt.Sprintf("%+v", NonSensitiveHeaders(req.Header)),
+		)
+	}
 	start := time.Now()
 	resp, err := c.deps.HTTPDoer().Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	level.Info(logger).Message("http request complete",
-		"elapsed_ns", time.Since(start).Nanoseconds(),
-		"status_code", resp.StatusCode,
-	)
+	if c.debug || resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		level.Info(logger).Message("http request complete",
+			"elapsed_ns", time.Since(start).Nanoseconds(),
+			"status_code", resp.StatusCode,
+		)
+	}
 
 	return resp, nil
 }

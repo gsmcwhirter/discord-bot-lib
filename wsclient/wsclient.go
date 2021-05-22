@@ -48,6 +48,8 @@ type WSClient struct {
 
 	closeLock *sync.Mutex
 	isClosed  bool
+
+	debug bool
 }
 
 var _ wsapi.WSClient = (*WSClient)(nil)
@@ -76,6 +78,10 @@ func NewWSClient(deps dependencies, options Options) *WSClient {
 	return c
 }
 
+func (c *WSClient) SetDebug(val bool) {
+	c.debug = val
+}
+
 func (c *WSClient) Connect(gatewayURL, token string) error {
 	var err error
 	ctx := request.NewRequestContext()
@@ -87,9 +93,11 @@ func (c *WSClient) Connect(gatewayURL, token string) error {
 
 	var dialResp *http.Response
 
-	level.Debug(logger).Message("ws client dial start",
-		"url", gatewayURL,
-	)
+	if c.debug {
+		level.Debug(logger).Message("ws client dial start",
+			"url", gatewayURL,
+		)
+	}
 
 	start := time.Now()
 	c.conn, dialResp, err = c.deps.WSDialer().Dial(gatewayURL, dialHeader)
@@ -107,7 +115,7 @@ func (c *WSClient) Connect(gatewayURL, token string) error {
 		defer dialResp.Body.Close() // nolint:errcheck // not a real issue here
 	}
 
-	level.Info(logger).Message("ws connected")
+	// level.Info(logger).Message("ws connected")
 
 	return nil
 }
@@ -227,14 +235,18 @@ func (c *WSClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	copy(mC, msg)
 
 	wsMsg := wsapi.WSMessage{Ctx: reqCtx, MessageType: mT, MessageContents: mC}
-	level.Info(logger).Message("received message",
-		"ws_msg_type", mT,
-		"ws_msg_len", len(mC),
-	)
 
-	level.Debug(logger).Message("waiting for worker token")
+	if c.debug {
+		level.Debug(logger).Message("received message",
+			"ws_msg_type", mT,
+			"ws_msg_len", len(mC),
+		)
+		level.Debug(logger).Message("waiting for worker token")
+	}
 	c.poolTokens <- struct{}{}
-	level.Info(logger).Message("worker token acquired")
+	if c.debug {
+		level.Debug(logger).Message("worker token acquired")
+	}
 
 	gid := c.handleRequest(wsMsg)
 	span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
@@ -249,7 +261,9 @@ func (c *WSClient) handleRequest(req wsapi.WSMessage) snowflake.Snowflake {
 
 	defer func() {
 		<-c.poolTokens
-		level.Info(logger).Message("released worker token")
+		if c.debug {
+			level.Debug(logger).Message("released worker token")
+		}
 	}()
 
 	select {
@@ -257,7 +271,9 @@ func (c *WSClient) handleRequest(req wsapi.WSMessage) snowflake.Snowflake {
 		level.Info(logger).Message("handleRequest received interrupt -- shutting down")
 		return 0
 	default:
-		level.Info(logger).Message("handleRequest dispatching request")
+		if c.debug {
+			level.Info(logger).Message("handleRequest dispatching request")
+		}
 		gid := c.handler.HandleRequest(req, c.responses)
 		span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
 		return gid
@@ -315,10 +331,12 @@ func (c *WSClient) processResponse(resp wsapi.WSMessage) {
 
 	logger := logging.WithContext(resp.Ctx, c.deps.Logger())
 
-	level.Debug(logger).Message("starting sending message",
-		"ws_msg_type", resp.MessageType,
-		"ws_msg_len", len(resp.MessageContents),
-	)
+	if c.debug {
+		level.Debug(logger).Message("starting sending message",
+			"ws_msg_type", resp.MessageType,
+			"ws_msg_len", len(resp.MessageContents),
+		)
+	}
 
 	if err := c.deps.Census().Record(resp.Ctx, []telemetry.Measurement{stats.RawMessagesSentCount.M(1)}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
@@ -327,11 +345,13 @@ func (c *WSClient) processResponse(resp wsapi.WSMessage) {
 	start := time.Now()
 	err := c.conn.WriteMessage(int(resp.MessageType), resp.MessageContents)
 
-	level.Info(logger).Message("done sending message",
-		"elapsed_ns", time.Since(start).Nanoseconds(),
-		"ws_msg_type", resp.MessageType,
-		"ws_msg_len", len(resp.MessageContents),
-	)
+	if c.debug {
+		level.Info(logger).Message("done sending message",
+			"elapsed_ns", time.Since(start).Nanoseconds(),
+			"ws_msg_type", resp.MessageType,
+			"ws_msg_len", len(resp.MessageContents),
+		)
+	}
 
 	if err != nil {
 		level.Error(logger).Err("error sending message", err)
@@ -343,11 +363,13 @@ func (c *WSClient) SendMessage(msg wsapi.WSMessage) {
 	defer span.End()
 	msg.Ctx = ctx
 
-	logger := logging.WithContext(msg.Ctx, c.deps.Logger())
-	level.Debug(logger).Message("adding message to response queue",
-		"ws_msg_type", msg.MessageType,
-		"ws_msg_len", len(msg.MessageContents),
-	)
+	if c.debug {
+		logger := logging.WithContext(msg.Ctx, c.deps.Logger())
+		level.Debug(logger).Message("adding message to response queue",
+			"ws_msg_type", msg.MessageType,
+			"ws_msg_len", len(msg.MessageContents),
+		)
+	}
 
 	c.responses <- msg
 }

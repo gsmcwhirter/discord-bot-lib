@@ -56,6 +56,8 @@ type marshaler interface {
 type DiscordJSONClient struct {
 	deps   dependencies
 	apiURL string
+
+	debug bool
 }
 
 func NewDiscordJSONClient(deps dependencies, apiURL string) *DiscordJSONClient {
@@ -65,13 +67,16 @@ func NewDiscordJSONClient(deps dependencies, apiURL string) *DiscordJSONClient {
 	}
 }
 
+func (d *DiscordJSONClient) SetDebug(val bool) {
+	d.debug = val
+}
+
 func (d *DiscordJSONClient) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData GuildMemberResponse, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildMember")
 	defer span.End()
 
-	logger := logging.WithContext(ctx, d.deps.Logger())
-
-	level.Info(logger).Message("getting guild member data")
+	// logger := logging.WithContext(ctx, d.deps.Logger())
+	// level.Info(logger).Message("getting guild member data")
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
@@ -107,10 +112,12 @@ func (d *DiscordJSONClient) GetGateway(ctx context.Context) (GatewayResponse, er
 		return respData, errors.Wrap(err, "could not get gateway information")
 	}
 
-	level.Debug(logger).Message("gateway response",
-		"gateway_url", respData.URL,
-		"gateway_shards", respData.Shards,
-	)
+	if d.debug {
+		level.Debug(logger).Message("gateway response",
+			"gateway_url", respData.URL,
+			"gateway_shards", respData.Shards,
+		)
+	}
 
 	level.Info(logger).Message("acquired gateway url")
 
@@ -123,7 +130,7 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
-	level.Info(logger).Message("sending message to channel")
+	// level.Info(logger).Message("sending message to channel")
 
 	var b []byte
 
@@ -163,9 +170,8 @@ func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.S
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
 	defer span.End()
 
-	logger := logging.WithContext(ctx, d.deps.Logger())
-
-	level.Info(logger).Message("getting message details")
+	// logger := logging.WithContext(ctx, d.deps.Logger())
+	// level.Info(logger).Message("getting message details")
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
@@ -190,7 +196,6 @@ func (d *DiscordJSONClient) CreateReaction(ctx context.Context, cid, mid snowfla
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
-
 	level.Info(logger).Message("creating reaction")
 
 	emoji = strings.TrimSuffix(emoji, ">")
