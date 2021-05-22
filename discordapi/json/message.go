@@ -16,7 +16,7 @@ type Message struct {
 	ReplyTo MessageReference `json:"message_reference,omitempty"`
 }
 
-func (m Message) MarshalJSON() ([]byte, error) {
+func (m Message) MarshalToJSON() ([]byte, error) {
 	return json.MarshalToBuffer(m)
 }
 
@@ -29,7 +29,7 @@ type MessageWithEmbed struct {
 	ReplyTo MessageReference `json:"message_reference,omitempty"`
 }
 
-func (m MessageWithEmbed) MarshalJSON() ([]byte, error) {
+func (m MessageWithEmbed) MarshalToJSON() ([]byte, error) {
 	return json.MarshalToBuffer(m)
 }
 

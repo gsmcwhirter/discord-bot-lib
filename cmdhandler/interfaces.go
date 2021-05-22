@@ -3,5 +3,5 @@ package cmdhandler
 // JSONMarshaler is the interface implemented by types that
 // can marshal themselves into valid JSON.
 type JSONMarshaler interface {
-	MarshalJSON() ([]byte, error)
+	MarshalToJSON() ([]byte, error) // yes, this is intentionally different than stdlib
 }

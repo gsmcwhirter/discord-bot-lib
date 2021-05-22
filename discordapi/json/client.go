@@ -50,7 +50,7 @@ type HTTPClient interface {
 // marshaler is the interface implemented by types that
 // can marshal themselves into valid JSON.
 type marshaler interface {
-	MarshalJSON() ([]byte, error)
+	MarshalToJSON() ([]byte, error)
 }
 
 type DiscordJSONClient struct {
@@ -134,7 +134,7 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 
 	var b []byte
 
-	b, err = m.MarshalJSON()
+	b, err = m.MarshalToJSON()
 	if err != nil {
 		return respData, errors.Wrap(err, "could not marshal message as json")
 	}
