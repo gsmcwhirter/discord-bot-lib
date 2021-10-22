@@ -16,6 +16,7 @@ const ctn = "\n\n(continued...)"
 // Response is the interface that should be returned from a command handler
 type Response interface {
 	SetColor(int)
+	GetColor() int
 	IncludeError(err error)
 	HasErrors() bool
 	ToString() string
@@ -56,6 +57,9 @@ func (r *SimpleResponse) SetReplyTo(m Message) {
 
 // SetColor is included for the Response API but is a no-op
 func (r *SimpleResponse) SetColor(color int) {}
+
+// GetColor is included for the Response API but always returns 0
+func (r *SimpleResponse) GetColor() int { return 0 }
 
 // Channel returns the ToChannel value
 func (r *SimpleResponse) Channel() snowflake.Snowflake {
@@ -176,6 +180,11 @@ func (r *SimpleEmbedResponse) SetReplyTo(m Message) {
 // SetColor sets the side color of the embed box
 func (r *SimpleEmbedResponse) SetColor(color int) {
 	r.Color = color
+}
+
+// GetColor returns the currently set color of the embed box
+func (r *SimpleEmbedResponse) GetColor() int {
+	return r.Color
 }
 
 // Channel returns the ToChannel value
@@ -346,6 +355,11 @@ func (r *EmbedResponse) SetReplyTo(m Message) {
 // SetColor sets the side color of the embed box
 func (r *EmbedResponse) SetColor(color int) {
 	r.Color = color
+}
+
+// GetColor is included for the Response API but always returns 0
+func (r *EmbedResponse) GetColor() int {
+	return r.Color
 }
 
 // Channel returns the ToChannel value
