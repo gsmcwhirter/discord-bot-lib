@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
 )
 
 func TestPayload_Marshal(t *testing.T) {

@@ -1,7 +1,7 @@
 package wsapi
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
 )
 
 // MessageHandler is the api of an object that has a HandleRequest MessageHandlerFunc method

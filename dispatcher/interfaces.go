@@ -1,9 +1,9 @@
 package dispatcher
 
 import (
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
 )
 
 type Payload = interface {

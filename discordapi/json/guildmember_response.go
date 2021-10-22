@@ -3,7 +3,7 @@ package json
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
 )
 
 // GuildMemberResponse is the data about a guild member recevied from the json api

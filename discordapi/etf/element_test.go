@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
 )
 
 func TestNewCollectionElement(t *testing.T) {

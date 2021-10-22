@@ -18,9 +18,9 @@ build-stress: version generate
 
 deps:  ## download dependencies
 	$Q GOPROXY=$(GOPROXY) go mod download
-	$Q GOPROXY=$(GOPROXY) go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.40.1
-	$Q GOPROXY=$(GOPROXY) go get golang.org/x/tools/cmd/stringer
-	$Q GOPROXY=$(GOPROXY) go get golang.org/x/tools/cmd/goimports
+	$Q GOPROXY=$(GOPROXY) go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+	$Q GOPROXY=$(GOPROXY) go install golang.org/x/tools/cmd/stringer
+	$Q GOPROXY=$(GOPROXY) go install golang.org/x/tools/cmd/goimports
 
 generate:  ## run a go generate
 	$Q GOPROXY=$(GOPROXY) go generate ./...
@@ -40,7 +40,7 @@ version:  ## Print the version string and git sha that would be recorded if a re
 vet: deps generate ## run various linters and vetters
 	$Q bash -c 'for d in $$(go list -f {{.Dir}} ./...); do gofmt -s -w $$d/*.go; done'
 	$Q bash -c 'for d in $$(go list -f {{.Dir}} ./...); do goimports -w -local $(PROJECT) $$d/*.go; done'
-	$Q golangci-lint run -E golint,gosimple,staticcheck ./...
+	$Q golangci-lint run -E revive,gosimple,staticcheck ./...
 	$Q golangci-lint run -E deadcode,depguard,errcheck,gocritic,gofmt,goimports,gosec,govet,ineffassign,nakedret,prealloc,structcheck,typecheck,unconvert,varcheck ./...
 
 help:  ## Show the help message

@@ -14,11 +14,11 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
 )
 
 type dependencies interface {

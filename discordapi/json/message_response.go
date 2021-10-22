@@ -3,7 +3,7 @@ package json
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
 )
 
 // MessageResponse is the data that is received back from the discord api

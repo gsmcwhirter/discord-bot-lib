@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
 )
 
 // Message represents the data about a message in a discord channel

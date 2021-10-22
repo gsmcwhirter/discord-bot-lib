@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v19/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
 )
 
 // ChannelType represents the type of a discord channel

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v19/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi"
 )
 
 // Payload represents the data in a etf api payload (both for sending and receiving)
