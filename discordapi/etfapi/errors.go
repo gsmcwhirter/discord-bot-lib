@@ -1,4 +1,4 @@
-package etf
+package etfapi
 
 import "github.com/gsmcwhirter/go-util/v8/errors"
 

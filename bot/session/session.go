@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // Session represents a discord bot's session with an api gateway
@@ -91,7 +91,7 @@ func (s *Session) IsGuildAdmin(gid, uid snowflake.Snowflake) bool {
 }
 
 // UpsertGuildFromElement updates data in the session state for a guild based on the given Element
-func (s *Session) UpsertGuildFromElement(e etf.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertGuildFromElement(e etfapi.Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -99,7 +99,7 @@ func (s *Session) UpsertGuildFromElement(e etf.Element) (snowflake.Snowflake, er
 }
 
 // UpsertGuildFromElementMap updates data in the session state for a guild based on the given data
-func (s *Session) UpsertGuildFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertGuildFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -107,7 +107,7 @@ func (s *Session) UpsertGuildFromElementMap(eMap map[string]etf.Element) (snowfl
 }
 
 // UpsertGuildMemberFromElementMap updates data in the session state for a guild member based on the given data
-func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -115,7 +115,7 @@ func (s *Session) UpsertGuildMemberFromElementMap(eMap map[string]etf.Element) (
 }
 
 // UpsertGuildRoleFromElementMap updates data in the session state for a guild role based on the given data
-func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -123,7 +123,7 @@ func (s *Session) UpsertGuildRoleFromElementMap(eMap map[string]etf.Element) (sn
 }
 
 // UpsertChannelFromElement updates data in the session state for a channel based on the given Element
-func (s *Session) UpsertChannelFromElement(e etf.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertChannelFromElement(e etfapi.Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -131,7 +131,7 @@ func (s *Session) UpsertChannelFromElement(e etf.Element) (snowflake.Snowflake, 
 }
 
 // UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
-func (s *Session) UpsertChannelFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -139,7 +139,7 @@ func (s *Session) UpsertChannelFromElementMap(eMap map[string]etf.Element) (snow
 }
 
 // UpdateFromReady updates data in the session state from a session ready message, and updates the session id
-func (s *Session) UpdateFromReady(data map[string]etf.Element) error {
+func (s *Session) UpdateFromReady(data map[string]etfapi.Element) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

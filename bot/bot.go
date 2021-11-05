@@ -14,17 +14,18 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/json"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
 )
 
 type dependencies interface {
 	Logger() Logger
-	DiscordJSONClient() *json.DiscordJSONClient
+	DiscordJSONClient() *jsonapi.DiscordJSONClient
 	WSClient() wsapi.WSClient
 	MessageRateLimiter() *rate.Limiter
 	ConnectRateLimiter() *rate.Limiter
@@ -45,6 +46,10 @@ type Config struct {
 	OS          string
 	BotName     string
 	BotPresence string
+
+	UseSlashCommands    bool
+	GlobalSlashCommands []jsonapi.ApplicationCommand
+	GuildSlashCommands  map[snowflake.Snowflake][]jsonapi.ApplicationCommand
 }
 
 // HBReconfig
@@ -105,6 +110,12 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 	ctx := request.NewRequestContext()
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
+	if d.config.UseSlashCommands {
+		if err := d.DiffAndRegisterSlashCommands(ctx); err != nil {
+			return errors.Wrap(err, "could not DiffAndRegisterSlashCommands")
+		}
+	}
+
 	err := d.deps.ConnectRateLimiter().Wait(ctx)
 	if err != nil {
 		return errors.Wrap(err, "connection rate limit error")
@@ -121,7 +132,7 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 	}
 
 	q := connectURL.Query()
-	q.Add("v", "6")
+	q.Add("v", "9")
 	q.Add("encoding", "etf")
 	connectURL.RawQuery = q.Encode()
 
@@ -134,9 +145,79 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(err, "could not WSClient().Connect()")
 	}
 
-	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=%d\n\n", d.config.ClientID, d.permissions)
+	scope := "bot"
+	if d.config.UseSlashCommands {
+		scope += "%20application.commands"
+	}
+	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=%s&permissions=%d\n\n", d.config.ClientID, scope, d.permissions)
 
 	return nil
+}
+
+var ErrDuplicateCommand = errors.New("duplicate command")
+
+func (d *DiscordBot) DiffAndRegisterSlashCommands(ctx context.Context) error {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.DiffAndRegisterSlashCommands")
+	defer span.End()
+
+	// logger := logging.WithContext(ctx, d.deps.Logger())
+
+	c := d.deps.DiscordJSONClient()
+
+	if _, err := c.BulkOverwriteGlobalCommands(ctx, d.config.ClientID, d.config.GlobalSlashCommands); err != nil {
+		return errors.Wrap(err, "could not BulkOverwriteGlobalCommands")
+	}
+
+	for gid, cmds := range d.config.GuildSlashCommands {
+		if _, err := c.BulkOverwriteGuildCommands(ctx, d.config.ClientID, gid, cmds); err != nil {
+			return errors.Wrap(err, "could not BulkOverwriteGuildCommands", "gid", gid.ToString())
+		}
+	}
+
+	return nil
+
+	// level.Info(logger).Message("diffing global commands")
+	// cmds, err := c.GetGlobalCommands(ctx, d.config.ClientID)
+	// if err != nil {
+	// 	return errors.Wrap(err, "could not GetGlobalCommands")
+	// }
+
+	// existing := map[jsonapi.ApplicationCommandType]map[string]snowflake.Snowflake{}
+	// want := map[jsonapi.ApplicationCommandType]map[string]int{}
+
+	// for i, v := range d.config.GlobalSlashCommands {
+	// 	tcmds, ok := want[v.Type]
+	// 	if !ok {
+	// 		tcmds = map[string]int{
+	// 			v.Name: i,
+	// 		}
+	// 	} else {
+	// 		if _, ok := tcmds[v.Name]; ok {
+	// 			return errors.WithDetails(ErrDuplicateCommand, "name", v.Name, "type", v.Type)
+	// 		}
+
+	// 		tcmds[v.Name] = i
+	// 	}
+
+	// 	want[v.Type] = tcmds
+	// }
+
+	// for _, v := range cmds {
+	// 	tcmds, ok := existing[v.Type]
+	// 	if !ok {
+	// 		tcmds = map[string]snowflake.Snowflake{
+	// 			v.Name: v.IDSnowflake,
+	// 		}
+	// 	} else {
+	// 		// don't need to check dupes here b/c discord handles it
+	// 		tcmds[v.Name] = v.IDSnowflake
+	// 	}
+
+	// 	existing[v.Type] = tcmds
+	// }
+
+	// I think bulk overwrite should work, so try that instead of manual diff
+
 }
 
 func (d *DiscordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
@@ -273,6 +354,6 @@ func (d *DiscordBot) sendHeartbeat(reqCtx context.Context) error {
 	return nil
 }
 
-func (d *DiscordBot) API() *json.DiscordJSONClient {
+func (d *DiscordBot) API() *jsonapi.DiscordJSONClient {
 	return d.deps.DiscordJSONClient()
 }

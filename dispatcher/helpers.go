@@ -5,13 +5,13 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
 )
 
 // ETFPayload is the interface that a specialized etf api payload conforms to
 type ETFPayload interface {
-	Payload() (etf.Payload, error)
+	Payload() (etfapi.Payload, error)
 }
 
 // ETFPayloadToMessage converts a specialized etf payload to a websocket message

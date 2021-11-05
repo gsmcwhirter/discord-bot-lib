@@ -1,4 +1,4 @@
-package etf
+package etfapi
 
 import (
 	"bytes"

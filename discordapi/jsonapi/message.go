@@ -1,4 +1,4 @@
-package json
+package jsonapi
 
 import "github.com/gsmcwhirter/go-util/v8/json"
 

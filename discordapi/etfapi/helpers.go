@@ -1,4 +1,4 @@
-package etf
+package etfapi
 
 import (
 	"encoding/binary"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 func writeLength16(b io.Writer, n int) error {

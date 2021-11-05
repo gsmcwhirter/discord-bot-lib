@@ -10,14 +10,14 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
 )
 
 type dependencies interface {
@@ -103,7 +103,7 @@ func (c *Dispatcher) GenerateHeartbeat(reqCtx context.Context, seqNum int) (wsap
 
 	var m wsapi.WSMessage
 
-	m, err := ETFPayloadToMessage(reqCtx, &etf.HeartbeatPayload{
+	m, err := ETFPayloadToMessage(reqCtx, &etfapi.HeartbeatPayload{
 		Sequence: seqNum,
 	})
 	if err != nil {
@@ -149,7 +149,7 @@ func (c *Dispatcher) HandleRequest(req wsapi.WSMessage, resp chan<- wsapi.WSMess
 		level.Debug(logger).Message("processing server message", "ws_msg", fmt.Sprintf("%v", req.MessageContents))
 	}
 
-	p, err := etf.Unmarshal(req.MessageContents)
+	p, err := etfapi.Unmarshal(req.MessageContents)
 	if err != nil {
 		level.Error(logger).Err("error unmarshaling payload", err, "ws_msg", fmt.Sprintf("%v", req.MessageContents))
 		return 0
@@ -222,7 +222,7 @@ func (c *Dispatcher) handleHello(p Payload, req wsapi.WSMessage, resp chan<- wsa
 	sessID := c.deps.BotSession().ID()
 	if sessID != "" {
 		level.Info(logger).Message("generating resume payload")
-		rp := &etf.ResumePayload{
+		rp := &etfapi.ResumePayload{
 			Token:     c.bot.Config().BotToken,
 			SessionID: sessID,
 			SeqNum:    c.bot.LastSequence(),
@@ -231,21 +231,21 @@ func (c *Dispatcher) handleHello(p Payload, req wsapi.WSMessage, resp chan<- wsa
 		m, err = ETFPayloadToMessage(req.Ctx, rp)
 	} else {
 		level.Info(logger).Message("generating identify payload")
-		ip := &etf.IdentifyPayload{
+		ip := &etfapi.IdentifyPayload{
 			Token:   c.bot.Config().BotToken,
 			Intents: c.bot.Intents(),
-			Properties: etf.IdentifyPayloadProperties{
+			Properties: etfapi.IdentifyPayloadProperties{
 				OS:      c.bot.Config().OS,
 				Browser: c.bot.Config().BotName,
 				Device:  c.bot.Config().BotName,
 			},
 			LargeThreshold: 250,
-			Shard: etf.IdentifyPayloadShard{
+			Shard: etfapi.IdentifyPayloadShard{
 				ID:    0,
 				MaxID: 0,
 			},
-			Presence: etf.IdentifyPayloadPresence{
-				Game: etf.IdentifyPayloadGame{
+			Presence: etfapi.IdentifyPayloadPresence{
+				Game: etfapi.IdentifyPayloadGame{
 					Name: c.bot.Config().BotPresence,
 					Type: 0,
 				},

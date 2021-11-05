@@ -3,8 +3,8 @@ package session
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // User represents the data about a discord user
@@ -18,8 +18,8 @@ type User struct {
 // UpdateFromElementMap updates the information about a user from the given data
 //
 // This will not remove information, only change and add information
-func (u *User) UpdateFromElementMap(eMap map[string]etf.Element) error {
-	var e2 etf.Element
+func (u *User) UpdateFromElementMap(eMap map[string]etfapi.Element) error {
+	var e2 etfapi.Element
 	var ok bool
 	var err error
 
@@ -48,12 +48,12 @@ func (u *User) UpdateFromElementMap(eMap map[string]etf.Element) error {
 }
 
 // UserFromElement generates a new User object from the given Element
-func UserFromElement(e etf.Element) (User, error) {
+func UserFromElement(e etfapi.Element) (User, error) {
 	var u User
-	var eMap map[string]etf.Element
+	var eMap map[string]etfapi.Element
 	var err error
 
-	eMap, u.id, err = etf.MapAndIDFromElement(e)
+	eMap, u.id, err = etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return u, err
 	}

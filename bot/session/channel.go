@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // ChannelType represents the type of a discord channel
@@ -22,7 +22,7 @@ const (
 )
 
 // ChannelTypeFromElement extracts the channel type from a etf Element
-func ChannelTypeFromElement(e etf.Element) (ChannelType, error) {
+func ChannelTypeFromElement(e etfapi.Element) (ChannelType, error) {
 	temp, err := e.ToInt()
 	return ChannelType(temp), errors.Wrap(err, "could not unmarshal channelType")
 }
@@ -65,9 +65,9 @@ func (c *Channel) ID() snowflake.Snowflake {
 
 // UpdateFromElementMap updates information about the channel
 // This will not remove known data, only replace it
-func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
+func (c *Channel) UpdateFromElementMap(eMap map[string]etfapi.Element) error {
 	var ok bool
-	var e2 etf.Element
+	var e2 etfapi.Element
 	var u User
 	var err error
 
@@ -78,7 +78,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["guild_id"]
 	if ok && !e2.IsNil() {
-		c.guildID, err = etf.SnowflakeFromElement(e2)
+		c.guildID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}
@@ -102,7 +102,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["last_message_id"]
 	if ok && !e2.IsNil() {
-		c.lastMessageID, err = etf.SnowflakeFromElement(e2)
+		c.lastMessageID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get last_message_id snowflake.Snowflake")
 		}
@@ -110,7 +110,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["parent_id"]
 	if ok && !e2.IsNil() {
-		c.parentID, err = etf.SnowflakeFromElement(e2)
+		c.parentID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get parent_id snowflake.Snowflake")
 		}
@@ -118,7 +118,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["owner_id"]
 	if ok && !e2.IsNil() {
-		c.ownerID, err = etf.SnowflakeFromElement(e2)
+		c.ownerID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
 		}
@@ -126,7 +126,7 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["application_id"]
 	if ok && !e2.IsNil() {
-		c.applicationID, err = etf.SnowflakeFromElement(e2)
+		c.applicationID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get application_id snowflake.Snowflake")
 		}
@@ -149,12 +149,12 @@ func (c *Channel) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 // ChannelFromElement creates a new Channel object from the given etf Element.
 // The element should be a Map-type Element
-func ChannelFromElement(e etf.Element) (Channel, error) {
+func ChannelFromElement(e etfapi.Element) (Channel, error) {
 	var c Channel
-	var eMap map[string]etf.Element
+	var eMap map[string]etfapi.Element
 	var err error
 
-	eMap, c.id, err = etf.MapAndIDFromElement(e)
+	eMap, c.id, err = etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return c, err
 	}
@@ -164,11 +164,11 @@ func ChannelFromElement(e etf.Element) (Channel, error) {
 }
 
 // ChannelFromElementMap creates a new Channel object from the given data map.
-func ChannelFromElementMap(eMap map[string]etf.Element) (Channel, error) {
+func ChannelFromElementMap(eMap map[string]etfapi.Element) (Channel, error) {
 	var c Channel
 	var err error
 
-	c.id, err = etf.SnowflakeFromElement(eMap["id"])
+	c.id, err = etfapi.SnowflakeFromElement(eMap["id"])
 	if err != nil {
 		return c, errors.Wrap(err, "could not get channel id")
 	}

@@ -3,9 +3,9 @@ package bot
 import (
 	"context"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
 )
 
 type Logger = interface {
@@ -17,7 +17,7 @@ type Logger = interface {
 
 type Payload = interface {
 	EventName() string
-	Contents() map[string]etf.Element
+	Contents() map[string]etfapi.Element
 }
 
 // DispatcherFunc is the api that a bot expects a handler function to have

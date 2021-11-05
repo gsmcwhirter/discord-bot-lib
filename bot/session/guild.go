@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // Guild represents the known data about a discord guild
@@ -108,9 +108,9 @@ func (g *Guild) IsAdmin(uid snowflake.Snowflake) bool {
 // UpdateFromElementMap updates information about the guild from the provided data
 //
 // This will not delete data; it will only add and change data
-func (g *Guild) UpdateFromElementMap(eMap map[string]etf.Element) error {
+func (g *Guild) UpdateFromElementMap(eMap map[string]etfapi.Element) error {
 	var ok bool
-	var e2 etf.Element
+	var e2 etfapi.Element
 	var m GuildMember
 	var c Channel
 	var r Role
@@ -118,7 +118,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["owner_id"]
 	if ok && !e2.IsNil() {
-		g.ownerID, err = etf.SnowflakeFromElement(e2)
+		g.ownerID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
 		}
@@ -126,7 +126,7 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 	e2, ok = eMap["application_id"]
 	if ok && !e2.IsNil() {
-		g.applicationID, err = etf.SnowflakeFromElement(e2)
+		g.applicationID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not get application_id snowflake.Snowflake")
 		}
@@ -197,10 +197,10 @@ func (g *Guild) UpdateFromElementMap(eMap map[string]etf.Element) error {
 }
 
 // UpsertMemberFromElementMap upserts a GuildMemeber in the guild from the given data
-func (g *Guild) UpsertMemberFromElementMap(eMap map[string]etf.Element) (GuildMember, error) {
+func (g *Guild) UpsertMemberFromElementMap(eMap map[string]etfapi.Element) (GuildMember, error) {
 	var m GuildMember
 
-	mid, err := etf.SnowflakeFromElement(eMap["id"])
+	mid, err := etfapi.SnowflakeFromElement(eMap["id"])
 	if err != nil {
 		return m, errors.Wrap(err, "could not get member id")
 	}
@@ -219,10 +219,10 @@ func (g *Guild) UpsertMemberFromElementMap(eMap map[string]etf.Element) (GuildMe
 }
 
 // UpsertRoleFromElementMap upserts a Role in the guild from the given data
-func (g *Guild) UpsertRoleFromElementMap(eMap map[string]etf.Element) (Role, error) {
+func (g *Guild) UpsertRoleFromElementMap(eMap map[string]etfapi.Element) (Role, error) {
 	var r Role
 
-	rid, err := etf.SnowflakeFromElement(eMap["id"])
+	rid, err := etfapi.SnowflakeFromElement(eMap["id"])
 	if err != nil {
 		return r, errors.Wrap(err, "could not get role id")
 	}
@@ -241,7 +241,7 @@ func (g *Guild) UpsertRoleFromElementMap(eMap map[string]etf.Element) (Role, err
 }
 
 // GuildFromElementMap creates a new Guild object from the given data
-func GuildFromElementMap(eMap map[string]etf.Element) (Guild, error) {
+func GuildFromElementMap(eMap map[string]etfapi.Element) (Guild, error) {
 	g := Guild{
 		channels: map[snowflake.Snowflake]Channel{},
 		members:  map[snowflake.Snowflake]GuildMember{},
@@ -250,7 +250,7 @@ func GuildFromElementMap(eMap map[string]etf.Element) (Guild, error) {
 
 	var err error
 
-	g.id, err = etf.SnowflakeFromElement(eMap["id"])
+	g.id, err = etfapi.SnowflakeFromElement(eMap["id"])
 	if err != nil {
 		return g, errors.Wrap(err, "could not get guild id")
 	}
@@ -260,8 +260,8 @@ func GuildFromElementMap(eMap map[string]etf.Element) (Guild, error) {
 }
 
 // GuildFromElement creates a new Guild object from the given Element
-func GuildFromElement(e etf.Element) (Guild, error) {
-	eMap, _, err := etf.MapAndIDFromElement(e)
+func GuildFromElement(e etfapi.Element) (Guild, error) {
+	eMap, _, err := etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return Guild{}, errors.Wrap(err, "could not create guild map")
 	}

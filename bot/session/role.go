@@ -3,8 +3,8 @@ package session
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 const (
@@ -26,9 +26,9 @@ func (r *Role) IsAdmin() bool {
 // UpdateFromElementMap updates the data in a role from the given information
 //
 // This will not remove data, only change and add data
-func (r *Role) UpdateFromElementMap(eMap map[string]etf.Element) error {
+func (r *Role) UpdateFromElementMap(eMap map[string]etfapi.Element) error {
 	var ok bool
-	var e2 etf.Element
+	var e2 etfapi.Element
 
 	var err error
 
@@ -52,12 +52,12 @@ func (r *Role) UpdateFromElementMap(eMap map[string]etf.Element) error {
 }
 
 // RoleFromElement generates a new Role object from the given Element
-func RoleFromElement(e etf.Element) (Role, error) {
-	var eMap map[string]etf.Element
+func RoleFromElement(e etfapi.Element) (Role, error) {
+	var eMap map[string]etfapi.Element
 	var r Role
 	var err error
 
-	eMap, r.id, err = etf.MapAndIDFromElement(e)
+	eMap, r.id, err = etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return r, err
 	}

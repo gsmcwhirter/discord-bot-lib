@@ -1,9 +1,9 @@
-package etf
+package etfapi
 
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi"
 )
 
 // ResumePayload is the specialized payload for sending "Resume" events to the discord gateway websocket

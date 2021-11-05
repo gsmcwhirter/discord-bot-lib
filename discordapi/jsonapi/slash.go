@@ -1,0 +1,163 @@
+package jsonapi
+
+import (
+	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
+
+	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/json"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+)
+
+type ApplicationCommandOptionType int
+
+const (
+	OptTypeSubCommand      ApplicationCommandOptionType = 1
+	OptTypeSubCommandGroup ApplicationCommandOptionType = 2
+	OptTypeString          ApplicationCommandOptionType = 3
+	OptTypeInteger         ApplicationCommandOptionType = 4
+	OptTypeBoolean         ApplicationCommandOptionType = 5
+	OptTypeUser            ApplicationCommandOptionType = 6
+	OptTypeChannel         ApplicationCommandOptionType = 7
+	OptTypeRole            ApplicationCommandOptionType = 8
+	OptTypeMentionable     ApplicationCommandOptionType = 9
+	OptTypeNumber          ApplicationCommandOptionType = 10
+)
+
+type ApplicationCommandType int
+
+const (
+	CmdTypeChatInput ApplicationCommandType = 1
+	CmdTypeUser      ApplicationCommandType = 2
+	CmdTypeMessage   ApplicationCommandType = 3
+)
+
+var ErrBadOptType = errors.New("bad option type value")
+
+type ApplicationCommand struct {
+	ID                string                     `json:"id,omitempty"`
+	Type              ApplicationCommandType     `json:"type"`
+	ApplicationID     string                     `json:"application_id,omitempty"`
+	GuildID           string                     `json:"guild_id,omitempty"`
+	Name              string                     `json:"name"`
+	Description       string                     `json:"description"`
+	Options           []ApplicationCommandOption `json:"options"`
+	DefaultPermission bool                       `json:"default_permission"`
+	Version           string                     `json:"version,omitempty"`
+
+	IDSnowflake            snowflake.Snowflake
+	ApplicationIDSnowflake snowflake.Snowflake
+	GuildIDSnowflake       snowflake.Snowflake
+	VersionSnowflake       snowflake.Snowflake
+}
+
+func (c *ApplicationCommand) Snowflakify() error {
+	var err error
+
+	if c.ID != "" {
+		if c.IDSnowflake, err = snowflake.FromString(c.ID); err != nil {
+			return errors.Wrap(err, "could not snowflakify ID")
+		}
+	}
+
+	if c.GuildID != "" {
+		if c.GuildIDSnowflake, err = snowflake.FromString(c.GuildID); err != nil {
+			return errors.Wrap(err, "could not snowflakify GuildID")
+		}
+	}
+
+	if c.ApplicationID != "" {
+		if c.ApplicationIDSnowflake, err = snowflake.FromString(c.ApplicationID); err != nil {
+			return errors.Wrap(err, "could not snowflakify ApplicationID")
+		}
+	}
+
+	if c.Version != "" {
+		if c.VersionSnowflake, err = snowflake.FromString(c.Version); err != nil {
+			return errors.Wrap(err, "could not snowflakify Version")
+		}
+	}
+
+	for _, opt := range c.Options {
+		if err = opt.Snowflakify(); err != nil {
+			return errors.Wrap(err, "could not snowflakify all Options")
+		}
+	}
+
+	return nil
+}
+
+type ApplicationCommandOption struct {
+	Type         ApplicationCommandOptionType   `json:"type"`
+	Name         string                         `json:"name"`
+	Description  string                         `json:"description"`
+	Required     bool                           `json:"required"`
+	Choices      ApplicationCommandOptionChoice `json:"choices,omitempty"`
+	Options      []ApplicationCommandOption     `json:"options,omitempty"`
+	ChannelTypes int                            `json:"channel_types,omitempty"`
+}
+
+func (o *ApplicationCommandOption) Snowflakify() error {
+	var err error
+
+	for _, opt := range o.Options {
+		if err = opt.Snowflakify(); err != nil {
+			return errors.Wrap(err, "could not snowflakify all Options")
+		}
+	}
+
+	return nil
+}
+
+type ApplicationCommandOptionChoice struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type ApplicationCommandInteraction struct {
+	Name    string                          `json:"name"`
+	Type    ApplicationCommandOptionType    `json:"type"`
+	Value   stdjson.RawMessage              `json:"value"`
+	Options []ApplicationCommandInteraction `json:"options"`
+
+	ValueSubCommand      string
+	ValueSubCommandGroup string
+	ValueString          string
+	ValueInt             int
+	ValueBool            bool
+	ValueUser            *UserResponse
+	ValueChannel         *ChannelMentionResponse
+	ValueRole            *RoleResponse
+	ValueNumber          float64
+	// TODO: ValueMentionable
+}
+
+func (i *ApplicationCommandInteraction) ResolveValue() error {
+	switch i.Type {
+	case OptTypeSubCommand:
+		return json.Unmarshal([]byte(i.Value), &i.ValueSubCommand)
+	case OptTypeSubCommandGroup:
+		return json.Unmarshal([]byte(i.Value), &i.ValueSubCommandGroup)
+	case OptTypeString:
+		return json.Unmarshal([]byte(i.Value), &i.ValueString)
+	case OptTypeInteger:
+		return json.Unmarshal([]byte(i.Value), &i.ValueInt)
+	case OptTypeBoolean:
+		return json.Unmarshal([]byte(i.Value), &i.ValueBool)
+	case OptTypeUser:
+		i.ValueUser = new(UserResponse)
+		return json.Unmarshal([]byte(i.Value), i.ValueUser)
+	case OptTypeRole:
+		i.ValueRole = new(RoleResponse)
+		return json.Unmarshal([]byte(i.Value), i.ValueRole)
+	case OptTypeChannel:
+		i.ValueChannel = new(ChannelMentionResponse)
+		return json.Unmarshal([]byte(i.Value), &i.ValueChannel)
+	case OptTypeMentionable:
+		return ErrBadOptType // TODO
+	case OptTypeNumber:
+		return json.Unmarshal([]byte(i.Value), &i.ValueNumber)
+	default:
+		return ErrBadOptType
+	}
+}

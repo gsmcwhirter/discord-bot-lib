@@ -3,8 +3,8 @@ package session
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // GuildMember represents the information about a known guild membership
@@ -17,16 +17,16 @@ type GuildMember struct {
 // UpdateFromElementMap updates the information from the given data
 //
 // This will not remove data; it will only add and change data
-func (m *GuildMember) UpdateFromElementMap(eMap map[string]etf.Element) error {
-	var eMap2 map[string]etf.Element
-	var rEList []etf.Element
+func (m *GuildMember) UpdateFromElementMap(eMap map[string]etfapi.Element) error {
+	var eMap2 map[string]etfapi.Element
+	var rEList []etfapi.Element
 	var roleID snowflake.Snowflake
 	var userID snowflake.Snowflake
 
 	var err error
 
 	if e, ok := eMap["user"]; ok {
-		eMap2, userID, err = etf.MapAndIDFromElement(e)
+		eMap2, userID, err = etfapi.MapAndIDFromElement(e)
 		if err != nil {
 			return errors.Wrap(err, "could not inflate guild member user to map")
 		}
@@ -53,7 +53,7 @@ func (m *GuildMember) UpdateFromElementMap(eMap map[string]etf.Element) error {
 
 		m.roles = make([]snowflake.Snowflake, 0, len(rEList))
 		for _, re := range rEList {
-			roleID, err = etf.SnowflakeFromElement(re)
+			roleID, err = etfapi.SnowflakeFromElement(re)
 			if err != nil {
 				return errors.Wrap(err, "could not inflate snowflake for guild member role")
 			}
@@ -65,10 +65,10 @@ func (m *GuildMember) UpdateFromElementMap(eMap map[string]etf.Element) error {
 }
 
 // GuildMemberFromElement generates a new GuildMember object from the given Element
-func GuildMemberFromElement(e etf.Element) (GuildMember, error) {
+func GuildMemberFromElement(e etfapi.Element) (GuildMember, error) {
 	var m GuildMember
 
-	var rEList []etf.Element
+	var rEList []etfapi.Element
 	var roleID snowflake.Snowflake
 
 	eMap, err := e.ToMap()
@@ -96,7 +96,7 @@ func GuildMemberFromElement(e etf.Element) (GuildMember, error) {
 
 		m.roles = make([]snowflake.Snowflake, 0, len(rEList))
 		for _, re := range rEList {
-			roleID, err = etf.SnowflakeFromElement(re)
+			roleID, err = etfapi.SnowflakeFromElement(re)
 			if err != nil {
 				return m, errors.Wrap(err, "could not inflate snowflake for guild member role")
 			}

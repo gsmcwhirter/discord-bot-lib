@@ -5,8 +5,8 @@ import (
 
 	log "github.com/gsmcwhirter/go-util/v8/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/request"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/request"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 type Message interface {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // Message represents the data about a message in a discord channel
@@ -46,13 +46,13 @@ func (r *Reaction) Emoji() string {
 }
 
 // ReactionFromElementMap generates a new Reaction object from the given data
-func ReactionFromElementMap(eMap map[string]etf.Element) (Reaction, error) {
+func ReactionFromElementMap(eMap map[string]etfapi.Element) (Reaction, error) {
 	var r Reaction
 	var err error
 
 	e2, ok := eMap["user_id"]
 	if ok {
-		r.userID, err = etf.SnowflakeFromElement(e2)
+		r.userID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get user_id snowflake.Snowflake")
 		}
@@ -60,7 +60,7 @@ func ReactionFromElementMap(eMap map[string]etf.Element) (Reaction, error) {
 
 	e2, ok = eMap["channel_id"]
 	if ok {
-		r.channelID, err = etf.SnowflakeFromElement(e2)
+		r.channelID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get channel_id snowflake.Snowflake")
 		}
@@ -68,7 +68,7 @@ func ReactionFromElementMap(eMap map[string]etf.Element) (Reaction, error) {
 
 	e2, ok = eMap["message_id"]
 	if ok {
-		r.messageID, err = etf.SnowflakeFromElement(e2)
+		r.messageID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get message_id snowflake.Snowflake")
 		}
@@ -76,7 +76,7 @@ func ReactionFromElementMap(eMap map[string]etf.Element) (Reaction, error) {
 
 	e2, ok = eMap["guild_id"]
 	if ok && !e2.IsNil() {
-		r.guildID, err = etf.SnowflakeFromElement(e2)
+		r.guildID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}
@@ -102,7 +102,7 @@ func ReactionFromElementMap(eMap map[string]etf.Element) (Reaction, error) {
 }
 
 // ReactionFromElement generates a new Reaction object from the given Element
-func ReactionFromElement(e etf.Element) (Reaction, error) {
+func ReactionFromElement(e etfapi.Element) (Reaction, error) {
 	eMap, err := e.ToMap()
 	if err != nil {
 		return Reaction{}, errors.Wrap(err, fmt.Sprintf("could not inflate element to map: %v", e))

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // MessageType represents the type of message received in a discord channel
@@ -26,7 +26,7 @@ const (
 
 // MessageTypeFromElement generates a MessageType representation from the given
 // message-type Element
-func MessageTypeFromElement(e etf.Element) (MessageType, error) {
+func MessageTypeFromElement(e etfapi.Element) (MessageType, error) {
 	temp, err := e.ToInt()
 	t := MessageType(temp)
 	return t, errors.Wrap(err, "could not unmarshal MessageType")
@@ -90,13 +90,13 @@ func (m *Message) ContentString() string {
 }
 
 // MessageFromElementMap generates a new Message object from the given data
-func MessageFromElementMap(eMap map[string]etf.Element) (Message, error) {
+func MessageFromElementMap(eMap map[string]etfapi.Element) (Message, error) {
 	var m Message
 	var err error
 
 	e2, ok := eMap["id"]
 	if ok {
-		m.id, err = etf.SnowflakeFromElement(e2)
+		m.id, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return m, errors.Wrap(err, "could not get message_id snowflake.Snowflake")
 		}
@@ -104,7 +104,7 @@ func MessageFromElementMap(eMap map[string]etf.Element) (Message, error) {
 
 	e2, ok = eMap["channel_id"]
 	if ok && !e2.IsNil() {
-		m.channelID, err = etf.SnowflakeFromElement(e2)
+		m.channelID, err = etfapi.SnowflakeFromElement(e2)
 		if err != nil {
 			return m, errors.Wrap(err, "could not get channel_id snowflake.Snowflake")
 		}
@@ -132,8 +132,8 @@ func MessageFromElementMap(eMap map[string]etf.Element) (Message, error) {
 }
 
 // MessageFromElement generates a new Message object from the given Element
-func MessageFromElement(e etf.Element) (Message, error) {
-	eMap, _, err := etf.MapAndIDFromElement(e)
+func MessageFromElement(e etfapi.Element) (Message, error) {
+	eMap, _, err := etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return Message{}, err
 	}

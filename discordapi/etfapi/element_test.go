@@ -1,39 +1,39 @@
-package etf_test
+package etfapi_test
 
 import (
 	"bytes"
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
 )
 
 func TestNewCollectionElement(t *testing.T) {
 	type args struct {
-		code etf.Code
-		val  []etf.Element
+		code etfapi.Code
+		val  []etfapi.Element
 	}
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{
-				code: etf.List,
-				val: []etf.Element{
+				code: etfapi.List,
+				val: []etfapi.Element{
 					{
-						Code: etf.EmptyList,
+						Code: etfapi.EmptyList,
 					},
 				},
 			},
-			wantE: etf.Element{
-				Code: etf.List,
-				Vals: []etf.Element{
+			wantE: etfapi.Element{
+				Code: etfapi.List,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.EmptyList,
+						Code: etfapi.EmptyList,
 					},
 				},
 			},
@@ -42,20 +42,20 @@ func TestNewCollectionElement(t *testing.T) {
 		{
 			name: "not ok",
 			args: args{
-				code: etf.Int8,
-				val: []etf.Element{
+				code: etfapi.Int8,
+				val: []etfapi.Element{
 					{
-						Code: etf.EmptyList,
+						Code: etfapi.EmptyList,
 					},
 				},
 			},
-			wantE:   etf.Element{},
+			wantE:   etfapi.Element{},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewCollectionElement(tt.args.code, tt.args.val)
+			gotE, err := etfapi.NewCollectionElement(tt.args.code, tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewCollectionElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -69,23 +69,23 @@ func TestNewCollectionElement(t *testing.T) {
 
 func TestNewBasicElement(t *testing.T) {
 	type args struct {
-		code etf.Code
+		code etfapi.Code
 		val  []byte
 	}
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{
-				code: etf.Int8,
+				code: etfapi.Int8,
 				val:  []byte{1},
 			},
-			wantE: etf.Element{
-				Code: etf.Int8,
+			wantE: etfapi.Element{
+				Code: etfapi.Int8,
 				Val:  []byte{1},
 			},
 			wantErr: false,
@@ -93,16 +93,16 @@ func TestNewBasicElement(t *testing.T) {
 		{
 			name: "not ok",
 			args: args{
-				code: etf.List,
+				code: etfapi.List,
 				val:  []byte{2},
 			},
-			wantE:   etf.Element{},
+			wantE:   etfapi.Element{},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewBasicElement(tt.args.code, tt.args.val)
+			gotE, err := etfapi.NewBasicElement(tt.args.code, tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBasicElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -117,20 +117,20 @@ func TestNewBasicElement(t *testing.T) {
 func TestNewNilElement(t *testing.T) {
 	tests := []struct {
 		name    string
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
-			wantE: etf.Element{
-				Code: etf.Atom,
+			wantE: etfapi.Element{
+				Code: etfapi.Atom,
 				Val:  []byte("nil"),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewNilElement()
+			gotE, err := etfapi.NewNilElement()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewNilElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -149,29 +149,29 @@ func TestNewBoolElement(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok true",
 			args: args{true},
-			wantE: etf.Element{
-				Code: etf.Atom,
+			wantE: etfapi.Element{
+				Code: etfapi.Atom,
 				Val:  []byte("true"),
 			},
 		},
 		{
 			name: "ok false",
 			args: args{false},
-			wantE: etf.Element{
-				Code: etf.Atom,
+			wantE: etfapi.Element{
+				Code: etfapi.Atom,
 				Val:  []byte("false"),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewBoolElement(tt.args.val)
+			gotE, err := etfapi.NewBoolElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBoolElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -190,27 +190,27 @@ func TestNewInt8Element(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{1},
-			wantE: etf.Element{
-				Code: etf.Int8,
+			wantE: etfapi.Element{
+				Code: etfapi.Int8,
 				Val:  []byte{1},
 			},
 		},
 		{
 			name:    "not ok",
 			args:    args{1024},
-			wantE:   etf.Element{},
+			wantE:   etfapi.Element{},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewInt8Element(tt.args.val)
+			gotE, err := etfapi.NewInt8Element(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewInt8Element() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -229,27 +229,27 @@ func TestNewInt32Element(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{1 << 31},
-			wantE: etf.Element{
-				Code: etf.Int32,
+			wantE: etfapi.Element{
+				Code: etfapi.Int32,
 				Val:  []byte{128, 0, 0, 0},
 			},
 		},
 		{
 			name:    "not ok",
 			args:    args{1 << 42},
-			wantE:   etf.Element{},
+			wantE:   etfapi.Element{},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewInt32Element(tt.args.val)
+			gotE, err := etfapi.NewInt32Element(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewInt32Element() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -268,21 +268,21 @@ func TestNewSmallBigElement(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{1 << 42},
-			wantE: etf.Element{
-				Code: etf.SmallBig,
+			wantE: etfapi.Element{
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0, 0},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewSmallBigElement(tt.args.val)
+			gotE, err := etfapi.NewSmallBigElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewSmallBigElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -301,21 +301,21 @@ func TestNewBinaryElement(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{[]byte("test")},
-			wantE: etf.Element{
-				Code: etf.Binary,
+			wantE: etfapi.Element{
+				Code: etfapi.Binary,
 				Val:  []byte{116, 101, 115, 116},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewBinaryElement(tt.args.val)
+			gotE, err := etfapi.NewBinaryElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBinaryElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -334,21 +334,21 @@ func TestNewAtomElement(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{[]byte("test")},
-			wantE: etf.Element{
-				Code: etf.Atom,
+			wantE: etfapi.Element{
+				Code: etfapi.Atom,
 				Val:  []byte{116, 101, 115, 116},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewAtomElement(tt.args.val)
+			gotE, err := etfapi.NewAtomElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewAtomElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -367,21 +367,21 @@ func TestNewStringElement(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{"test"},
-			wantE: etf.Element{
-				Code: etf.Binary,
+			wantE: etfapi.Element{
+				Code: etfapi.Binary,
 				Val:  []byte{116, 101, 115, 116},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewStringElement(tt.args.val)
+			gotE, err := etfapi.NewStringElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewStringElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -395,28 +395,28 @@ func TestNewStringElement(t *testing.T) {
 
 func TestNewMapElement(t *testing.T) {
 	type args struct {
-		val map[string]etf.Element
+		val map[string]etfapi.Element
 	}
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
-			args: args{map[string]etf.Element{
-				"test": {Code: etf.Int8, Val: []byte{1}},
+			args: args{map[string]etfapi.Element{
+				"test": {Code: etfapi.Int8, Val: []byte{1}},
 			}},
-			wantE: etf.Element{
-				Code: etf.Map,
-				Vals: []etf.Element{
+			wantE: etfapi.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Binary,
+						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
 				},
@@ -425,7 +425,7 @@ func TestNewMapElement(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewMapElement(tt.args.val)
+			gotE, err := etfapi.NewMapElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewMapElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -439,35 +439,35 @@ func TestNewMapElement(t *testing.T) {
 
 func TestNewListElement(t *testing.T) {
 	type args struct {
-		val []etf.Element
+		val []etfapi.Element
 	}
 	tests := []struct {
 		name    string
 		args    args
-		wantE   etf.Element
+		wantE   etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
-			args: args{[]etf.Element{
+			args: args{[]etfapi.Element{
 				{
-					Code: etf.Int8,
+					Code: etfapi.Int8,
 					Val:  []byte{2},
 				},
 				{
-					Code: etf.Int8,
+					Code: etfapi.Int8,
 					Val:  []byte{1},
 				},
 			}},
-			wantE: etf.Element{
-				Code: etf.List,
-				Vals: []etf.Element{
+			wantE: etfapi.Element{
+				Code: etfapi.List,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{2},
 					},
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
 				},
@@ -476,7 +476,7 @@ func TestNewListElement(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotE, err := etf.NewListElement(tt.args.val)
+			gotE, err := etfapi.NewListElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewListElement() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -490,9 +490,9 @@ func TestNewListElement(t *testing.T) {
 
 func TestElement_Marshal(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -503,14 +503,14 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "map",
 			fields: fields{
-				Code: etf.Map,
-				Vals: []etf.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Binary,
+						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
 				},
@@ -521,7 +521,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "empty list",
 			fields: fields{
-				Code: etf.EmptyList,
+				Code: etfapi.EmptyList,
 			},
 			want:    []byte{106},
 			wantErr: false,
@@ -529,14 +529,14 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "list",
 			fields: fields{
-				Code: etf.List,
-				Vals: []etf.Element{
+				Code: etfapi.List,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Binary,
+						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
 				},
@@ -547,7 +547,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte{116, 101, 115, 116},
 			},
 			want:    []byte{100, 0, 4, 116, 101, 115, 116},
@@ -556,7 +556,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				Code: etf.String,
+				Code: etfapi.String,
 				Val:  []byte{116, 101, 115, 116},
 			},
 			want:    []byte{107, 0, 4, 116, 101, 115, 116},
@@ -565,7 +565,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "binary",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte{116, 101, 115, 116},
 			},
 			want:    []byte{109, 0, 0, 0, 4, 116, 101, 115, 116},
@@ -574,7 +574,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "int8",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 				Val:  []byte{100},
 			},
 			want:    []byte{97, 100},
@@ -583,7 +583,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "int8 oob",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 				Val:  []byte{100, 1},
 			},
 			wantErr: true,
@@ -591,7 +591,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "int32",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{1, 0, 0, 0},
 			},
 			want:    []byte{98, 1, 0, 0, 0},
@@ -600,7 +600,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "int32 short",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{1, 0, 0},
 			},
 			wantErr: true,
@@ -608,7 +608,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "int32 long",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{1, 0, 0, 0, 0},
 			},
 			wantErr: true,
@@ -616,7 +616,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "smallbig",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0, 0},
 			},
 			want:    []byte{110, 8, 0, 0, 0, 0, 0, 0, 4, 0, 0},
@@ -625,7 +625,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "smallbig neg",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{1, 0, 0, 0, 0, 0, 4, 0, 0},
 			},
 			want:    []byte{110, 8, 1, 0, 0, 0, 0, 0, 4, 0, 0},
@@ -634,7 +634,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "smallbig short",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0},
 			},
 			wantErr: true,
@@ -642,7 +642,7 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "smallbig long",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0, 0, 0},
 			},
 			wantErr: true,
@@ -650,14 +650,14 @@ func TestElement_Marshal(t *testing.T) {
 		{
 			name: "largebig",
 			fields: fields{
-				Code: etf.LargeBig,
+				Code: etfapi.LargeBig,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -676,9 +676,9 @@ func TestElement_Marshal(t *testing.T) {
 
 func TestElement_MarshalTo(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -689,14 +689,14 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "map",
 			fields: fields{
-				Code: etf.Map,
-				Vals: []etf.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Binary,
+						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
 				},
@@ -707,7 +707,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "empty list",
 			fields: fields{
-				Code: etf.EmptyList,
+				Code: etfapi.EmptyList,
 			},
 			want:    []byte{106},
 			wantErr: false,
@@ -715,14 +715,14 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "list",
 			fields: fields{
-				Code: etf.List,
-				Vals: []etf.Element{
+				Code: etfapi.List,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Binary,
+						Code: etfapi.Binary,
 						Val:  []byte{116, 101, 115, 116},
 					},
 					{
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{1},
 					},
 				},
@@ -733,7 +733,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte{116, 101, 115, 116},
 			},
 			want:    []byte{100, 0, 4, 116, 101, 115, 116},
@@ -742,7 +742,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				Code: etf.String,
+				Code: etfapi.String,
 				Val:  []byte{116, 101, 115, 116},
 			},
 			want:    []byte{107, 0, 4, 116, 101, 115, 116},
@@ -751,7 +751,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "binary",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte{116, 101, 115, 116},
 			},
 			want:    []byte{109, 0, 0, 0, 4, 116, 101, 115, 116},
@@ -760,7 +760,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "int8",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 				Val:  []byte{100},
 			},
 			want:    []byte{97, 100},
@@ -769,7 +769,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "int8 oob",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 				Val:  []byte{100, 1},
 			},
 			wantErr: true,
@@ -777,7 +777,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "int32",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{1, 0, 0, 0},
 			},
 			want:    []byte{98, 1, 0, 0, 0},
@@ -786,7 +786,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "int32 short",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{1, 0, 0},
 			},
 			wantErr: true,
@@ -794,7 +794,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "int32 long",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{1, 0, 0, 0, 0},
 			},
 			wantErr: true,
@@ -802,7 +802,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "smallbig",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0, 0},
 			},
 			want:    []byte{110, 8, 0, 0, 0, 0, 0, 0, 4, 0, 0},
@@ -811,7 +811,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "smallbig neg",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{1, 0, 0, 0, 0, 0, 4, 0, 0},
 			},
 			want:    []byte{110, 8, 1, 0, 0, 0, 0, 0, 4, 0, 0},
@@ -820,7 +820,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "smallbig short",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0},
 			},
 			wantErr: true,
@@ -828,7 +828,7 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "smallbig long",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 0, 0, 0, 0, 0, 4, 0, 0, 0},
 			},
 			wantErr: true,
@@ -836,14 +836,14 @@ func TestElement_MarshalTo(t *testing.T) {
 		{
 			name: "largebig",
 			fields: fields{
-				Code: etf.LargeBig,
+				Code: etfapi.LargeBig,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -867,9 +867,9 @@ func TestElement_MarshalTo(t *testing.T) {
 
 func TestElement_ToString(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -880,7 +880,7 @@ func TestElement_ToString(t *testing.T) {
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("test"),
 			},
 			want: "test",
@@ -888,7 +888,7 @@ func TestElement_ToString(t *testing.T) {
 		{
 			name: "binary",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte("test"),
 			},
 			want: "test",
@@ -896,7 +896,7 @@ func TestElement_ToString(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				Code: etf.String,
+				Code: etfapi.String,
 				Val:  []byte("test"),
 			},
 			want: "test",
@@ -904,14 +904,14 @@ func TestElement_ToString(t *testing.T) {
 		{
 			name: "bad",
 			fields: fields{
-				Code: etf.Map,
+				Code: etfapi.Map,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -930,9 +930,9 @@ func TestElement_ToString(t *testing.T) {
 
 func TestElement_ToBytes(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -943,7 +943,7 @@ func TestElement_ToBytes(t *testing.T) {
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("test"),
 			},
 			want: []byte("test"),
@@ -951,7 +951,7 @@ func TestElement_ToBytes(t *testing.T) {
 		{
 			name: "binary",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte("test"),
 			},
 			want: []byte("test"),
@@ -959,7 +959,7 @@ func TestElement_ToBytes(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				Code: etf.String,
+				Code: etfapi.String,
 				Val:  []byte("test"),
 			},
 			want: []byte("test"),
@@ -967,14 +967,14 @@ func TestElement_ToBytes(t *testing.T) {
 		{
 			name: "bad",
 			fields: fields{
-				Code: etf.Map,
+				Code: etfapi.Map,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -993,9 +993,9 @@ func TestElement_ToBytes(t *testing.T) {
 
 func TestElement_ToInt(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -1006,7 +1006,7 @@ func TestElement_ToInt(t *testing.T) {
 		{
 			name: "int8",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 				Val:  []byte{123},
 			},
 			want: 123,
@@ -1014,7 +1014,7 @@ func TestElement_ToInt(t *testing.T) {
 		{
 			name: "int32",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{0, 1, 0, 1},
 			},
 			want: 65537,
@@ -1022,7 +1022,7 @@ func TestElement_ToInt(t *testing.T) {
 		{
 			name: "smallbig",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 1, 0, 1, 0, 0, 0, 0, 0},
 			},
 			wantErr: true,
@@ -1030,7 +1030,7 @@ func TestElement_ToInt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1049,9 +1049,9 @@ func TestElement_ToInt(t *testing.T) {
 
 func TestElement_ToInt64(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -1062,7 +1062,7 @@ func TestElement_ToInt64(t *testing.T) {
 		{
 			name: "int8",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 				Val:  []byte{123},
 			},
 			want: 123,
@@ -1070,7 +1070,7 @@ func TestElement_ToInt64(t *testing.T) {
 		{
 			name: "int32",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 				Val:  []byte{0, 1, 0, 1},
 			},
 			want: 65537,
@@ -1078,7 +1078,7 @@ func TestElement_ToInt64(t *testing.T) {
 		{
 			name: "smallbig",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{0, 1, 0, 1, 0, 0, 0, 0, 0},
 			},
 			want: 65537,
@@ -1086,7 +1086,7 @@ func TestElement_ToInt64(t *testing.T) {
 		{
 			name: "smallbig neg",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 				Val:  []byte{1, 1, 0, 1, 0, 0, 0, 0, 0},
 			},
 			want: -65537,
@@ -1094,14 +1094,14 @@ func TestElement_ToInt64(t *testing.T) {
 		{
 			name: "map",
 			fields: fields{
-				Code: etf.Map,
+				Code: etfapi.Map,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1120,34 +1120,34 @@ func TestElement_ToInt64(t *testing.T) {
 
 func TestElement_ToMap(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
 		fields  fields
-		want    map[string]etf.Element
+		want    map[string]etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			fields: fields{
-				Code: etf.Map,
-				Vals: []etf.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test"),
 					},
 					{
-						Code: etf.Int32,
+						Code: etfapi.Int32,
 						Val:  []byte{0, 1, 0, 1},
 					},
 				},
 			},
-			want: map[string]etf.Element{
+			want: map[string]etfapi.Element{
 				"test": {
-					Code: etf.Int32,
+					Code: etfapi.Int32,
 					Val:  []byte{0, 1, 0, 1},
 				},
 			},
@@ -1156,14 +1156,14 @@ func TestElement_ToMap(t *testing.T) {
 		{
 			name: "not map",
 			fields: fields{
-				Code: etf.List,
-				Vals: []etf.Element{
+				Code: etfapi.List,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test"),
 					},
 					{
-						Code: etf.Int32,
+						Code: etfapi.Int32,
 						Val:  []byte{0, 1, 0, 1},
 					},
 				},
@@ -1173,18 +1173,18 @@ func TestElement_ToMap(t *testing.T) {
 		{
 			name: "bad parity",
 			fields: fields{
-				Code: etf.Map,
-				Vals: []etf.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test"),
 					},
 					{
-						Code: etf.Int32,
+						Code: etfapi.Int32,
 						Val:  []byte{0, 1, 0, 1},
 					},
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test2"),
 					},
 				},
@@ -1194,14 +1194,14 @@ func TestElement_ToMap(t *testing.T) {
 		{
 			name: "bad key",
 			fields: fields{
-				Code: etf.Map,
-				Vals: []etf.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Int32,
+						Code: etfapi.Int32,
 						Val:  []byte{0, 1, 0, 1},
 					},
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test2"),
 					},
 				},
@@ -1211,7 +1211,7 @@ func TestElement_ToMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1230,38 +1230,38 @@ func TestElement_ToMap(t *testing.T) {
 
 func TestElement_ToList(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []etf.Element
+		want    []etfapi.Element
 		wantErr bool
 	}{
 		{
 			name: "some",
 			fields: fields{
-				Code: etf.List,
-				Vals: []etf.Element{
+				Code: etfapi.List,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test"),
 					},
 					{
-						Code: etf.Int32,
+						Code: etfapi.Int32,
 						Val:  []byte{0, 1, 0, 1},
 					},
 				},
 			},
-			want: []etf.Element{
+			want: []etfapi.Element{
 				{
-					Code: etf.Atom,
+					Code: etfapi.Atom,
 					Val:  []byte("test"),
 				},
 				{
-					Code: etf.Int32,
+					Code: etfapi.Int32,
 					Val:  []byte{0, 1, 0, 1},
 				},
 			},
@@ -1269,21 +1269,21 @@ func TestElement_ToList(t *testing.T) {
 		{
 			name: "empty",
 			fields: fields{
-				Code: etf.EmptyList,
+				Code: etfapi.EmptyList,
 			},
 			want: nil,
 		},
 		{
 			name: "map",
 			fields: fields{
-				Code: etf.Map,
-				Vals: []etf.Element{
+				Code: etfapi.Map,
+				Vals: []etfapi.Element{
 					{
-						Code: etf.Atom,
+						Code: etfapi.Atom,
 						Val:  []byte("test"),
 					},
 					{
-						Code: etf.Int32,
+						Code: etfapi.Int32,
 						Val:  []byte{0, 1, 0, 1},
 					},
 				},
@@ -1293,7 +1293,7 @@ func TestElement_ToList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1312,9 +1312,9 @@ func TestElement_ToList(t *testing.T) {
 
 func TestElement_IsNumeric(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1324,49 +1324,49 @@ func TestElement_IsNumeric(t *testing.T) {
 		{
 			name: "int8",
 			fields: fields{
-				Code: etf.Int8,
+				Code: etfapi.Int8,
 			},
 			want: true,
 		},
 		{
 			name: "int32",
 			fields: fields{
-				Code: etf.Int32,
+				Code: etfapi.Int32,
 			},
 			want: true,
 		},
 		{
 			name: "float",
 			fields: fields{
-				Code: etf.Float,
+				Code: etfapi.Float,
 			},
 			want: true,
 		},
 		{
 			name: "smallbit",
 			fields: fields{
-				Code: etf.SmallBig,
+				Code: etfapi.SmallBig,
 			},
 			want: true,
 		},
 		{
 			name: "largebig",
 			fields: fields{
-				Code: etf.LargeBig,
+				Code: etfapi.LargeBig,
 			},
 			want: true,
 		},
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1380,9 +1380,9 @@ func TestElement_IsNumeric(t *testing.T) {
 
 func TestElement_IsCollection(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1392,35 +1392,35 @@ func TestElement_IsCollection(t *testing.T) {
 		{
 			name: "list",
 			fields: fields{
-				Code: etf.List,
+				Code: etfapi.List,
 			},
 			want: true,
 		},
 		{
 			name: "empty list",
 			fields: fields{
-				Code: etf.EmptyList,
+				Code: etfapi.EmptyList,
 			},
 			want: true,
 		},
 		{
 			name: "map",
 			fields: fields{
-				Code: etf.Map,
+				Code: etfapi.Map,
 			},
 			want: true,
 		},
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1434,9 +1434,9 @@ func TestElement_IsCollection(t *testing.T) {
 
 func TestElement_IsStringish(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1446,28 +1446,28 @@ func TestElement_IsStringish(t *testing.T) {
 		{
 			name: "atom",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 			},
 			want: true,
 		},
 		{
 			name: "binary",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 			},
 			want: true,
 		},
 		{
 			name: "string",
 			fields: fields{
-				Code: etf.String,
+				Code: etfapi.String,
 			},
 			want: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1481,9 +1481,9 @@ func TestElement_IsStringish(t *testing.T) {
 
 func TestElement_IsList(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1493,28 +1493,28 @@ func TestElement_IsList(t *testing.T) {
 		{
 			name: "list",
 			fields: fields{
-				Code: etf.List,
+				Code: etfapi.List,
 			},
 			want: true,
 		},
 		{
 			name: "empty list",
 			fields: fields{
-				Code: etf.EmptyList,
+				Code: etfapi.EmptyList,
 			},
 			want: true,
 		},
 		{
 			name: "map",
 			fields: fields{
-				Code: etf.Map,
+				Code: etfapi.Map,
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1528,9 +1528,9 @@ func TestElement_IsList(t *testing.T) {
 
 func TestElement_IsNil(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1540,7 +1540,7 @@ func TestElement_IsNil(t *testing.T) {
 		{
 			name: "ok",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("nil"),
 			},
 			want: true,
@@ -1548,7 +1548,7 @@ func TestElement_IsNil(t *testing.T) {
 		{
 			name: "not atom",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte("nil"),
 			},
 			want: false,
@@ -1556,7 +1556,7 @@ func TestElement_IsNil(t *testing.T) {
 		{
 			name: "not false",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("foo"),
 			},
 			want: false,
@@ -1564,7 +1564,7 @@ func TestElement_IsNil(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1578,9 +1578,9 @@ func TestElement_IsNil(t *testing.T) {
 
 func TestElement_IsTrue(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1590,7 +1590,7 @@ func TestElement_IsTrue(t *testing.T) {
 		{
 			name: "ok",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("true"),
 			},
 			want: true,
@@ -1598,7 +1598,7 @@ func TestElement_IsTrue(t *testing.T) {
 		{
 			name: "not atom",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte("true"),
 			},
 			want: false,
@@ -1606,7 +1606,7 @@ func TestElement_IsTrue(t *testing.T) {
 		{
 			name: "not false",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("foo"),
 			},
 			want: false,
@@ -1614,7 +1614,7 @@ func TestElement_IsTrue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,
@@ -1628,9 +1628,9 @@ func TestElement_IsTrue(t *testing.T) {
 
 func TestElement_IsFalse(t *testing.T) {
 	type fields struct {
-		Code etf.Code
+		Code etfapi.Code
 		Val  []byte
-		Vals []etf.Element
+		Vals []etfapi.Element
 	}
 	tests := []struct {
 		name   string
@@ -1640,7 +1640,7 @@ func TestElement_IsFalse(t *testing.T) {
 		{
 			name: "ok",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("false"),
 			},
 			want: true,
@@ -1648,7 +1648,7 @@ func TestElement_IsFalse(t *testing.T) {
 		{
 			name: "not atom",
 			fields: fields{
-				Code: etf.Binary,
+				Code: etfapi.Binary,
 				Val:  []byte("false"),
 			},
 			want: false,
@@ -1656,7 +1656,7 @@ func TestElement_IsFalse(t *testing.T) {
 		{
 			name: "not false",
 			fields: fields{
-				Code: etf.Atom,
+				Code: etfapi.Atom,
 				Val:  []byte("foo"),
 			},
 			want: false,
@@ -1664,7 +1664,7 @@ func TestElement_IsFalse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &etf.Element{
+			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
 				Vals: tt.fields.Vals,

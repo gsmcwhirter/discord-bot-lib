@@ -1,11 +1,11 @@
-package etf_test
+package etfapi_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
 )
 
 func TestPayload_Marshal(t *testing.T) {
@@ -16,8 +16,8 @@ func TestPayload_Marshal(t *testing.T) {
 		OpCode    discordapi.OpCode
 		SeqNum    *int
 		EventName string
-		Data      map[string]etf.Element
-		DataList  []etf.Element
+		Data      map[string]etfapi.Element
+		DataList  []etfapi.Element
 	}
 	tests := []struct {
 		name    string
@@ -31,9 +31,9 @@ func TestPayload_Marshal(t *testing.T) {
 				OpCode:    1,
 				SeqNum:    s,
 				EventName: "test",
-				Data: map[string]etf.Element{
+				Data: map[string]etfapi.Element{
 					"test": {
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{128},
 					},
 				},
@@ -43,7 +43,7 @@ func TestPayload_Marshal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &etf.Payload{
+			p := &etfapi.Payload{
 				OpCode:   tt.fields.OpCode,
 				SeqNum:   tt.fields.SeqNum,
 				EName:    tt.fields.EventName,
@@ -72,18 +72,18 @@ func TestUnmarshal(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *etf.Payload
+		want    *etfapi.Payload
 		wantErr bool
 	}{
 		{
 			name: "ok",
 			args: args{[]byte{131, 116, 0, 0, 0, 3, 109, 0, 0, 0, 2, 111, 112, 97, 1, 109, 0, 0, 0, 1, 100, 116, 0, 0, 0, 1, 109, 0, 0, 0, 4, 116, 101, 115, 116, 97, 128, 109, 0, 0, 0, 1, 115, 98, 0, 0, 0, 3}},
-			want: &etf.Payload{
+			want: &etfapi.Payload{
 				OpCode: 1,
 				SeqNum: s,
-				Data: map[string]etf.Element{
+				Data: map[string]etfapi.Element{
 					"test": {
-						Code: etf.Int8,
+						Code: etfapi.Int8,
 						Val:  []byte{128},
 					},
 				},
@@ -92,7 +92,7 @@ func TestUnmarshal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := etf.Unmarshal(tt.args.raw)
+			got, err := etfapi.Unmarshal(tt.args.raw)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Unmarshal() error = %v, wantErr %v", err, tt.wantErr)
 				return

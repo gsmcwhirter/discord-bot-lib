@@ -1,4 +1,4 @@
-package json
+package jsonapi
 
 import (
 	"bytes"
@@ -10,13 +10,14 @@ import (
 	"strings"
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/json"
 	"github.com/gsmcwhirter/go-util/v8/logging/level"
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
 )
 
 type dependencies interface {
@@ -216,4 +217,128 @@ func (d *DiscordJSONClient) CreateReaction(ctx context.Context, cid, mid snowfla
 	}
 
 	return resp, err
+}
+
+func (d *DiscordJSONClient) GetGlobalCommands(ctx context.Context, aid string) (cmds []ApplicationCommand, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGlobalCommands")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+	level.Info(logger).Message("listing global commands", "aid", aid)
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	_, err = d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/applications/%s/commands", d.apiURL, aid), nil, &cmds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get global commands", "aid", aid)
+	}
+
+	for i := range cmds {
+		if err := cmds[i].Snowflakify(); err != nil {
+			return nil, errors.Wrap(err, "could not snowflakify command")
+		}
+	}
+
+	return cmds, err
+}
+
+func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid string, cmds []ApplicationCommand) (resCmds []ApplicationCommand, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGlobalCommands")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	var b []byte
+
+	b, err = json.Marshal(cmds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not marshal commands as json")
+	}
+
+	r := bytes.NewReader(b)
+
+	level.Info(logger).Message("overwriting global commands", "aid", aid, "num_commands", len(cmds))
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	_, err = d.deps.HTTPClient().PutJSON(ctx, fmt.Sprintf("%s/applications/%s/commands", d.apiURL, aid), nil, r, &resCmds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not overwrite global commands", "aid", aid)
+	}
+
+	for i := range resCmds {
+		if err := resCmds[i].Snowflakify(); err != nil {
+			return nil, errors.Wrap(err, "could not snowflakify command")
+		}
+	}
+
+	return resCmds, err
+}
+
+func (d *DiscordJSONClient) GetGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake) (cmds []ApplicationCommand, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildCommands")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+	level.Info(logger).Message("listing guild commands", "aid", aid, "gid", gid.ToString())
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	_, err = d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/applications/%s/guilds/%d/commands", d.apiURL, aid, gid), nil, &cmds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get guild commands", "aid", aid, "gid", gid.ToString())
+	}
+
+	for i := range cmds {
+		if err := cmds[i].Snowflakify(); err != nil {
+			return nil, errors.Wrap(err, "could not snowflakify command")
+		}
+	}
+
+	return cmds, err
+}
+
+func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake, cmds []ApplicationCommand) (resCmds []ApplicationCommand, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGuildCommands")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	var b []byte
+
+	b, err = json.Marshal(cmds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not marshal commands as json")
+	}
+
+	r := bytes.NewReader(b)
+
+	level.Info(logger).Message("overwriting global commands", "aid", aid, "gid", gid.ToString(), "num_commands", len(cmds))
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	_, err = d.deps.HTTPClient().PutJSON(ctx, fmt.Sprintf("%s/applications/%s/guilds/%d/commands", d.apiURL, aid, gid), nil, r, &resCmds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not overwrite global commands", "aid", aid)
+	}
+
+	for i := range resCmds {
+		if err := resCmds[i].Snowflakify(); err != nil {
+			return nil, errors.Wrap(err, "could not snowflakify command")
+		}
+	}
+
+	return resCmds, err
 }

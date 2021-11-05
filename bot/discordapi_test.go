@@ -14,15 +14,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/json"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/dispatcher"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/wsapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/dispatcher"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/wsclient"
 )
 
 type nopLogger struct{}
@@ -89,12 +89,12 @@ type mockdeps struct {
 	rep     errreport.Reporter
 	census  *telemetry.Census
 	actRec  *stats.ActivityRecorder
-	jsc     *json.DiscordJSONClient
+	jsc     *jsonapi.DiscordJSONClient
 }
 
 func (d *mockdeps) Logger() bot.Logger                              { return d.logger }
 func (d *mockdeps) HTTPDoer() httpclient.Doer                       { return d.doer }
-func (d *mockdeps) HTTPClient() json.HTTPClient                     { return d.http }
+func (d *mockdeps) HTTPClient() jsonapi.HTTPClient                  { return d.http }
 func (d *mockdeps) WSDialer() wsclient.Dialer                       { return d.wsd }
 func (d *mockdeps) WSClient() wsapi.WSClient                        { return d.ws }
 func (d *mockdeps) MessageRateLimiter() *rate.Limiter               { return d.msgrl }
@@ -104,7 +104,7 @@ func (d *mockdeps) Dispatcher() bot.Dispatcher                      { return d.m
 func (d *mockdeps) ErrReporter() errreport.Reporter                 { return d.rep }
 func (d *mockdeps) Census() *telemetry.Census                       { return d.census }
 func (d *mockdeps) MessageHandlerRecorder() *stats.ActivityRecorder { return d.actRec }
-func (d *mockdeps) DiscordJSONClient() *json.DiscordJSONClient      { return d.jsc }
+func (d *mockdeps) DiscordJSONClient() *jsonapi.DiscordJSONClient   { return d.jsc }
 
 func TestDiscordBot(t *testing.T) {
 	conf := bot.Config{
@@ -140,7 +140,7 @@ func TestDiscordBot(t *testing.T) {
 	deps.mh = dispatcher.NewDispatcher(deps)
 
 	deps.http = httpclient.NewHTTPClient(deps)
-	deps.jsc = json.NewDiscordJSONClient(deps, conf.APIURL)
+	deps.jsc = jsonapi.NewDiscordJSONClient(deps, conf.APIURL)
 
 	b := bot.NewDiscordBot(deps, conf, 0, 0)
 	err := b.AuthenticateAndConnect()

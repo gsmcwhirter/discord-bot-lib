@@ -3,8 +3,8 @@ package session
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v20/discordapi/etf"
-	"github.com/gsmcwhirter/discord-bot-lib/v20/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // state represents the state of a current bot session
@@ -26,13 +26,13 @@ func newState() *state {
 }
 
 // UpdateFromReady updates the session state from the given "ready" payload
-func (s *state) UpdateFromReady(data map[string]etf.Element) error {
+func (s *state) UpdateFromReady(data map[string]etfapi.Element) error {
 	var ok bool
-	var e etf.Element
-	var e2 etf.Element
+	var e etfapi.Element
+	var e2 etfapi.Element
 	var c Channel
 	var g Guild
-	var gMap map[string]etf.Element
+	var gMap map[string]etfapi.Element
 	var gid snowflake.Snowflake
 	var err error
 
@@ -68,7 +68,7 @@ func (s *state) UpdateFromReady(data map[string]etf.Element) error {
 		return errors.Wrap(ErrBadData, "guilds was not a list")
 	}
 	for _, e2 = range e.Vals {
-		gMap, gid, err = etf.MapAndIDFromElement(e2)
+		gMap, gid, err = etfapi.MapAndIDFromElement(e2)
 		if err != nil {
 			return errors.Wrap(err, "could not inflate session guild to map")
 		}
@@ -92,8 +92,8 @@ func (s *state) UpdateFromReady(data map[string]etf.Element) error {
 }
 
 // UpsertGuildFromElement updates data in the session state for a guild based on the given Element
-func (s *state) UpsertGuildFromElement(e etf.Element) (snowflake.Snowflake, error) {
-	eMap, id, err := etf.MapAndIDFromElement(e)
+func (s *state) UpsertGuildFromElement(e etfapi.Element) (snowflake.Snowflake, error) {
+	eMap, id, err := etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return 0, errors.Wrap(err, "UpsertGuildFromElement could not inflate element to find guild")
 	}
@@ -117,14 +117,14 @@ func (s *state) UpsertGuildFromElement(e etf.Element) (snowflake.Snowflake, erro
 }
 
 // UpsertGuildFromElementMap updates data in the session state for a guild based on the given data
-func (s *state) UpsertGuildFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *state) UpsertGuildFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 
 	e, ok := eMap["id"]
 	if !ok {
 		return 0, errors.Wrap(ErrMissingData, "UpsertGuildFromElementMap could not find guild id map element")
 	}
 
-	id, err := etf.SnowflakeFromElement(e)
+	id, err := etfapi.SnowflakeFromElement(e)
 	if err != nil {
 		return id, errors.Wrap(err, "UpsertGuildFromElementMap could not find guild id")
 	}
@@ -150,13 +150,13 @@ func (s *state) UpsertGuildFromElementMap(eMap map[string]etf.Element) (snowflak
 }
 
 // UpsertGuildMemberFromElementMap updates data in the session state for a guild member based on the given data
-func (s *state) UpsertGuildMemberFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *state) UpsertGuildMemberFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	e, ok := eMap["guild_id"]
 	if !ok {
 		return 0, errors.Wrap(ErrMissingData, "UpsertGuildMemberFromElementMap could not find guild id map element")
 	}
 
-	id, err := etf.SnowflakeFromElement(e)
+	id, err := etfapi.SnowflakeFromElement(e)
 	if err != nil {
 		return 0, errors.Wrap(err, "UpsertGuildMemberFromElementMap could not find guild id")
 	}
@@ -185,13 +185,13 @@ func (s *state) UpsertGuildMemberFromElementMap(eMap map[string]etf.Element) (sn
 }
 
 // UpsertGuildRoleFromElementMap updates data in the session state for a guild role based on the given data
-func (s *state) UpsertGuildRoleFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *state) UpsertGuildRoleFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	e, ok := eMap["guild_id"]
 	if !ok {
 		return 0, errors.Wrap(ErrMissingData, "UpsertGuildRoleFromElementMap could not find guild id map element")
 	}
 
-	id, err := etf.SnowflakeFromElement(e)
+	id, err := etfapi.SnowflakeFromElement(e)
 	if err != nil {
 		return 0, errors.Wrap(err, "UpsertGuildRoleFromElementMap could not find guild id")
 	}
@@ -220,8 +220,8 @@ func (s *state) UpsertGuildRoleFromElementMap(eMap map[string]etf.Element) (snow
 }
 
 // UpsertChannelFromElement updates data in the session state for a channel based on the given Element
-func (s *state) UpsertChannelFromElement(e etf.Element) (snowflake.Snowflake, error) {
-	eMap, id, err := etf.MapAndIDFromElement(e)
+func (s *state) UpsertChannelFromElement(e etfapi.Element) (snowflake.Snowflake, error) {
+	eMap, id, err := etfapi.MapAndIDFromElement(e)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not inflate element to find channel")
 	}
@@ -246,7 +246,7 @@ func (s *state) UpsertChannelFromElement(e etf.Element) (snowflake.Snowflake, er
 		return 0, nil
 	}
 
-	gid, err := etf.SnowflakeFromElement(gidE)
+	gid, err := etfapi.SnowflakeFromElement(gidE)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not get guild_id from element")
 	}
@@ -277,7 +277,7 @@ func (s *state) UpsertChannelFromElement(e etf.Element) (snowflake.Snowflake, er
 }
 
 // UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
-func (s *state) UpsertChannelFromElementMap(eMap map[string]etf.Element) (snowflake.Snowflake, error) {
+func (s *state) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
 	var id snowflake.Snowflake
 
 	e, ok := eMap["id"]
@@ -285,7 +285,7 @@ func (s *state) UpsertChannelFromElementMap(eMap map[string]etf.Element) (snowfl
 		return 0, errors.Wrap(ErrMissingData, "UpsertChannelFromElementMap could not find channel id map element")
 	}
 
-	id, err := etf.SnowflakeFromElement(e)
+	id, err := etfapi.SnowflakeFromElement(e)
 	if err != nil {
 		return 0, errors.Wrap(err, "UpsertChannelFromElementMap could not find channel id")
 	}
@@ -310,7 +310,7 @@ func (s *state) UpsertChannelFromElementMap(eMap map[string]etf.Element) (snowfl
 		return 0, nil
 	}
 
-	gid, err := etf.SnowflakeFromElement(gidE)
+	gid, err := etfapi.SnowflakeFromElement(gidE)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not get guild_id from element")
 	}
