@@ -1,6 +1,8 @@
 package session
 
 import (
+	"strconv"
+
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
@@ -42,7 +44,12 @@ func (r *Role) UpdateFromElementMap(eMap map[string]etfapi.Element) error {
 
 	e2, ok = eMap["permissions"]
 	if ok {
-		r.permissions, err = e2.ToInt64()
+		permStr, err := e2.ToString()
+		if err != nil {
+			return errors.Wrap(err, "could not get string permissions")
+		}
+
+		r.permissions, err = strconv.ParseInt(permStr, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "could not get permissions")
 		}
