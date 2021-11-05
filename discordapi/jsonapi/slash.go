@@ -1,6 +1,7 @@
 package jsonapi
 
 import (
+	"bytes"
 	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
@@ -117,6 +118,48 @@ type ApplicationCommandOptionChoice struct {
 	ValueString string
 	ValueInt    int
 	ValueNumber float64
+}
+
+func (c *ApplicationCommandOptionChoice) MarshalJSON() ([]byte, error) {
+	var b2 []byte
+	var err error
+
+	if err = c.FillValue(); err != nil {
+		return nil, errors.Wrap(err, "could not FillValue")
+	}
+
+	b := &bytes.Buffer{}
+	if _, err = b.WriteString(`{"name":`); err != nil {
+		return nil, errors.Wrap(err, "could not write to buffer")
+	}
+
+	b2, err = json.Marshal(c.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not marshal name")
+	}
+
+	if _, err = b.Write(b2); err != nil {
+		return nil, errors.Wrap(err, "could not write to buffer")
+	}
+
+	if _, err = b.WriteString(`,"value":`); err != nil {
+		return nil, errors.Wrap(err, "could not write to buffer")
+	}
+
+	b2, err = json.Marshal(c.Value)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not marshal value")
+	}
+
+	if _, err = b.Write(b2); err != nil {
+		return nil, errors.Wrap(err, "could not write to buffer")
+	}
+
+	if _, err = b.WriteString(`}`); err != nil {
+		return nil, errors.Wrap(err, "could not write to buffer")
+	}
+
+	return b.Bytes(), nil
 }
 
 func (c *ApplicationCommandOptionChoice) ResolveValue() error {
