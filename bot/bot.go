@@ -147,7 +147,7 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 
 	scope := "bot"
 	if d.config.UseSlashCommands {
-		scope += "%20application.commands"
+		scope = "applications.commands%20bot"
 	}
 	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=%s&permissions=%d\n\n", d.config.ClientID, scope, d.permissions)
 
