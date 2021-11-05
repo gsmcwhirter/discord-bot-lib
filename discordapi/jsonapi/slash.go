@@ -88,13 +88,13 @@ func (c *ApplicationCommand) Snowflakify() error {
 }
 
 type ApplicationCommandOption struct {
-	Type         ApplicationCommandOptionType   `json:"type"`
-	Name         string                         `json:"name"`
-	Description  string                         `json:"description"`
-	Required     bool                           `json:"required"`
-	Choices      ApplicationCommandOptionChoice `json:"choices,omitempty"`
-	Options      []ApplicationCommandOption     `json:"options,omitempty"`
-	ChannelTypes int                            `json:"channel_types,omitempty"`
+	Type         ApplicationCommandOptionType     `json:"type"`
+	Name         string                           `json:"name"`
+	Description  string                           `json:"description"`
+	Required     bool                             `json:"required"`
+	Choices      []ApplicationCommandOptionChoice `json:"choices,omitempty"`
+	Options      []ApplicationCommandOption       `json:"options,omitempty"`
+	ChannelTypes int                              `json:"channel_types,omitempty"`
 }
 
 func (o *ApplicationCommandOption) Snowflakify() error {
@@ -110,8 +110,53 @@ func (o *ApplicationCommandOption) Snowflakify() error {
 }
 
 type ApplicationCommandOptionChoice struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  string             `json:"name"`
+	Value stdjson.RawMessage `json:"value"`
+
+	Type        ApplicationCommandOptionType
+	ValueString string
+	ValueInt    int
+	ValueNumber float64
+}
+
+func (c *ApplicationCommandOptionChoice) ResolveValue() error {
+	switch c.Type {
+	case OptTypeString:
+		return json.Unmarshal([]byte(c.Value), &c.ValueString)
+	case OptTypeInteger:
+		return json.Unmarshal([]byte(c.Value), &c.ValueInt)
+	case OptTypeNumber:
+		return json.Unmarshal([]byte(c.Value), &c.ValueNumber)
+	default:
+		return ErrBadOptType
+	}
+}
+
+func (c *ApplicationCommandOptionChoice) FillValue() error {
+	var b []byte
+	var err error
+
+	switch c.Type {
+	case OptTypeInteger:
+		b, err = json.Marshal(c.ValueInt)
+		if err != nil {
+			return errors.Wrap(err, "could not marshal ValueInt")
+		}
+	case OptTypeNumber:
+		b, err = json.Marshal(c.ValueNumber)
+		if err != nil {
+			return errors.Wrap(err, "could not marshal ValueNumber")
+		}
+	case OptTypeString:
+		b, err = json.Marshal(c.ValueString)
+		if err != nil {
+			return errors.Wrap(err, "could not marshal ValueString")
+		}
+	default:
+		return ErrBadOptType
+	}
+
+	return errors.Wrap(c.Value.UnmarshalJSON(b), "could not unmarshal to RawMessage")
 }
 
 type ApplicationCommandInteraction struct {
