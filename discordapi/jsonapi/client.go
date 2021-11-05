@@ -258,6 +258,8 @@ func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid
 		return nil, errors.Wrap(err, "could not marshal commands as json")
 	}
 
+	level.Debug(logger).Message("body debug", "body", string(b))
+
 	r := bytes.NewReader(b)
 
 	level.Info(logger).Message("overwriting global commands", "aid", aid, "num_commands", len(cmds))
@@ -320,9 +322,11 @@ func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid 
 		return nil, errors.Wrap(err, "could not marshal commands as json")
 	}
 
+	level.Debug(logger).Message("body debug", "body", string(b))
+
 	r := bytes.NewReader(b)
 
-	level.Info(logger).Message("overwriting global commands", "aid", aid, "gid", gid.ToString(), "num_commands", len(cmds))
+	level.Info(logger).Message("overwriting guild commands", "aid", aid, "gid", gid.ToString(), "num_commands", len(cmds))
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {

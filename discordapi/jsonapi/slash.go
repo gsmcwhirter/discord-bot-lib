@@ -46,10 +46,10 @@ type ApplicationCommand struct {
 	DefaultPermission bool                       `json:"default_permission"`
 	Version           string                     `json:"version,omitempty"`
 
-	IDSnowflake            snowflake.Snowflake
-	ApplicationIDSnowflake snowflake.Snowflake
-	GuildIDSnowflake       snowflake.Snowflake
-	VersionSnowflake       snowflake.Snowflake
+	IDSnowflake            snowflake.Snowflake `json:"-"`
+	ApplicationIDSnowflake snowflake.Snowflake `json:"-"`
+	GuildIDSnowflake       snowflake.Snowflake `json:"-"`
+	VersionSnowflake       snowflake.Snowflake `json:"-"`
 }
 
 func (c *ApplicationCommand) Snowflakify() error {
@@ -114,10 +114,10 @@ type ApplicationCommandOptionChoice struct {
 	Name  string             `json:"name"`
 	Value stdjson.RawMessage `json:"value"`
 
-	Type        ApplicationCommandOptionType
-	ValueString string
-	ValueInt    int
-	ValueNumber float64
+	Type        ApplicationCommandOptionType `json:"-"`
+	ValueString string                       `json:"-"`
+	ValueInt    int                          `json:"-"`
+	ValueNumber float64                      `json:"-"`
 }
 
 func (c *ApplicationCommandOptionChoice) MarshalJSON() ([]byte, error) {
@@ -208,15 +208,15 @@ type ApplicationCommandInteraction struct {
 	Value   stdjson.RawMessage              `json:"value"`
 	Options []ApplicationCommandInteraction `json:"options"`
 
-	ValueSubCommand      string
-	ValueSubCommandGroup string
-	ValueString          string
-	ValueInt             int
-	ValueBool            bool
-	ValueUser            *UserResponse
-	ValueChannel         *ChannelMentionResponse
-	ValueRole            *RoleResponse
-	ValueNumber          float64
+	ValueSubCommand      string                  `json:"-"`
+	ValueSubCommandGroup string                  `json:"-"`
+	ValueString          string                  `json:"-"`
+	ValueInt             int                     `json:"-"`
+	ValueBool            bool                    `json:"-"`
+	ValueUser            *UserResponse           `json:"-"`
+	ValueChannel         *ChannelMentionResponse `json:"-"`
+	ValueRole            *RoleResponse           `json:"-"`
+	ValueNumber          float64                 `json:"-"`
 	// TODO: ValueMentionable
 }
 
