@@ -211,6 +211,10 @@ func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Hea
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
 
+	if headers == nil {
+		headers = &http.Header{}
+	}
+
 	if headers.Get("content-type") == "" {
 		headers.Set("content-type", "application/json")
 	}
@@ -283,6 +287,10 @@ func (c *HTTPClient) PutJSON(ctx context.Context, url string, headers *http.Head
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
+
+	if headers == nil {
+		headers = &http.Header{}
+	}
 
 	if headers.Get("content-type") == "" {
 		headers.Set("content-type", "application/json")
