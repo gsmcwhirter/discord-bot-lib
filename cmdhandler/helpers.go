@@ -7,7 +7,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
 )
 
 // ErrNotUserMention is the error returned when a user mention string is required but not provided

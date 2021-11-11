@@ -7,7 +7,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
 )
 
 // Element is a container for arbitrary etf-formatted data

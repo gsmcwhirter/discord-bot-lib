@@ -14,15 +14,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v21/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/dispatcher"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/dispatcher"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/wsclient"
 )
 
 type nopLogger struct{}

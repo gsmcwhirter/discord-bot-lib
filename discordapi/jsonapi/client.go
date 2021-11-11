@@ -15,10 +15,10 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/entity"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/stats"
 )
 
 type dependencies interface {

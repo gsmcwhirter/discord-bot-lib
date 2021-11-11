@@ -8,9 +8,9 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/request"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v21/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
 )
 
 type mockLogger struct {

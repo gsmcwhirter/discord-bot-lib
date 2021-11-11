@@ -14,14 +14,14 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v21/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/entity"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v21/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/wsapi"
 )
 
 type dependencies interface {
