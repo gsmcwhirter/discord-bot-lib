@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
@@ -304,6 +305,23 @@ func intNSliceToInt64(v []byte) (int64, error) {
 	}
 
 	return int64(binary.LittleEndian.Uint64(newV)), nil
+}
+
+func floatSliceToFloat64(v []byte) (float64, error) {
+	var newV []byte
+
+	if len(v) > 8 {
+		return 0, ErrOutOfBounds
+	}
+
+	if len(v) < 8 {
+		newV = make([]byte, 8)
+		copy(newV, v)
+	} else {
+		newV = v
+	}
+
+	return math.Float64frombits(binary.BigEndian.Uint64(newV)), nil
 }
 
 // ElementMapToElementSlice converts an string->Element map into a slice of Elements (kv pairs)

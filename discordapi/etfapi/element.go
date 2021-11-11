@@ -6,6 +6,8 @@ import (
 	"io"
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
 // Element is a container for arbitrary etf-formatted data
@@ -256,6 +258,17 @@ func (e *Element) ToInt64() (int64, error) {
 	}
 }
 
+// ToFloat64 converts a float-like Element to a float64, if possible
+func (e *Element) ToFloat64() (float64, error) {
+	switch e.Code {
+	case Float:
+		v, err := floatSliceToFloat64(e.Val)
+		return v, errors.Wrap(err, "could not convert to float64")
+	default:
+		return 0, errors.Wrap(ErrBadTarget, "cannot convert to float64")
+	}
+}
+
 // ToMap converts a map Element to a map
 func (e *Element) ToMap() (map[string]Element, error) {
 	switch e.Code {
@@ -280,6 +293,30 @@ func (e *Element) ToMap() (map[string]Element, error) {
 	}
 }
 
+// ToSnowflakeMap converts a map Element whose keys are snowflakes to a real map
+func (e *Element) ToSnowflakeMap() (map[snowflake.Snowflake]Element, error) {
+	switch e.Code {
+	case Map:
+		v := map[snowflake.Snowflake]Element{}
+
+		if len(e.Vals)%2 != 0 {
+			return nil, ErrBadParity
+		}
+
+		for i := 0; i < len(e.Vals); i += 2 {
+			k, err := SnowflakeFromElement(e.Vals[i])
+			if err != nil {
+				return nil, errors.Wrap(ErrBadFieldType, "snowflake_error", err.Error())
+			}
+			v[k] = e.Vals[i+1]
+		}
+
+		return v, nil
+	default:
+		return nil, errors.Wrap(ErrBadTarget, "cannot convert to snowflake map")
+	}
+}
+
 // ToList converts a list Element to a list
 func (e *Element) ToList() ([]Element, error) {
 	if !e.IsList() {
@@ -287,6 +324,17 @@ func (e *Element) ToList() ([]Element, error) {
 	}
 
 	return e.Vals, nil
+}
+
+// ToBool converts a boolean Element to a bool
+func (e *Element) ToBool() (bool, error) {
+	t, f := e.IsTrue(), e.IsFalse()
+
+	if !t && !f {
+		return false, ErrBadTarget
+	}
+
+	return t, nil
 }
 
 // IsNumeric determines if an element is number-like

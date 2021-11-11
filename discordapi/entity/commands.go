@@ -1,4 +1,4 @@
-package jsonapi
+package entity
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 	"github.com/gsmcwhirter/go-util/v8/json"
 
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 )
 
@@ -25,6 +26,14 @@ const (
 	OptTypeNumber          ApplicationCommandOptionType = 10
 )
 
+// ApplicationCommandOptionTypeFromElement generates a ApplicationCommandOptionType representation from the given
+// application-command-option-type Element
+func ApplicationCommandOptionTypeFromElement(e etfapi.Element) (ApplicationCommandOptionType, error) {
+	temp, err := e.ToInt()
+	t := ApplicationCommandOptionType(temp)
+	return t, errors.Wrap(err, "could not unmarshal ApplicationCommandOptionType")
+}
+
 type ApplicationCommandType int
 
 const (
@@ -32,6 +41,14 @@ const (
 	CmdTypeUser      ApplicationCommandType = 2
 	CmdTypeMessage   ApplicationCommandType = 3
 )
+
+// ApplicationCommandTypeFromElement generates a ApplicationCommandType representation from the given
+// application-command-type Element
+func ApplicationCommandTypeFromElement(e etfapi.Element) (ApplicationCommandType, error) {
+	temp, err := e.ToInt()
+	t := ApplicationCommandType(temp)
+	return t, errors.Wrap(err, "could not unmarshal ApplicationCommandType")
+}
 
 var ErrBadOptType = errors.New("bad option type value")
 
@@ -202,25 +219,26 @@ func (c *ApplicationCommandOptionChoice) FillValue() error {
 	return errors.Wrap(c.Value.UnmarshalJSON(b), "could not unmarshal to RawMessage")
 }
 
-type ApplicationCommandInteraction struct {
-	Name    string                          `json:"name"`
-	Type    ApplicationCommandOptionType    `json:"type"`
-	Value   stdjson.RawMessage              `json:"value"`
-	Options []ApplicationCommandInteraction `json:"options"`
+type ApplicationCommandInteractionOption struct {
+	Name    string                                `json:"name"`
+	Type    ApplicationCommandOptionType          `json:"type"`
+	Value   stdjson.RawMessage                    `json:"value"`
+	Options []ApplicationCommandInteractionOption `json:"options"`
+	Focused bool                                  `json:"focused,omitempty"`
 
-	ValueSubCommand      string                  `json:"-"`
-	ValueSubCommandGroup string                  `json:"-"`
-	ValueString          string                  `json:"-"`
-	ValueInt             int                     `json:"-"`
-	ValueBool            bool                    `json:"-"`
-	ValueUser            *UserResponse           `json:"-"`
-	ValueChannel         *ChannelMentionResponse `json:"-"`
-	ValueRole            *RoleResponse           `json:"-"`
-	ValueNumber          float64                 `json:"-"`
+	ValueSubCommand      string   `json:"-"`
+	ValueSubCommandGroup string   `json:"-"`
+	ValueString          string   `json:"-"`
+	ValueInt             int      `json:"-"`
+	ValueBool            bool     `json:"-"`
+	ValueUser            *User    `json:"-"`
+	ValueChannel         *Channel `json:"-"`
+	ValueRole            *Role    `json:"-"`
+	ValueNumber          float64  `json:"-"`
 	// TODO: ValueMentionable
 }
 
-func (i *ApplicationCommandInteraction) ResolveValue() error {
+func (i *ApplicationCommandInteractionOption) ResolveValue() error {
 	switch i.Type {
 	case OptTypeSubCommand:
 		return json.Unmarshal([]byte(i.Value), &i.ValueSubCommand)
@@ -233,13 +251,13 @@ func (i *ApplicationCommandInteraction) ResolveValue() error {
 	case OptTypeBoolean:
 		return json.Unmarshal([]byte(i.Value), &i.ValueBool)
 	case OptTypeUser:
-		i.ValueUser = new(UserResponse)
+		i.ValueUser = new(User)
 		return json.Unmarshal([]byte(i.Value), i.ValueUser)
 	case OptTypeRole:
-		i.ValueRole = new(RoleResponse)
+		i.ValueRole = new(Role)
 		return json.Unmarshal([]byte(i.Value), i.ValueRole)
 	case OptTypeChannel:
-		i.ValueChannel = new(ChannelMentionResponse)
+		i.ValueChannel = new(Channel)
 		return json.Unmarshal([]byte(i.Value), &i.ValueChannel)
 	case OptTypeMentionable:
 		return ErrBadOptType // TODO
@@ -248,4 +266,125 @@ func (i *ApplicationCommandInteraction) ResolveValue() error {
 	default:
 		return ErrBadOptType
 	}
+}
+
+func (i *ApplicationCommandInteractionOption) PackValue() error {
+	var b []byte
+	var err error
+
+	switch i.Type {
+	case OptTypeSubCommand:
+		b, err = json.Marshal(i.ValueSubCommand)
+	case OptTypeSubCommandGroup:
+		b, err = json.Marshal(i.ValueSubCommandGroup)
+	case OptTypeString:
+		b, err = json.Marshal(i.ValueString)
+	case OptTypeInteger:
+		b, err = json.Marshal(i.ValueInt)
+	case OptTypeBoolean:
+		b, err = json.Marshal(i.ValueBool)
+	case OptTypeUser:
+		b, err = json.Marshal(i.ValueUser)
+	case OptTypeRole:
+		b, err = json.Marshal(i.ValueRole)
+	case OptTypeChannel:
+		b, err = json.Marshal(i.ValueChannel)
+	case OptTypeMentionable:
+		return ErrBadOptType // TODO
+	case OptTypeNumber:
+		b, err = json.Marshal(i.ValueNumber)
+	default:
+		return ErrBadOptType
+	}
+
+	i.Value = stdjson.RawMessage(b)
+	return err
+}
+
+func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (ApplicationCommandInteractionOption, error) {
+	var o ApplicationCommandInteractionOption
+
+	eMap, err := e.ToMap()
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate ApplicationCommandInteractionOption from non-map")
+	}
+
+	e2, ok := eMap["options"]
+	if ok && !e2.IsNil() {
+		el, err := e2.ToList()
+		if err != nil {
+			return o, errors.Wrap(err, "could not inflate Options")
+		}
+
+		o.Options = make([]ApplicationCommandInteractionOption, 0, len(el))
+
+		for _, e3 := range el {
+			o2, err := ApplicationCommandInteractionOptionFromElement(e3)
+			if err != nil {
+				return o, errors.Wrap(err, "could not inflate sub-option")
+			}
+
+			o.Options = append(o.Options, o2)
+		}
+	}
+
+	e2 = eMap["name"]
+	o.Name, err = e2.ToString()
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate name")
+	}
+
+	e2 = eMap["type"]
+	o.Type, err = ApplicationCommandOptionTypeFromElement(e2)
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate type")
+	}
+
+	e2 = eMap["focused"]
+	o.Focused, err = e2.ToBool()
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate focused")
+	}
+
+	e2 = eMap["value"]
+	switch o.Type {
+	case OptTypeSubCommand:
+		o.ValueSubCommand, err = e2.ToString()
+	case OptTypeSubCommandGroup:
+		o.ValueSubCommandGroup, err = e2.ToString()
+	case OptTypeString:
+		o.ValueString, err = e2.ToString()
+	case OptTypeInteger:
+		o.ValueInt, err = e2.ToInt()
+	case OptTypeBoolean:
+		o.ValueBool, err = e2.ToBool()
+	case OptTypeUser:
+		if !e2.IsNil() {
+			*o.ValueUser, err = UserFromElement(e2)
+		}
+	case OptTypeRole:
+		if !e2.IsNil() {
+			*o.ValueRole, err = RoleFromElement(e2)
+		}
+	case OptTypeChannel:
+		if !e2.IsNil() {
+			*o.ValueChannel, err = ChannelFromElement(e2)
+		}
+	case OptTypeMentionable:
+		err = ErrBadOptType
+	case OptTypeNumber:
+		o.ValueNumber, err = e2.ToFloat64()
+	default:
+		err = ErrBadOptType
+	}
+
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate value")
+	}
+
+	if err := o.PackValue(); err != nil {
+		return o, errors.Wrap(err, "could not pack value")
+	}
+
+	return o, nil
 }

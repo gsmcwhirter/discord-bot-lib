@@ -15,6 +15,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/time/rate"
 
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/entity"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/stats"
@@ -72,7 +73,7 @@ func (d *DiscordJSONClient) SetDebug(val bool) {
 	d.debug = val
 }
 
-func (d *DiscordJSONClient) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData GuildMemberResponse, err error) {
+func (d *DiscordJSONClient) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData entity.GuildMember, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildMember")
 	defer span.End()
 
@@ -97,16 +98,16 @@ func (d *DiscordJSONClient) GetGuildMember(ctx context.Context, gid, uid snowfla
 	return respData, nil
 }
 
-// ErrResponse is the error that is wrapped and returned when there is a non-200 api response
-var ErrResponse = errors.New("error response")
+// Err is the error that is wrapped and returned when there is a non-200 api response
+var Err = errors.New("error response")
 
-func (d *DiscordJSONClient) GetGateway(ctx context.Context) (GatewayResponse, error) {
+func (d *DiscordJSONClient) GetGateway(ctx context.Context) (entity.Gateway, error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGateway")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
-	respData := GatewayResponse{}
+	respData := entity.Gateway{}
 
 	_, err := d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/gateway/bot", d.apiURL), nil, &respData)
 	if err != nil {
@@ -125,7 +126,7 @@ func (d *DiscordJSONClient) GetGateway(ctx context.Context) (GatewayResponse, er
 	return respData, nil
 }
 
-func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowflake, m marshaler) (respData MessageResponse, err error) {
+func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowflake, m marshaler) (respData entity.Message, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
 	defer span.End()
 
@@ -167,7 +168,7 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 	return respData, err
 }
 
-func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData MessageResponse, err error) {
+func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData entity.Message, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
 	defer span.End()
 
@@ -213,13 +214,13 @@ func (d *DiscordJSONClient) CreateReaction(ctx context.Context, cid, mid snowfla
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		err = errors.Wrap(ErrResponse, "non-204 response", "status_code", resp.StatusCode, "emoji", emoji, "response_body", string(body))
+		err = errors.Wrap(Err, "non-204 response", "status_code", resp.StatusCode, "emoji", emoji, "response_body", string(body))
 	}
 
 	return resp, err
 }
 
-func (d *DiscordJSONClient) GetGlobalCommands(ctx context.Context, aid string) (cmds []ApplicationCommand, err error) {
+func (d *DiscordJSONClient) GetGlobalCommands(ctx context.Context, aid string) (cmds []entity.ApplicationCommand, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGlobalCommands")
 	defer span.End()
 
@@ -245,7 +246,7 @@ func (d *DiscordJSONClient) GetGlobalCommands(ctx context.Context, aid string) (
 	return cmds, err
 }
 
-func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid string, cmds []ApplicationCommand) (resCmds []ApplicationCommand, err error) {
+func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid string, cmds []entity.ApplicationCommand) (resCmds []entity.ApplicationCommand, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGlobalCommands")
 	defer span.End()
 
@@ -283,7 +284,7 @@ func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid
 	return resCmds, err
 }
 
-func (d *DiscordJSONClient) GetGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake) (cmds []ApplicationCommand, err error) {
+func (d *DiscordJSONClient) GetGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake) (cmds []entity.ApplicationCommand, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildCommands")
 	defer span.End()
 
@@ -309,7 +310,7 @@ func (d *DiscordJSONClient) GetGuildCommands(ctx context.Context, aid string, gi
 	return cmds, err
 }
 
-func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake, cmds []ApplicationCommand) (resCmds []ApplicationCommand, err error) {
+func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake, cmds []entity.ApplicationCommand) (resCmds []entity.ApplicationCommand, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGuildCommands")
 	defer span.End()
 

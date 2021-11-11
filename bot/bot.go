@@ -15,6 +15,7 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v21/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/entity"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/discordapi/jsonapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/errreport"
 	"github.com/gsmcwhirter/discord-bot-lib/v21/logging"
@@ -48,8 +49,8 @@ type Config struct {
 	BotPresence string
 
 	UseSlashCommands    bool
-	GlobalSlashCommands []jsonapi.ApplicationCommand
-	GuildSlashCommands  map[snowflake.Snowflake][]jsonapi.ApplicationCommand
+	GlobalSlashCommands []entity.ApplicationCommand
+	GuildSlashCommands  map[snowflake.Snowflake][]entity.ApplicationCommand
 }
 
 // HBReconfig
