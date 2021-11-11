@@ -15,8 +15,6 @@ type Message interface {
 	GuildID() snowflake.Snowflake
 	ChannelID() snowflake.Snowflake
 	MessageID() snowflake.Snowflake
-	Contents() []string
-	ContentErr() error
 }
 
 // WithContext wraps a logger with fields from a context

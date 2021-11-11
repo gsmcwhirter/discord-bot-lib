@@ -5,6 +5,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/parser"
 
+	"github.com/gsmcwhirter/discord-bot-lib/v22/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
 )
 
@@ -30,6 +31,9 @@ type simpleMessage struct {
 	contents   []string
 	contentErr error
 }
+
+var _ Message = (*simpleMessage)(nil)
+var _ logging.Message = (*simpleMessage)(nil)
 
 // NewSimpleMessage creates a new Message object
 func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) Message {
