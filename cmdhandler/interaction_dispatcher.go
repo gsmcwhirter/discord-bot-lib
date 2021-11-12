@@ -1,18 +1,17 @@
 package cmdhandler
 
 import (
+	"github.com/gsmcwhirter/go-util/v8/errors"
+
 	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/entity"
 	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
-	"github.com/gsmcwhirter/go-util/v8/errors"
 )
 
 var ErrMalformedInteraction = errors.New("malformed interaction payload")
 
 type InteractionDispatcher struct {
-	globals []InteractionCommandHandler
-	guilds  map[snowflake.Snowflake][]InteractionCommandHandler
-
-	dispatch map[string]map[snowflake.Snowflake]InteractionHandler
+	globals map[string]InteractionCommandHandler
+	guilds  map[snowflake.Snowflake]map[string]InteractionCommandHandler
 }
 
 type InteractionCommandHandler struct {
@@ -22,9 +21,8 @@ type InteractionCommandHandler struct {
 
 func NewInteractionDispatcher(globals []InteractionCommandHandler) (*InteractionDispatcher, error) {
 	ix := &InteractionDispatcher{
-		globals:  make([]InteractionCommandHandler, 0, len(globals)),
-		guilds:   make(map[snowflake.Snowflake][]InteractionCommandHandler),
-		dispatch: make(map[string]map[snowflake.Snowflake]InteractionHandler),
+		globals: make(map[string]InteractionCommandHandler, len(globals)),
+		guilds:  make(map[snowflake.Snowflake]map[string]InteractionCommandHandler),
 	}
 
 	if err := ix.LearnGlobalCommands(globals); err != nil {
@@ -57,52 +55,24 @@ func (i *InteractionDispatcher) GuildCommands() map[snowflake.Snowflake][]entity
 }
 
 func (i *InteractionDispatcher) LearnGlobalCommands(cmds []InteractionCommandHandler) error {
-	tmp := make(map[string]InteractionCommandHandler, len(i.globals)+len(cmds))
-
-	for _, ich := range i.globals {
-		tmp[ich.Command.Name] = ich
-	}
-
 	for _, ich := range cmds {
-		tmp[ich.Command.Name] = ich
+		i.globals[ich.Command.Name] = ich
 	}
 
-	i.globals = make([]InteractionCommandHandler, 0, len(tmp))
-	for _, ich := range tmp {
-		i.globals = append(i.globals, ich)
-	}
-
-	return i.learnCommands(0, cmds)
+	return nil
 }
 
 func (i *InteractionDispatcher) LearnGuildCommands(gid snowflake.Snowflake, cmds []InteractionCommandHandler) error {
-	tmp := make(map[string]InteractionCommandHandler, len(i.guilds[gid])+len(cmds))
-
-	for _, ich := range i.guilds[gid] {
-		tmp[ich.Command.Name] = ich
+	gcmds, ok := i.guilds[gid]
+	if !ok {
+		gcmds = make(map[string]InteractionCommandHandler, len(cmds))
 	}
 
 	for _, ich := range cmds {
-		tmp[ich.Command.Name] = ich
+		gcmds[ich.Command.Name] = ich
 	}
 
-	i.guilds[gid] = make([]InteractionCommandHandler, 0, len(tmp))
-	for _, ich := range tmp {
-		i.guilds[gid] = append(i.guilds[gid], ich)
-	}
-
-	return i.learnCommands(gid, cmds)
-}
-
-func (i *InteractionDispatcher) learnCommands(gid snowflake.Snowflake, cmds []InteractionCommandHandler) error {
-	for _, ich := range cmds {
-		handlers, ok := i.dispatch[ich.Command.Name]
-		if !ok {
-			handlers = make(map[snowflake.Snowflake]InteractionHandler)
-		}
-
-		i.dispatch[ich.Command.Name] = handlers
-	}
+	i.guilds[gid] = gcmds
 
 	return nil
 }
@@ -112,18 +82,15 @@ func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, error) {
 		return nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
 	}
 
-	handlers, ok := i.dispatch[ix.Data.Name]
+	handlers, ok := i.guilds[ix.GuildID()]
+	if !ok {
+		handlers = i.globals
+	}
+
+	handler, ok := handlers[ix.Data.Name]
 	if !ok {
 		return nil, ErrMissingHandler
 	}
 
-	handler, ok := handlers[ix.GuildIDSnowflake]
-	if !ok {
-		handler, ok = handlers[0]
-		if !ok {
-			return nil, ErrMissingHandler
-		}
-	}
-
-	return handler.HandleInteraction(ix)
+	return handler.Handler.HandleInteraction(ix)
 }

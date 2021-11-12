@@ -168,6 +168,48 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 	return respData, err
 }
 
+func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) (respData entity.Message, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	// level.Info(logger).Message("sending message to channel")
+
+	var b []byte
+
+	b, err = m.MarshalToJSON()
+	if err != nil {
+		return respData, errors.Wrap(err, "could not marshal message as json")
+	}
+
+	level.Info(logger).Message("sending message", "payload", string(b))
+	r := bytes.NewReader(b)
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return respData, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	header := http.Header{}
+	header.Add("Content-Type", "application/json")
+	resp, err := d.deps.HTTPClient().PostJSON(ctx, fmt.Sprintf("%s/interactions/%d/%s/callback", d.apiURL, ixID, ixToken), &header, r, &respData)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not complete the message send")
+	}
+
+	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
+	}
+
+	err = respData.Snowflakify()
+	if err != nil {
+		return respData, errors.Wrap(err, "could not snowflakify message response information")
+	}
+
+	return respData, err
+}
+
 func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData entity.Message, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
 	defer span.End()
