@@ -14,10 +14,20 @@ type InteractionDispatcher struct {
 	guilds  map[snowflake.Snowflake]map[string]InteractionCommandHandler
 }
 
-type InteractionCommandHandler struct {
-	Command entity.ApplicationCommand
-	Handler InteractionHandler
+type InteractionCommandHandler interface {
+	Command() entity.ApplicationCommand
+	Handler() InteractionHandler
 }
+
+type interactionCommandHandler struct {
+	command entity.ApplicationCommand
+	handler InteractionHandler
+}
+
+var _ InteractionCommandHandler = (*interactionCommandHandler)(nil)
+
+func (ich *interactionCommandHandler) Command() entity.ApplicationCommand { return ich.command }
+func (ich *interactionCommandHandler) Handler() InteractionHandler        { return ich.handler }
 
 func NewInteractionDispatcher(globals []InteractionCommandHandler) (*InteractionDispatcher, error) {
 	ix := &InteractionDispatcher{
@@ -35,7 +45,7 @@ func NewInteractionDispatcher(globals []InteractionCommandHandler) (*Interaction
 func (i *InteractionDispatcher) GlobalCommands() []entity.ApplicationCommand {
 	cmds := make([]entity.ApplicationCommand, 0, len(i.globals))
 	for _, ich := range i.globals {
-		cmds = append(cmds, ich.Command)
+		cmds = append(cmds, ich.Command())
 	}
 
 	return cmds
@@ -47,7 +57,7 @@ func (i *InteractionDispatcher) GuildCommands() map[snowflake.Snowflake][]entity
 	for gid, gcmds := range i.guilds {
 		cmds[gid] = make([]entity.ApplicationCommand, 0, len(gcmds))
 		for _, ich := range gcmds {
-			cmds[gid] = append(cmds[gid], ich.Command)
+			cmds[gid] = append(cmds[gid], ich.Command())
 		}
 	}
 
@@ -56,7 +66,7 @@ func (i *InteractionDispatcher) GuildCommands() map[snowflake.Snowflake][]entity
 
 func (i *InteractionDispatcher) LearnGlobalCommands(cmds []InteractionCommandHandler) error {
 	for _, ich := range cmds {
-		i.globals[ich.Command.Name] = ich
+		i.globals[ich.Command().Name] = ich
 	}
 
 	return nil
@@ -69,7 +79,7 @@ func (i *InteractionDispatcher) LearnGuildCommands(gid snowflake.Snowflake, cmds
 	}
 
 	for _, ich := range cmds {
-		gcmds[ich.Command.Name] = ich
+		gcmds[ich.Command().Name] = ich
 	}
 
 	i.guilds[gid] = gcmds
@@ -92,5 +102,5 @@ func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, error) {
 		return nil, ErrMissingHandler
 	}
 
-	return handler.Handler.HandleInteraction(ix)
+	return handler.Handler().HandleInteraction(ix)
 }

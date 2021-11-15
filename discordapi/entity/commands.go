@@ -360,15 +360,21 @@ func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (Applicati
 		o.ValueBool, err = e2.ToBool()
 	case OptTypeUser:
 		if !e2.IsNil() {
-			*o.ValueUser, err = UserFromElement(e2)
+			v, err2 := UserFromElement(e2)
+			err = err2
+			o.ValueUser = &v
 		}
 	case OptTypeRole:
 		if !e2.IsNil() {
-			*o.ValueRole, err = RoleFromElement(e2)
+			v, err2 := RoleFromElement(e2)
+			err = err2
+			o.ValueRole = &v
 		}
 	case OptTypeChannel:
 		if !e2.IsNil() {
-			*o.ValueChannel, err = ChannelFromElement(e2)
+			v, err2 := ChannelFromElement(e2)
+			err = err2
+			o.ValueChannel = &v
 		}
 	case OptTypeMentionable:
 		err = ErrBadOptType

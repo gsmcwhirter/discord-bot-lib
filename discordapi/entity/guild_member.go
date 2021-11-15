@@ -55,10 +55,11 @@ func GuildMemberFromElement(e etfapi.Element) (GuildMember, error) {
 
 	e2, ok := eMap["user"]
 	if ok && !e2.IsNil() {
-		*m.User, err = UserFromElement(e2)
+		v, err := UserFromElement(e2)
 		if err != nil {
 			return m, errors.Wrap(err, "could not inflate User")
 		}
+		m.User = &v
 	}
 
 	e2 = eMap["nick"]

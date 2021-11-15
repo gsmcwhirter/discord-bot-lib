@@ -105,34 +105,38 @@ func InteractionFromElementMap(eMap map[string]etfapi.Element) (Interaction, err
 
 	e2, ok = eMap["data"]
 	if ok && !e2.IsNil() {
-		*i.Data, err = InteractionDataFromElement(e2)
+		v, err := InteractionDataFromElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not inflate interaction data")
 		}
+		i.Data = &v
 	}
 
 	e2, ok = eMap["member"]
 	if ok && !e2.IsNil() {
-		*i.Member, err = GuildMemberFromElement(e2)
+		v, err := GuildMemberFromElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not inflate guild member")
 		}
+		i.Member = &v
 	}
 
 	e2, ok = eMap["user"]
 	if ok && !e2.IsNil() {
-		*i.User, err = UserFromElement(e2)
+		v, err := UserFromElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not inflate interaction user")
 		}
+		i.User = &v
 	}
 
 	e2, ok = eMap["message"]
 	if ok && !e2.IsNil() {
-		*i.Message, err = MessageFromElement(e2)
+		v, err := MessageFromElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not inflate interaction message")
 		}
+		i.Message = &v
 	}
 
 	return i, nil
@@ -220,10 +224,10 @@ func InteractionDataFromElement(e etfapi.Element) (InteractionData, error) {
 }
 
 type ResolvedData struct {
-	Users    map[snowflake.Snowflake]*User
-	Members  map[snowflake.Snowflake]*GuildMember
-	Roles    map[snowflake.Snowflake]*Role
-	Channels map[snowflake.Snowflake]*Channel
+	Users    map[snowflake.Snowflake]User
+	Members  map[snowflake.Snowflake]GuildMember
+	Roles    map[snowflake.Snowflake]Role
+	Channels map[snowflake.Snowflake]Channel
 }
 
 // ResolvedDataFromElement generates a new Interaction object from the given data
@@ -243,10 +247,10 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 			return d, errors.Wrap(err, "could not inflate users map")
 		}
 
-		d.Users = make(map[snowflake.Snowflake]*User, len(m))
+		d.Users = make(map[snowflake.Snowflake]User, len(m))
 		for k, v := range m {
 			if !v.IsNil() {
-				*(d.Users[k]), err = UserFromElement(v)
+				d.Users[k], err = UserFromElement(v)
 				if err != nil {
 					return d, errors.Wrap(err, "could not inflate user")
 				}
@@ -261,10 +265,10 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 			return d, errors.Wrap(err, "could not inflate members map")
 		}
 
-		d.Members = make(map[snowflake.Snowflake]*GuildMember, len(m))
+		d.Members = make(map[snowflake.Snowflake]GuildMember, len(m))
 		for k, v := range m {
 			if !v.IsNil() {
-				*(d.Members[k]), err = GuildMemberFromElement(v)
+				d.Members[k], err = GuildMemberFromElement(v)
 				if err != nil {
 					return d, errors.Wrap(err, "could not inflate member")
 				}
@@ -279,10 +283,10 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 			return d, errors.Wrap(err, "could not inflate roles map")
 		}
 
-		d.Roles = make(map[snowflake.Snowflake]*Role, len(m))
+		d.Roles = make(map[snowflake.Snowflake]Role, len(m))
 		for k, v := range m {
 			if !v.IsNil() {
-				*(d.Roles[k]), err = RoleFromElement(v)
+				d.Roles[k], err = RoleFromElement(v)
 				if err != nil {
 					return d, errors.Wrap(err, "could not inflate role")
 				}
@@ -297,10 +301,10 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 			return d, errors.Wrap(err, "could not inflate channels map")
 		}
 
-		d.Channels = make(map[snowflake.Snowflake]*Channel, len(m))
+		d.Channels = make(map[snowflake.Snowflake]Channel, len(m))
 		for k, v := range m {
 			if !v.IsNil() {
-				*(d.Channels[k]), err = ChannelFromElement(v)
+				d.Channels[k], err = ChannelFromElement(v)
 				if err != nil {
 					return d, errors.Wrap(err, "could not inflate channel")
 				}
