@@ -92,14 +92,14 @@ func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, error) {
 		return nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
 	}
 
-	handlers, ok := i.guilds[ix.GuildID()]
-	if !ok {
-		handlers = i.globals
-	}
-
+	handlers := i.guilds[ix.GuildID()]
 	handler, ok := handlers[ix.Data.Name]
 	if !ok {
-		return nil, ErrMissingHandler
+		handlers = i.globals
+		handler, ok = handlers[ix.Data.Name]
+		if !ok {
+			return nil, ErrMissingHandler
+		}
 	}
 
 	return handler.Handler().HandleInteraction(ix)
