@@ -33,9 +33,13 @@ func (ix *Interaction) MessageID() snowflake.Snowflake {
 }
 
 func (ix *Interaction) UserID() snowflake.Snowflake {
-	if ix.User == nil {
-		return 0
+	if ix.User != nil {
+		return ix.User.IDSnowflake
 	}
 
-	return ix.User.IDSnowflake
+	if ix.Member != nil && ix.Member.User != nil {
+		return ix.Member.User.IDSnowflake
+	}
+
+	return 0
 }
