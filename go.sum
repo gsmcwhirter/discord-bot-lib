@@ -380,8 +380,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t
 github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/grpc-ecosystem/grpc-gateway v1.12.1/go.mod h1:8XEsbTttt/W+VvjtQhLACqCisSPWTxCZ7sBRjU6iH9c=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
-github.com/gsmcwhirter/go-util/v8 v8.2.1 h1:qBBJzkDue0dw8MTvuptwwvQXqCgKa3fgEucliWmGB0U=
-github.com/gsmcwhirter/go-util/v8 v8.2.1/go.mod h1:hsroSXbHl/KVRGWFi0fzNT0kgZBuIcSOR18E4MRCYck=
+github.com/gsmcwhirter/go-util/v8 v8.3.0 h1:EX17Jts0n+VSVRxd5iLBkcse2xpgvqhf/gPEN8FniGg=
+github.com/gsmcwhirter/go-util/v8 v8.3.0/go.mod h1:hsroSXbHl/KVRGWFi0fzNT0kgZBuIcSOR18E4MRCYck=
 github.com/hashicorp/consul/api v1.1.0/go.mod h1:VmuI/Lkw1nC05EYQWNKwWGbkg+FbDBtguAZLlVdkD9Q=
 github.com/hashicorp/consul/api v1.3.0/go.mod h1:MmDNSzIMUjNpY/mQ398R4bk2FnqQLoPndWW5VkKPlCE=
 github.com/hashicorp/consul/sdk v0.1.1/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyNV1vwHyQBF0x8=
