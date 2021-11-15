@@ -200,7 +200,7 @@ func InteractionDataFromElement(e etfapi.Element) (InteractionData, error) {
 
 	e2, ok = eMap["resolved"]
 	if ok && !e2.IsNil() {
-		d.Resolved, err = ResolvedDataFromElement()
+		d.Resolved, err = ResolvedDataFromElement(e2)
 		if err != nil {
 			return d, errors.Wrap(err, "could not get resolved data")
 		}
