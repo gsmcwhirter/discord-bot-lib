@@ -65,6 +65,64 @@ type Channel struct {
 	PermissionsSnowflake   snowflake.Snowflake `json:"-"`
 }
 
+func (c *Channel) Snowflakify() error {
+	var err error
+
+	if c.IDSnowflake, err = snowflake.FromString(c.IDString); err != nil {
+		return errors.Wrap(err, "could not snowflakify ID")
+	}
+
+	if c.GuildIDString != "" {
+		if c.GuildIDSnowflake, err = snowflake.FromString(c.GuildIDString); err != nil {
+			return errors.Wrap(err, "could not snowflakify GuildID")
+		}
+	}
+
+	if c.LastMessageIDString != "" {
+		if c.LastMessageIDSnowflake, err = snowflake.FromString(c.LastMessageIDString); err != nil {
+			return errors.Wrap(err, "could not snowflakify LastMessageID")
+		}
+	}
+
+	if c.OwnerIDString != "" {
+		if c.OwnerIDSnowflake, err = snowflake.FromString(c.OwnerIDString); err != nil {
+			return errors.Wrap(err, "could not snowflakify OwnerID")
+		}
+	}
+
+	if c.ApplicationIDString != "" {
+		if c.ApplicationIDSnowflake, err = snowflake.FromString(c.ApplicationIDString); err != nil {
+			return errors.Wrap(err, "could not snowflakify ApplicationID")
+		}
+	}
+
+	if c.ParentIDString != "" {
+		if c.ParentIDSnowflake, err = snowflake.FromString(c.ParentIDString); err != nil {
+			return errors.Wrap(err, "could not snowflakify ParentID")
+		}
+	}
+
+	if c.Permissions != "" {
+		if c.PermissionsSnowflake, err = snowflake.FromString(c.Permissions); err != nil {
+			return errors.Wrap(err, "could not snowflakify Permissions")
+		}
+	}
+
+	for i := range c.Recipients {
+		if err := c.Recipients[i].Snowflakify(); err != nil {
+			return errors.Wrap(err, "could not snowflakify User")
+		}
+	}
+
+	for _, o := range c.PermissionOverwrites {
+		if err := o.Snowflakify(); err != nil {
+			return errors.Wrap(err, "could not snowflakify PermissionOverwrite")
+		}
+	}
+
+	return nil
+}
+
 func ChannelFromElement(e etfapi.Element) (Channel, error) {
 	var c Channel
 
@@ -293,6 +351,28 @@ type PermissionOverwrite struct {
 	IDSnowflake    snowflake.Snowflake `json:"-"`
 	AllowSnowflake snowflake.Snowflake `json:"-"`
 	DenySnowflake  snowflake.Snowflake `json:"-"`
+}
+
+func (ow *PermissionOverwrite) Snowflakify() error {
+	var err error
+
+	if ow.IDSnowflake, err = snowflake.FromString(ow.IDString); err != nil {
+		return errors.Wrap(err, "could not snowflakify ID")
+	}
+
+	if ow.AllowString != "" {
+		if ow.AllowSnowflake, err = snowflake.FromString(ow.AllowString); err != nil {
+			return errors.Wrap(err, "could not snowflakify Allow")
+		}
+	}
+
+	if ow.DenyString != "" {
+		if ow.DenySnowflake, err = snowflake.FromString(ow.DenyString); err != nil {
+			return errors.Wrap(err, "could not snowflakify Deny")
+		}
+	}
+
+	return nil
 }
 
 func PermissionOverwriteFromElement(e etfapi.Element) (PermissionOverwrite, error) {
