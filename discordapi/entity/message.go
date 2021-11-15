@@ -132,7 +132,7 @@ func (m *Message) Snowflakify() error {
 
 	for i := range m.MentionRoles {
 		mr := m.MentionRoles[i]
-		if err = m.Snowflakify(); err != nil {
+		if err = mr.Snowflakify(); err != nil {
 			return errors.Wrap(err, "could not snowflakify MentionRoles")
 		}
 		m.MentionRoles[i] = mr
@@ -140,7 +140,7 @@ func (m *Message) Snowflakify() error {
 
 	for i := range m.MentionChannels {
 		mc := m.MentionChannels[i]
-		if err = m.Snowflakify(); err != nil {
+		if err = mc.Snowflakify(); err != nil {
 			return errors.Wrap(err, "could not snowflakify MentionChannels")
 		}
 		m.MentionChannels[i] = mc
@@ -148,7 +148,7 @@ func (m *Message) Snowflakify() error {
 
 	for i := range m.Attachments {
 		ma := m.Attachments[i]
-		if err = m.Snowflakify(); err != nil {
+		if err = ma.Snowflakify(); err != nil {
 			return errors.Wrap(err, "could not snowflakify Attachments")
 		}
 		m.Attachments[i] = ma
@@ -164,7 +164,7 @@ func (m *Message) Snowflakify() error {
 
 	for i := range m.Reactions {
 		mr := m.Reactions[i]
-		if err = m.Snowflakify(); err != nil {
+		if err = mr.Snowflakify(); err != nil {
 			return errors.Wrap(err, "could not snowflakify Reactions")
 		}
 		m.Reactions[i] = mr
