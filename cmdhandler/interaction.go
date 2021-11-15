@@ -33,5 +33,9 @@ func (ix *Interaction) MessageID() snowflake.Snowflake {
 }
 
 func (ix *Interaction) UserID() snowflake.Snowflake {
+	if ix.User == nil {
+		return 0
+	}
+
 	return ix.User.IDSnowflake
 }
