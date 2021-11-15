@@ -340,10 +340,12 @@ func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (Applicati
 		return o, errors.Wrap(err, "could not inflate type")
 	}
 
-	e2 = eMap["focused"]
-	o.Focused, err = e2.ToBool()
-	if err != nil {
-		return o, errors.Wrap(err, "could not inflate focused")
+	e2, ok = eMap["focused"]
+	if ok {
+		o.Focused, err = e2.ToBool()
+		if err != nil {
+			return o, errors.Wrap(err, "could not inflate focused")
+		}
 	}
 
 	e2 = eMap["value"]
