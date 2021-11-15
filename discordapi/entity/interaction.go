@@ -198,9 +198,12 @@ func InteractionDataFromElement(e etfapi.Element) (InteractionData, error) {
 		return d, errors.Wrap(err, "could not get type")
 	}
 
-	d.Resolved, err = ResolvedDataFromElement(eMap["resolved"])
-	if err != nil {
-		return d, errors.Wrap(err, "could not get resolved data")
+	e2, ok = eMap["resolved"]
+	if ok && !e2.IsNil() {
+		d.Resolved, err = ResolvedDataFromElement()
+		if err != nil {
+			return d, errors.Wrap(err, "could not get resolved data")
+		}
 	}
 
 	e2, ok = eMap["options"]
