@@ -151,7 +151,7 @@ func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Head
 		defer resp.Body.Close() //nolint:errcheck // not a real issue here
 	}
 
-	if resp.StatusCode >= http.StatusOK && resp.StatusCode < 300 {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		var body []byte
 		var err error
 		body, err = ioutil.ReadAll(resp.Body)
@@ -228,7 +228,7 @@ func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Hea
 		defer resp.Body.Close() //nolint:errcheck // not a real issue here
 	}
 
-	if resp.StatusCode >= http.StatusOK && resp.StatusCode < 300 {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		var body []byte
 		var err error
 		body, err = ioutil.ReadAll(resp.Body)
@@ -305,7 +305,7 @@ func (c *HTTPClient) PutJSON(ctx context.Context, url string, headers *http.Head
 		defer resp.Body.Close() //nolint:errcheck // not a real issue here
 	}
 
-	if resp.StatusCode >= http.StatusOK && resp.StatusCode < 300 {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		var body []byte
 		var err error
 		body, err = ioutil.ReadAll(resp.Body)
