@@ -183,6 +183,18 @@ func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID sno
 		return respData, errors.Wrap(err, "could not marshal message as json")
 	}
 
+	im := InteractionCallbackMessage{
+		Type: CallbackTypeChannelMessage,
+	}
+	if err := im.Data.UnmarshalJSON(b); err != nil {
+		return respData, errors.Wrap(err, "could not fill InteractionCallbackMessage Data")
+	}
+
+	b, err = json.Marshal(im)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not marshal InteractionCallbackMessage")
+	}
+
 	level.Info(logger).Message("sending message", "payload", string(b))
 	r := bytes.NewReader(b)
 

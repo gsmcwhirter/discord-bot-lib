@@ -1,6 +1,10 @@
 package jsonapi
 
-import "github.com/gsmcwhirter/go-util/v8/json"
+import (
+	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
+
+	"github.com/gsmcwhirter/go-util/v8/json"
+)
 
 type MessageReference struct {
 	MessageID string `json:"message_id,omitempty"`
@@ -54,4 +58,20 @@ type EmbedField struct {
 // EmbedFooter is a json object that represents the footer of an embed
 type EmbedFooter struct {
 	Text string `json:"text"`
+}
+
+type InteractionCallbackType int
+
+const (
+	CallbackTypePong                   InteractionCallbackType = 1
+	CallbackTypeChannelMessage         InteractionCallbackType = 4
+	CallbackTypeDeferredChannelMessage InteractionCallbackType = 5
+	CallbackTypeDeferredUpdate         InteractionCallbackType = 6
+	CallbackTypeUpdate                 InteractionCallbackType = 7
+	CallbackTypeAutocomplete           InteractionCallbackType = 8
+)
+
+type InteractionCallbackMessage struct {
+	Type InteractionCallbackType `json:"type"`
+	Data stdjson.RawMessage      `json:"data"`
 }
