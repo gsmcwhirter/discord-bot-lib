@@ -16,6 +16,7 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v22/httpclient"
 	"github.com/gsmcwhirter/discord-bot-lib/v22/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
 	"github.com/gsmcwhirter/discord-bot-lib/v22/stats"
@@ -168,31 +169,29 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 	return respData, err
 }
 
-func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) (respData entity.Message, err error) {
+func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) (err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
-	// level.Info(logger).Message("sending message to channel")
-
 	var b []byte
 
 	b, err = m.MarshalToJSON()
 	if err != nil {
-		return respData, errors.Wrap(err, "could not marshal message as json")
+		return errors.Wrap(err, "could not marshal message as json")
 	}
 
 	im := InteractionCallbackMessage{
 		Type: CallbackTypeChannelMessage,
 	}
 	if err := im.Data.UnmarshalJSON(b); err != nil {
-		return respData, errors.Wrap(err, "could not fill InteractionCallbackMessage Data")
+		return errors.Wrap(err, "could not fill InteractionCallbackMessage Data")
 	}
 
 	b, err = json.Marshal(im)
 	if err != nil {
-		return respData, errors.Wrap(err, "could not marshal InteractionCallbackMessage")
+		return errors.Wrap(err, "could not marshal InteractionCallbackMessage")
 	}
 
 	level.Info(logger).Message("sending message", "payload", string(b))
@@ -200,26 +199,25 @@ func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID sno
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
-		return respData, errors.Wrap(err, "error waiting for rate limiter")
+		return errors.Wrap(err, "error waiting for rate limiter")
 	}
 
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
-	resp, err := d.deps.HTTPClient().PostJSON(ctx, fmt.Sprintf("%s/interactions/%d/%s/callback", d.apiURL, ixID, ixToken), &header, r, &respData)
+	resp, body, err := d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/interactions/%d/%s/callback", d.apiURL, ixID, ixToken), &header, r)
 	if err != nil {
-		return respData, errors.Wrap(err, "could not complete the message send")
+		return errors.Wrap(err, "could not complete the message send")
+	}
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
+		return errors.Wrap(httpclient.ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
 	}
 
 	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
-	err = respData.Snowflakify()
-	if err != nil {
-		return respData, errors.Wrap(err, "could not snowflakify message response information")
-	}
-
-	return respData, err
+	return err
 }
 
 func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData entity.Message, err error) {
