@@ -220,6 +220,31 @@ func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID sno
 	return err
 }
 
+func (d *DiscordJSONClient) GetInteractionResponse(ctx context.Context, aid snowflake.Snowflake, ixToken string) (respData entity.Message, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
+	defer span.End()
+
+	// logger := logging.WithContext(ctx, d.deps.Logger())
+	// level.Info(logger).Message("getting message details")
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return respData, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	_, err = d.deps.HTTPClient().GetJSON(ctx, fmt.Sprintf("%s/webhooks/%d/%s/messages/@original", d.apiURL, aid, ixToken), nil, &respData)
+	if err != nil {
+		return respData, errors.Wrap(err, "could not complete the message get")
+	}
+
+	err = respData.Snowflakify()
+	if err != nil {
+		return respData, errors.Wrap(err, "could not snowflakify message information")
+	}
+
+	return respData, nil
+}
+
 func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData entity.Message, err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
 	defer span.End()
