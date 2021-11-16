@@ -20,7 +20,7 @@ const (
 func InteractionTypeFromElement(e etfapi.Element) (InteractionType, error) {
 	temp, err := e.ToInt()
 	t := InteractionType(temp)
-	return t, errors.Wrap(err, "could not unmarshal InteractionType")
+	return t, errors.Wrap(err, "could not unmarshal InteractionType", "raw", e.Val)
 }
 
 type Interaction struct {

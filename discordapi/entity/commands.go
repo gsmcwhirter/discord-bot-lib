@@ -350,46 +350,42 @@ func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (Applicati
 		}
 	}
 
-	e2 = eMap["value"]
-	switch o.Type {
-	case OptTypeSubCommand:
-		o.ValueSubCommand, err = e2.ToString()
-	case OptTypeSubCommandGroup:
-		o.ValueSubCommandGroup, err = e2.ToString()
-	case OptTypeString:
-		o.ValueString, err = e2.ToString()
-	case OptTypeInteger:
-		o.ValueInt, err = e2.ToInt()
-	case OptTypeBoolean:
-		o.ValueBool, err = e2.ToBool()
-	case OptTypeUser:
-		if !e2.IsNil() {
+	e2, ok = eMap["value"]
+	if ok && !e2.IsNil() {
+		switch o.Type {
+		case OptTypeSubCommand:
+			o.ValueSubCommand, err = e2.ToString()
+		case OptTypeSubCommandGroup:
+			o.ValueSubCommandGroup, err = e2.ToString()
+		case OptTypeString:
+			o.ValueString, err = e2.ToString()
+		case OptTypeInteger:
+			o.ValueInt, err = e2.ToInt()
+		case OptTypeBoolean:
+			o.ValueBool, err = e2.ToBool()
+		case OptTypeUser:
 			v, err2 := UserFromElement(e2)
 			err = err2
 			o.ValueUser = &v
-		}
-	case OptTypeRole:
-		if !e2.IsNil() {
+		case OptTypeRole:
 			v, err2 := RoleFromElement(e2)
 			err = err2
 			o.ValueRole = &v
-		}
-	case OptTypeChannel:
-		if !e2.IsNil() {
+		case OptTypeChannel:
 			v, err2 := ChannelFromElement(e2)
 			err = err2
 			o.ValueChannel = &v
+		case OptTypeMentionable:
+			err = ErrBadOptType
+		case OptTypeNumber:
+			o.ValueNumber, err = e2.ToFloat64()
+		default:
+			err = ErrBadOptType
 		}
-	case OptTypeMentionable:
-		err = ErrBadOptType
-	case OptTypeNumber:
-		o.ValueNumber, err = e2.ToFloat64()
-	default:
-		err = ErrBadOptType
-	}
 
-	if err != nil {
-		return o, errors.Wrap(err, "could not inflate value", "raw", e2.Val, "type", o.Type)
+		if err != nil {
+			return o, errors.Wrap(err, "could not inflate value", "raw", e2.Val, "type", o.Type)
+		}
 	}
 
 	if err := o.PackValue(); err != nil {
