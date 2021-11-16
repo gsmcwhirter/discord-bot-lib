@@ -161,15 +161,17 @@ func (d *DiscordBot) DiffAndRegisterSlashCommands(ctx context.Context) error {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.DiffAndRegisterSlashCommands")
 	defer span.End()
 
-	// logger := logging.WithContext(ctx, d.deps.Logger())
+	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	c := d.deps.DiscordJSONClient()
 
+	level.Debug(logger).Message("starting global command registration")
 	if _, err := c.BulkOverwriteGlobalCommands(ctx, d.config.ClientID, d.config.GlobalSlashCommands); err != nil {
 		return errors.Wrap(err, "could not BulkOverwriteGlobalCommands")
 	}
 
 	for gid, cmds := range d.config.GuildSlashCommands {
+		level.Debug(logger).Message("starting guild command registration", "gid", gid)
 		if _, err := c.BulkOverwriteGuildCommands(ctx, d.config.ClientID, gid, cmds); err != nil {
 			return errors.Wrap(err, "could not BulkOverwriteGuildCommands", "gid", gid.ToString())
 		}
