@@ -87,9 +87,9 @@ func (i *InteractionDispatcher) LearnGuildCommands(gid snowflake.Snowflake, cmds
 	return nil
 }
 
-func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, error) {
+func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, []Response, error) {
 	if ix.Data == nil {
-		return nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
+		return nil, nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
 	}
 
 	handlers := i.guilds[ix.GuildID()]
@@ -98,7 +98,7 @@ func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, error) {
 		handlers = i.globals
 		handler, ok = handlers[ix.Data.Name]
 		if !ok {
-			return nil, ErrMissingHandler
+			return nil, nil, ErrMissingHandler
 		}
 	}
 
