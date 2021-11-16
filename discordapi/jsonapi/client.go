@@ -397,6 +397,8 @@ func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid 
 
 	var b []byte
 
+	level.Debug(logger).Message("starting marshal")
+
 	b, err = json.Marshal(cmds)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not marshal commands as json")
