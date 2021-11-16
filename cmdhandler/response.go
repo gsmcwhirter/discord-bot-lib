@@ -236,32 +236,34 @@ func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
 	m := jsonapi.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
 		Tts:     false,
-		Embed: jsonapi.Embed{
-			Timestamp: time.Now().Format(time.RFC3339),
+		Embeds: []jsonapi.Embed{
+			{
+				Timestamp: time.Now().Format(time.RFC3339),
+			},
 		},
 	}
 
 	if r.Title != "" {
-		m.Embed.Title = r.Title
+		m.Embeds[0].Title = r.Title
 	}
 
 	if r.Description != "" {
-		m.Embed.Description = r.Description
+		m.Embeds[0].Description = r.Description
 	}
 
 	if r.Color != 0 {
-		m.Embed.Color = r.Color
+		m.Embeds[0].Color = r.Color
 	}
 
 	if r.FooterText != "" {
-		m.Embed.Footer.Text = r.FooterText
+		m.Embeds[0].Footer.Text = r.FooterText
 	}
 
 	if len(r.errors) > 0 {
 		for _, err := range r.errors {
-			m.Embed.Description += fmt.Sprintf("\nError: %v", err)
+			m.Embeds[0].Description += fmt.Sprintf("\nError: %v", err)
 		}
-		m.Embed.Description += "\n"
+		m.Embeds[0].Description += "\n"
 	}
 
 	if r.ReplyTo != nil {
@@ -419,30 +421,32 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 	m := jsonapi.MessageWithEmbed{
 		Content: fmt.Sprintf("%s\n", r.To),
 		Tts:     false,
-		Embed: jsonapi.Embed{
-			Timestamp: time.Now().Format(time.RFC3339),
+		Embeds: []jsonapi.Embed{
+			{
+				Timestamp: time.Now().Format(time.RFC3339),
+			},
 		},
 	}
 
 	if r.Title != "" {
-		m.Embed.Title = r.Title
+		m.Embeds[0].Title = r.Title
 	}
 
 	if r.Description != "" {
-		m.Embed.Description = r.Description
+		m.Embeds[0].Description = r.Description
 	}
 
 	if r.Color != 0 {
-		m.Embed.Color = r.Color
+		m.Embeds[0].Color = r.Color
 	}
 
 	if r.FooterText != "" {
-		m.Embed.Footer.Text = r.FooterText
+		m.Embeds[0].Footer.Text = r.FooterText
 	}
 
-	m.Embed.Fields = make([]jsonapi.EmbedField, 0, len(r.Fields))
+	m.Embeds[0].Fields = make([]jsonapi.EmbedField, 0, len(r.Fields))
 	for _, ef := range r.Fields {
-		m.Embed.Fields = append(m.Embed.Fields, jsonapi.EmbedField{
+		m.Embeds[0].Fields = append(m.Embeds[0].Fields, jsonapi.EmbedField{
 			Name:  ef.Name,
 			Value: ef.Val,
 		})
@@ -450,9 +454,9 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 
 	if len(r.errors) > 0 {
 		for _, err := range r.errors {
-			m.Embed.Description += fmt.Sprintf("\nError: %v", err)
+			m.Embeds[0].Description += fmt.Sprintf("\nError: %v", err)
 		}
-		m.Embed.Description += "\n"
+		m.Embeds[0].Description += "\n"
 	}
 
 	if r.ReplyTo != nil {

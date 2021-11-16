@@ -29,7 +29,7 @@ func (m Message) MarshalToJSON() ([]byte, error) {
 type MessageWithEmbed struct {
 	Content string            `json:"content"`
 	Tts     bool              `json:"tts"`
-	Embed   Embed             `json:"embeds"`
+	Embeds  []Embed           `json:"embeds"`
 	ReplyTo *MessageReference `json:"message_reference,omitempty"`
 }
 
