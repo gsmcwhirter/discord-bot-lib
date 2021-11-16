@@ -352,6 +352,8 @@ func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid
 		return nil, errors.Wrap(err, "could not overwrite global commands", "aid", aid)
 	}
 
+	level.Debug(logger).Message("done overwriting globals; snowflakifying")
+
 	for i := range resCmds {
 		if err := resCmds[i].Snowflakify(); err != nil {
 			return nil, errors.Wrap(err, "could not snowflakify command")
@@ -404,7 +406,7 @@ func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid 
 
 	r := bytes.NewReader(b)
 
-	level.Info(logger).Message("overwriting guild commands", "aid", aid, "gid", gid.ToString(), "num_commands", len(cmds))
+	level.Info(logger).Message("overwriting guild commands", "aid", aid, "gid", gid, "num_commands", len(cmds))
 
 	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
@@ -413,7 +415,7 @@ func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid 
 
 	_, err = d.deps.HTTPClient().PutJSON(ctx, fmt.Sprintf("%s/applications/%s/guilds/%d/commands", d.apiURL, aid, gid), nil, r, &resCmds)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not overwrite global commands", "aid", aid)
+		return nil, errors.Wrap(err, "could not overwrite guild commands", "aid", aid, "gid", gid)
 	}
 
 	for i := range resCmds {
