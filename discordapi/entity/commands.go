@@ -389,7 +389,7 @@ func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (Applicati
 	}
 
 	if err != nil {
-		return o, errors.Wrap(err, "could not inflate value")
+		return o, errors.Wrap(err, "could not inflate value", "raw", e2.Val, "type", o.Type)
 	}
 
 	if err := o.PackValue(); err != nil {
