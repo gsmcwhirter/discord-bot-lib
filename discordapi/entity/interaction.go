@@ -309,7 +309,7 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 			if !v.IsNil() {
 				d.Channels[k], err = ChannelFromElement(v)
 				if err != nil {
-					return d, errors.Wrap(err, "could not inflate channel")
+					return d, errors.Wrap(err, "could not inflate channel", "raw", v.Val, "type", v.Code.String())
 				}
 			}
 		}
