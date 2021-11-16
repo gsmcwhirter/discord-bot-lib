@@ -3,7 +3,6 @@ package entity
 import (
 	"bytes"
 	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
-	"fmt"
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 	"github.com/gsmcwhirter/go-util/v8/json"
@@ -97,8 +96,8 @@ func (c *ApplicationCommand) Snowflakify() error {
 		}
 	}
 
-	for i, opt := range c.Options {
-		fmt.Printf("snowflaking option i=%d total=%d\n", i, len(c.Options))
+	for _, opt := range c.Options {
+		// fmt.Printf("snowflaking option i=%d total=%d\n", i, len(c.Options))
 		if err = opt.Snowflakify(); err != nil {
 			return errors.Wrap(err, "could not snowflakify all Options")
 		}
@@ -120,8 +119,8 @@ type ApplicationCommandOption struct {
 func (o *ApplicationCommandOption) Snowflakify() error {
 	var err error
 
-	for i, opt := range o.Options {
-		fmt.Printf("snowflaking sub-option i=%d total=%d\n", i, len(o.Options))
+	for _, opt := range o.Options {
+		// fmt.Printf("snowflaking sub-option i=%d total=%d\n", i, len(o.Options))
 		if err = opt.Snowflakify(); err != nil {
 			return errors.Wrap(err, "could not snowflakify all Options")
 		}

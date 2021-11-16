@@ -171,7 +171,7 @@ func (d *DiscordBot) DiffAndRegisterSlashCommands(ctx context.Context) error {
 	}
 
 	for gid, cmds := range d.config.GuildSlashCommands {
-		level.Debug(logger).Message("starting guild command registration", "gid", gid)
+		level.Debug(logger).Message("starting guild command registration", "gid", gid, "cmds", fmt.Sprintf("%#v", cmds))
 		if _, err := c.BulkOverwriteGuildCommands(ctx, d.config.ClientID, gid, cmds); err != nil {
 			return errors.Wrap(err, "could not BulkOverwriteGuildCommands", "gid", gid.ToString())
 		}
