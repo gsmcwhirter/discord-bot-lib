@@ -106,7 +106,7 @@ func (r *SimpleResponse) ToMessage() JSONMarshaler {
 	}
 
 	if r.ReplyTo != nil {
-		resp.ReplyTo = jsonapi.MessageReference{}
+		resp.ReplyTo = &jsonapi.MessageReference{}
 		if r.ReplyTo.MessageID != 0 {
 			resp.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
 		}
@@ -265,7 +265,7 @@ func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
 	}
 
 	if r.ReplyTo != nil {
-		m.ReplyTo = jsonapi.MessageReference{}
+		m.ReplyTo = &jsonapi.MessageReference{}
 		if r.ReplyTo.MessageID != 0 {
 			m.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
 		}
@@ -456,7 +456,7 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 	}
 
 	if r.ReplyTo != nil {
-		m.ReplyTo = jsonapi.MessageReference{}
+		m.ReplyTo = &jsonapi.MessageReference{}
 		if r.ReplyTo.MessageID != 0 {
 			m.ReplyTo.MessageID = r.ReplyTo.MessageID.ToString()
 		}

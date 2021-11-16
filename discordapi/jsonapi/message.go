@@ -15,9 +15,9 @@ type MessageReference struct {
 // Message is the json object that is sent to the discord api
 // to post a plain-text message to a server
 type Message struct {
-	Content string           `json:"content"`
-	Tts     bool             `json:"tts"`
-	ReplyTo MessageReference `json:"message_reference,omitempty"`
+	Content string            `json:"content"`
+	Tts     bool              `json:"tts"`
+	ReplyTo *MessageReference `json:"message_reference,omitempty"`
 }
 
 func (m Message) MarshalToJSON() ([]byte, error) {
@@ -27,10 +27,10 @@ func (m Message) MarshalToJSON() ([]byte, error) {
 // MessageWithEmbed is the json object that is sent to the discord api
 // to post an embed message to a server
 type MessageWithEmbed struct {
-	Content string           `json:"content"`
-	Tts     bool             `json:"tts"`
-	Embed   Embed            `json:"embeds"`
-	ReplyTo MessageReference `json:"message_reference,omitempty"`
+	Content string            `json:"content"`
+	Tts     bool              `json:"tts"`
+	Embed   Embed             `json:"embeds"`
+	ReplyTo *MessageReference `json:"message_reference,omitempty"`
 }
 
 func (m MessageWithEmbed) MarshalToJSON() ([]byte, error) {
@@ -41,10 +41,10 @@ func (m MessageWithEmbed) MarshalToJSON() ([]byte, error) {
 type Embed struct {
 	Title       string       `json:"title,omitempty"`
 	Description string       `json:"description,omitempty"`
-	URL         string       `json:"url"`
+	URL         string       `json:"url,omitempty"`
 	Timestamp   string       `json:"timestamp,omitempty"`
 	Color       int          `json:"color,omitempty"`
-	Fields      []EmbedField `json:"fields"`
+	Fields      []EmbedField `json:"fields,omitempty"`
 	Footer      EmbedFooter  `json:"footer,omitempty"`
 }
 

@@ -34,7 +34,7 @@ var ErrResponse = errors.New("error response")
 
 type HTTPClient struct {
 	deps    dependencies
-	headers http.Header
+	headers *http.Header
 
 	debug bool
 }
@@ -43,7 +43,7 @@ type HTTPClient struct {
 func NewHTTPClient(deps dependencies) *HTTPClient {
 	return &HTTPClient{
 		deps:    deps,
-		headers: http.Header{},
+		headers: &http.Header{},
 	}
 }
 
@@ -66,7 +66,7 @@ func (c *HTTPClient) doRequest(ctx context.Context, logger Logger, method, url s
 		return nil, err
 	}
 
-	addHeaders(&req.Header, c.headers)
+	addHeaders(&req.Header, *c.headers)
 	if headers != nil {
 		addHeaders(&req.Header, *headers)
 	}
@@ -95,7 +95,7 @@ func (c *HTTPClient) doRequest(ctx context.Context, logger Logger, method, url s
 }
 
 func (c *HTTPClient) SetHeaders(h http.Header) {
-	addHeaders(&c.headers, h)
+	addHeaders(c.headers, h)
 }
 
 func (c *HTTPClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {

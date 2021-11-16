@@ -150,9 +150,9 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 		return respData, errors.Wrap(err, "error waiting for rate limiter")
 	}
 
-	header := http.Header{}
-	header.Add("Content-Type", "application/json")
-	resp, err := d.deps.HTTPClient().PostJSON(ctx, fmt.Sprintf("%s/channels/%d/messages", d.apiURL, cid), &header, r, &respData)
+	header := &http.Header{}
+	header.Set("Content-Type", "application/json")
+	resp, err := d.deps.HTTPClient().PostJSON(ctx, fmt.Sprintf("%s/channels/%d/messages", d.apiURL, cid), header, r, &respData)
 	if err != nil {
 		return respData, errors.Wrap(err, "could not complete the message send")
 	}
@@ -202,9 +202,9 @@ func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID sno
 		return errors.Wrap(err, "error waiting for rate limiter")
 	}
 
-	header := http.Header{}
-	header.Add("Content-Type", "application/json")
-	resp, body, err := d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/interactions/%d/%s/callback", d.apiURL, ixID, ixToken), &header, r)
+	header := &http.Header{}
+	header.Set("Content-Type", "application/json")
+	resp, body, err := d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/interactions/%d/%s/callback", d.apiURL, ixID, ixToken), header, r)
 	if err != nil {
 		return errors.Wrap(err, "could not complete the message send")
 	}
