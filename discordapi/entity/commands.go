@@ -113,7 +113,7 @@ type ApplicationCommandOption struct {
 	Required     bool                             `json:"required"`
 	Choices      []ApplicationCommandOptionChoice `json:"choices,omitempty"`
 	Options      []ApplicationCommandOption       `json:"options,omitempty"`
-	ChannelTypes int                              `json:"channel_types,omitempty"`
+	ChannelTypes []ChannelType                    `json:"channel_types,omitempty"`
 }
 
 func (o *ApplicationCommandOption) Snowflakify() error {
