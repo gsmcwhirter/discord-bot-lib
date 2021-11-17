@@ -114,6 +114,7 @@ type ApplicationCommandOption struct {
 	Choices      []ApplicationCommandOptionChoice `json:"choices,omitempty"`
 	Options      []ApplicationCommandOption       `json:"options,omitempty"`
 	ChannelTypes []ChannelType                    `json:"channel_types,omitempty"`
+	Autocomplete bool                             `json:"autocomplete,omitempty"`
 }
 
 func (o *ApplicationCommandOption) Snowflakify() error {
