@@ -329,13 +329,32 @@ func (e *Element) ToList() ([]Element, error) {
 
 // ToBool converts a boolean Element to a bool
 func (e *Element) ToBool() (bool, error) {
-	t, f := e.IsTrue(), e.IsFalse()
+	if e.IsTrue() {
+		return true, nil
+	}
 
-	if !t && !f {
+	if e.IsFalse() {
+		return false, nil
+	}
+
+	if e.IsNumeric() {
+		v, err := e.ToInt()
+		if err != nil {
+			return false, errors.Wrap(err, "could not convert expected bool to int")
+		}
+
+		if v == 1 {
+			return true, nil
+		}
+
+		if v == 0 {
+			return false, nil
+		}
+
 		return false, ErrBadTarget
 	}
 
-	return t, nil
+	return false, ErrBadTarget
 }
 
 // IsNumeric determines if an element is number-like
