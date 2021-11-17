@@ -57,36 +57,38 @@ func (t MessageType) String() string {
 
 // Message is the data that is received back from the discord api
 type Message struct {
-	IDString        string            `json:"id"`
-	ChannelIDString string            `json:"channel_id"`
-	GuildIDString   string            `json:"guild_id"`
-	Author          User              `json:"author"`
-	Member          GuildMember       `json:"member"`
-	Content         string            `json:"content"`
-	Timestamp       string            `json:"timestamp"`        // ISO8601
-	EditedTimestamp string            `json:"edited_timestamp"` // ISO8601
-	TTS             bool              `json:"tts"`
-	MentionEveryone bool              `json:"mention_everyone"`
-	Mentions        []User            `json:"mentions"`
-	MentionRoles    []Role            `json:"mention_roles"`
-	MentionChannels []Channel         `json:"mention_channels"`
-	Attachments     []Attachment      `json:"attachments"`
-	Embeds          []Embed           `json:"embeds"`
-	Reactions       []MessageReaction `json:"reactions"`
-	Pinned          bool              `json:"pinned"`
-	WebhookID       string            `json:"webhook_id"`
-	Type            MessageType       `json:"type"`
-	Flags           int               `json:"flags"`
+	IDString            string            `json:"id"`
+	ChannelIDString     string            `json:"channel_id"`
+	GuildIDString       string            `json:"guild_id"`
+	Author              User              `json:"author"`
+	Member              GuildMember       `json:"member"`
+	Content             string            `json:"content"`
+	Timestamp           string            `json:"timestamp"`        // ISO8601
+	EditedTimestamp     string            `json:"edited_timestamp"` // ISO8601
+	TTS                 bool              `json:"tts"`
+	MentionEveryone     bool              `json:"mention_everyone"`
+	Mentions            []User            `json:"mentions"`
+	MentionRolesStrings []string          `json:"mention_roles"`
+	MentionChannels     []Channel         `json:"mention_channels"`
+	Attachments         []Attachment      `json:"attachments"`
+	Embeds              []Embed           `json:"embeds"`
+	Reactions           []MessageReaction `json:"reactions"`
+	Pinned              bool              `json:"pinned"`
+	WebhookID           string            `json:"webhook_id"`
+	Type                MessageType       `json:"type"`
+	Flags               int               `json:"flags"`
 
 	// Nonce is skipped
 	// Activity is skipped
 	// Application is skipped
 	// MessageReference is skipped
 
-	IDSnowflake        snowflake.Snowflake
-	ChannelIDSnowflake snowflake.Snowflake
-	GuildIDSnowflake   snowflake.Snowflake
-	WebhookIDSnowflake snowflake.Snowflake
+	IDSnowflake        snowflake.Snowflake `json:"-"`
+	ChannelIDSnowflake snowflake.Snowflake `json:"-"`
+	GuildIDSnowflake   snowflake.Snowflake `json:"-"`
+	WebhookIDSnowflake snowflake.Snowflake `json:"-"`
+
+	MentionRoles []snowflake.Snowflake `json:"-"`
 }
 
 func (m *Message) Snowflakify() error {
@@ -130,12 +132,12 @@ func (m *Message) Snowflakify() error {
 		m.Mentions[i] = mn
 	}
 
-	for i := range m.MentionRoles {
-		mr := m.MentionRoles[i]
-		if err = mr.Snowflakify(); err != nil {
+	m.MentionRoles = make([]snowflake.Snowflake, len(m.MentionRolesStrings))
+	for i := range m.MentionRolesStrings {
+		m.MentionRoles[i], err = snowflake.FromString(m.MentionRolesStrings[i])
+		if err != nil {
 			return errors.Wrap(err, "could not snowflakify MentionRoles")
 		}
-		m.MentionRoles[i] = mr
 	}
 
 	for i := range m.MentionChannels {
