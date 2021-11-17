@@ -16,6 +16,7 @@ const ctn = "\n\n(continued...)"
 // Response is the interface that should be returned from a command handler
 type Response interface {
 	SetColor(int)
+	SetEphemeral(bool)
 	GetColor() int
 	IncludeError(err error)
 	HasErrors() bool
@@ -40,6 +41,7 @@ type SimpleResponse struct {
 	ToChannel snowflake.Snowflake
 	Reactions []string
 	ReplyTo   *ReplyTo
+	Ephemeral bool
 
 	errors []error
 }
@@ -57,6 +59,11 @@ func (r *SimpleResponse) SetReplyTo(m Message) {
 
 // SetColor is included for the Response API but is a no-op
 func (r *SimpleResponse) SetColor(color int) {}
+
+// SetEphemeral sets a flag that indicates the message is ephemeral for interactions
+func (r *SimpleResponse) SetEphemeral(e bool) {
+	r.Ephemeral = e
+}
 
 // GetColor is included for the Response API but always returns 0
 func (r *SimpleResponse) GetColor() int { return 0 }
@@ -118,6 +125,10 @@ func (r *SimpleResponse) ToMessage() JSONMarshaler {
 		}
 	}
 
+	if r.Ephemeral {
+		resp.Flags |= (1 << 6)
+	}
+
 	return resp
 }
 
@@ -141,6 +152,7 @@ func (r *SimpleResponse) Split() []Response {
 			ToChannel: r.ToChannel,
 			Reactions: r.Reactions,
 			ReplyTo:   r.ReplyTo,
+			Ephemeral: r.Ephemeral,
 		})
 	}
 
@@ -162,6 +174,7 @@ type SimpleEmbedResponse struct {
 	ToChannel   snowflake.Snowflake
 	Reactions   []string
 	ReplyTo     *ReplyTo
+	Ephemeral   bool
 
 	errors []error
 }
@@ -180,6 +193,11 @@ func (r *SimpleEmbedResponse) SetReplyTo(m Message) {
 // SetColor sets the side color of the embed box
 func (r *SimpleEmbedResponse) SetColor(color int) {
 	r.Color = color
+}
+
+// SetEphemeral sets a flag that indicates the message is ephemeral for interactions
+func (r *SimpleEmbedResponse) SetEphemeral(e bool) {
+	r.Ephemeral = e
 }
 
 // GetColor returns the currently set color of the embed box
@@ -279,6 +297,10 @@ func (r *SimpleEmbedResponse) ToMessage() JSONMarshaler {
 		}
 	}
 
+	if r.Ephemeral {
+		m.Flags |= (1 << 6)
+	}
+
 	return m
 }
 
@@ -310,6 +332,7 @@ func (r *SimpleEmbedResponse) Split() []Response {
 			ToChannel:   r.ToChannel,
 			Reactions:   r.Reactions,
 			ReplyTo:     r.ReplyTo,
+			Ephemeral:   r.Ephemeral,
 		})
 	}
 
@@ -339,6 +362,7 @@ type EmbedResponse struct {
 	ToChannel   snowflake.Snowflake
 	Reactions   []string
 	ReplyTo     *ReplyTo
+	Ephemeral   bool
 
 	errors []error
 }
@@ -357,6 +381,11 @@ func (r *EmbedResponse) SetReplyTo(m Message) {
 // SetColor sets the side color of the embed box
 func (r *EmbedResponse) SetColor(color int) {
 	r.Color = color
+}
+
+// SetEphemeral sets a flag that indicates the message is ephemeral for interactions
+func (r *EmbedResponse) SetEphemeral(e bool) {
+	r.Ephemeral = e
 }
 
 // GetColor is included for the Response API but always returns 0
@@ -472,6 +501,10 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 		}
 	}
 
+	if r.Ephemeral {
+		m.Flags |= (1 << 6)
+	}
+
 	return m
 }
 
@@ -507,6 +540,7 @@ func (r *EmbedResponse) Split() []Response {
 				ToChannel:   r.ToChannel,
 				Reactions:   r.Reactions,
 				ReplyTo:     r.ReplyTo,
+				Ephemeral:   r.Ephemeral,
 			})
 		}
 	}
@@ -522,6 +556,7 @@ func (r *EmbedResponse) Split() []Response {
 		ToChannel:   r.ToChannel,
 		Reactions:   r.Reactions,
 		ReplyTo:     r.ReplyTo,
+		Ephemeral:   r.Ephemeral,
 	}
 	descRespLen := len(desc) + len(r.FooterText)
 
@@ -598,6 +633,7 @@ func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSpli
 			FooterText:  r.FooterText,
 			ToChannel:   r.ToChannel,
 			ReplyTo:     r.ReplyTo,
+			Ephemeral:   r.Ephemeral,
 		}
 
 		resp.Fields = append(resp.Fields, EmbedField{

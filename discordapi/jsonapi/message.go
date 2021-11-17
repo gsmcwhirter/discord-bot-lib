@@ -18,6 +18,7 @@ type Message struct {
 	Content string            `json:"content"`
 	Tts     bool              `json:"tts"`
 	ReplyTo *MessageReference `json:"message_reference,omitempty"`
+	Flags   int               `json:"flags,omitempty"`
 }
 
 func (m Message) MarshalToJSON() ([]byte, error) {
@@ -31,6 +32,7 @@ type MessageWithEmbed struct {
 	Tts     bool              `json:"tts"`
 	Embeds  []Embed           `json:"embeds"`
 	ReplyTo *MessageReference `json:"message_reference,omitempty"`
+	Flags   int               `json:"flags,omitempty"`
 }
 
 func (m MessageWithEmbed) MarshalToJSON() ([]byte, error) {
