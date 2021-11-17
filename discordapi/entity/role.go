@@ -9,16 +9,17 @@ import (
 
 // Role is the data about a role recevied from the json api
 type Role struct {
-	IDString    string `json:"id"`
-	Name        string `json:"name"`
-	Color       int    `json:"color"`
-	Hoist       bool   `json:"hoist"`
-	Position    int    `json:"position"`
-	Permissions int64  `json:"permissions"`
-	Managed     bool   `json:"managed"`
-	Mentionable bool   `json:"mentionable"`
+	IDString          string `json:"id"`
+	Name              string `json:"name"`
+	Color             int    `json:"color"`
+	Hoist             bool   `json:"hoist"`
+	Position          int    `json:"position"`
+	PermissionsString string `json:"permissions"`
+	Managed           bool   `json:"managed"`
+	Mentionable       bool   `json:"mentionable"`
 
-	IDSnowflake snowflake.Snowflake `json:"-"`
+	IDSnowflake          snowflake.Snowflake `json:"-"`
+	PermissionsSnowflake snowflake.Snowflake `json:"-"`
 }
 
 func (rr *Role) Snowflakify() error {
@@ -26,6 +27,10 @@ func (rr *Role) Snowflakify() error {
 
 	if rr.IDSnowflake, err = snowflake.FromString(rr.IDString); err != nil {
 		return errors.Wrap(err, "could not snowflakify ID")
+	}
+
+	if rr.PermissionsSnowflake, err = snowflake.FromString(rr.PermissionsString); err != nil {
+		return errors.Wrap(err, "could not snowflakify Permissions")
 	}
 
 	return nil
@@ -75,10 +80,11 @@ func RoleFromElement(e etfapi.Element) (Role, error) {
 	}
 
 	e2 = eMap["permissions"]
-	r.Permissions, err = e2.ToInt64()
+	r.PermissionsSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 	if err != nil {
 		return r, errors.Wrap(err, "could not inflate permissions")
 	}
+	r.PermissionsString = r.PermissionsSnowflake.ToString()
 
 	e2 = eMap["managed"]
 	r.Managed, err = e2.ToBool()
