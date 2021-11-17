@@ -304,27 +304,12 @@ func (e *Element) ToSnowflakeMap() (map[snowflake.Snowflake]Element, error) {
 		}
 
 		for i := 0; i < len(e.Vals); i += 2 {
-			if e.IsNumeric() {
-				k, err := SnowflakeFromElement(e.Vals[i])
-				if err != nil {
-					return nil, errors.WithDetails(ErrBadFieldType, "snowflake_error", err.Error())
-				}
-				v[k] = e.Vals[i+1]
-				continue
+			k, err := SnowflakeFromUnknownElement(e.Vals[i])
+			if err != nil {
+				return nil, errors.WithDetails(ErrBadFieldType, "snowflake_error", err.Error())
 			}
 
-			if e.IsStringish() {
-				k, err := e.Vals[i].ToString()
-				if err != nil {
-					return nil, errors.WithDetails(ErrBadFieldType, "string_error", err.Error())
-				}
-				k2, err := snowflake.FromString(k)
-				if err != nil {
-					return nil, errors.WithDetails(ErrBadFieldType, "conversion_error", err.Error())
-				}
-				v[k2] = e.Vals[i+1]
-				continue
-			}
+			v[k] = e.Vals[i+1]
 		}
 
 		return v, nil

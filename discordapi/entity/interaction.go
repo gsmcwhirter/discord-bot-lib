@@ -1,7 +1,10 @@
 package entity
 
 import (
+	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
+
 	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v8/json"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
@@ -309,11 +312,191 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 			if !v.IsNil() {
 				d.Channels[k], err = ChannelFromElement(v)
 				if err != nil {
-					return d, errors.Wrap(err, "could not inflate channel", "raw", v.Val, "type", v.Code.String())
+					return d, errors.Wrap(err, "could not inflate channel")
 				}
 			}
 		}
 	}
 
 	return d, nil
+}
+
+type ApplicationCommandInteractionOption struct {
+	Name    string                                `json:"name"`
+	Type    ApplicationCommandOptionType          `json:"type"`
+	Value   stdjson.RawMessage                    `json:"value"`
+	Options []ApplicationCommandInteractionOption `json:"options"`
+	Focused bool                                  `json:"focused,omitempty"`
+
+	ValueSubCommand      string              `json:"-"`
+	ValueSubCommandGroup string              `json:"-"`
+	ValueString          string              `json:"-"`
+	ValueInt             int                 `json:"-"`
+	ValueBool            bool                `json:"-"`
+	ValueUser            snowflake.Snowflake `json:"-"`
+	ValueChannel         snowflake.Snowflake `json:"-"`
+	ValueRole            snowflake.Snowflake `json:"-"`
+	ValueNumber          float64             `json:"-"`
+	// TODO: ValueMentionable
+}
+
+func (i *ApplicationCommandInteractionOption) ResolveValue() error {
+	var s string
+	var err error
+
+	switch i.Type {
+	case OptTypeSubCommand:
+		return json.Unmarshal([]byte(i.Value), &i.ValueSubCommand)
+	case OptTypeSubCommandGroup:
+		return json.Unmarshal([]byte(i.Value), &i.ValueSubCommandGroup)
+	case OptTypeString:
+		return json.Unmarshal([]byte(i.Value), &i.ValueString)
+	case OptTypeInteger:
+		return json.Unmarshal([]byte(i.Value), &i.ValueInt)
+	case OptTypeBoolean:
+		return json.Unmarshal([]byte(i.Value), &i.ValueBool)
+	case OptTypeUser:
+		if err := json.Unmarshal([]byte(i.Value), &s); err != nil {
+			return errors.Wrap(err, "could not unmarshal User id to string")
+		}
+		i.ValueUser, err = snowflake.FromString(s)
+		return errors.Wrap(err, "could not snowflakify User id string")
+	case OptTypeRole:
+		if err := json.Unmarshal([]byte(i.Value), &s); err != nil {
+			return errors.Wrap(err, "could not unmarshal Role id to string")
+		}
+		i.ValueRole, err = snowflake.FromString(s)
+		return errors.Wrap(err, "could not snowflakify Role id string")
+	case OptTypeChannel:
+		if err := json.Unmarshal([]byte(i.Value), &s); err != nil {
+			return errors.Wrap(err, "could not unmarshal Channel id to string")
+		}
+		i.ValueChannel, err = snowflake.FromString(s)
+		return errors.Wrap(err, "could not snowflakify Channel id string")
+	case OptTypeMentionable:
+		return ErrBadOptType // TODO
+	case OptTypeNumber:
+		return json.Unmarshal([]byte(i.Value), &i.ValueNumber)
+	default:
+		return ErrBadOptType
+	}
+}
+
+func (i *ApplicationCommandInteractionOption) PackValue() error {
+	var b []byte
+	var err error
+
+	switch i.Type {
+	case OptTypeSubCommand:
+		b, err = json.Marshal(i.ValueSubCommand)
+	case OptTypeSubCommandGroup:
+		b, err = json.Marshal(i.ValueSubCommandGroup)
+	case OptTypeString:
+		b, err = json.Marshal(i.ValueString)
+	case OptTypeInteger:
+		b, err = json.Marshal(i.ValueInt)
+	case OptTypeBoolean:
+		b, err = json.Marshal(i.ValueBool)
+	case OptTypeUser:
+		b, err = json.Marshal(i.ValueUser)
+	case OptTypeRole:
+		b, err = json.Marshal(i.ValueRole)
+	case OptTypeChannel:
+		b, err = json.Marshal(i.ValueChannel)
+	case OptTypeMentionable:
+		return ErrBadOptType // TODO
+	case OptTypeNumber:
+		b, err = json.Marshal(i.ValueNumber)
+	default:
+		return ErrBadOptType
+	}
+
+	i.Value = stdjson.RawMessage(b)
+	return err
+}
+
+func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (ApplicationCommandInteractionOption, error) {
+	var o ApplicationCommandInteractionOption
+
+	eMap, err := e.ToMap()
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate ApplicationCommandInteractionOption from non-map")
+	}
+
+	e2, ok := eMap["options"]
+	if ok && !e2.IsNil() {
+		el, err := e2.ToList()
+		if err != nil {
+			return o, errors.Wrap(err, "could not inflate Options")
+		}
+
+		o.Options = make([]ApplicationCommandInteractionOption, 0, len(el))
+
+		for _, e3 := range el {
+			o2, err := ApplicationCommandInteractionOptionFromElement(e3)
+			if err != nil {
+				return o, errors.Wrap(err, "could not inflate sub-option")
+			}
+
+			o.Options = append(o.Options, o2)
+		}
+	}
+
+	e2 = eMap["name"]
+	o.Name, err = e2.ToString()
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate name")
+	}
+
+	e2 = eMap["type"]
+	o.Type, err = ApplicationCommandOptionTypeFromElement(e2)
+	if err != nil {
+		return o, errors.Wrap(err, "could not inflate type")
+	}
+
+	e2, ok = eMap["focused"]
+	if ok {
+		o.Focused, err = e2.ToBool()
+		if err != nil {
+			return o, errors.Wrap(err, "could not inflate focused")
+		}
+	}
+
+	e2, ok = eMap["value"]
+	if ok && !e2.IsNil() {
+		switch o.Type {
+		case OptTypeSubCommand:
+			o.ValueSubCommand, err = e2.ToString()
+		case OptTypeSubCommandGroup:
+			o.ValueSubCommandGroup, err = e2.ToString()
+		case OptTypeString:
+			o.ValueString, err = e2.ToString()
+		case OptTypeInteger:
+			o.ValueInt, err = e2.ToInt()
+		case OptTypeBoolean:
+			o.ValueBool, err = e2.ToBool()
+		case OptTypeUser:
+			o.ValueUser, err = etfapi.SnowflakeFromUnknownElement(e2)
+		case OptTypeRole:
+			o.ValueRole, err = etfapi.SnowflakeFromUnknownElement(e2)
+		case OptTypeChannel:
+			o.ValueChannel, err = etfapi.SnowflakeFromUnknownElement(e2)
+		case OptTypeMentionable:
+			err = ErrBadOptType
+		case OptTypeNumber:
+			o.ValueNumber, err = e2.ToFloat64()
+		default:
+			err = ErrBadOptType
+		}
+
+		if err != nil {
+			return o, errors.Wrap(err, "could not inflate value", "raw", e2.Val, "type", o.Type)
+		}
+	}
+
+	if err := o.PackValue(); err != nil {
+		return o, errors.Wrap(err, "could not pack value")
+	}
+
+	return o, nil
 }

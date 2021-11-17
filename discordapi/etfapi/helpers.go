@@ -357,3 +357,26 @@ func SnowflakeFromElement(e Element) (snowflake.Snowflake, error) {
 	s := snowflake.Snowflake(temp)
 	return s, errors.Wrap(err, "could not unmarshal snowflake.Snowflake")
 }
+
+// SnowflakeFromStringElement converts a string-like Element into a Snowflake
+func SnowflakeFromStringElement(e Element) (snowflake.Snowflake, error) {
+	temp, err := e.ToString()
+	if err != nil {
+		return 0, errors.Wrap(err, "could not unmarshal string element")
+	}
+	s, err := snowflake.FromString(temp)
+	return s, errors.Wrap(err, "could not unmarshal snowflake.Snowflake from string")
+}
+
+// SnowflakeFromUnknownElement converts several kinds of Elements into a Snowflake
+func SnowflakeFromUnknownElement(e Element) (snowflake.Snowflake, error) {
+	if e.IsNumeric() {
+		return SnowflakeFromElement(e)
+	}
+
+	if e.IsStringish() {
+		return SnowflakeFromStringElement(e)
+	}
+
+	return 0, errors.WithDetails(ErrBadFieldType, "field_type", e.Code.String())
+}
