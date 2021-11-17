@@ -57,7 +57,7 @@ func ReactionFromElementMap(eMap map[string]etfapi.Element) (Reaction, error) {
 
 	e2, ok := eMap["user_id"]
 	if ok {
-		r.UserIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		r.UserIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get user_id snowflake.Snowflake")
 		}
@@ -66,7 +66,7 @@ func ReactionFromElementMap(eMap map[string]etfapi.Element) (Reaction, error) {
 
 	e2, ok = eMap["channel_id"]
 	if ok {
-		r.ChannelIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		r.ChannelIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get channel_id snowflake.Snowflake")
 		}
@@ -75,7 +75,7 @@ func ReactionFromElementMap(eMap map[string]etfapi.Element) (Reaction, error) {
 
 	e2, ok = eMap["message_id"]
 	if ok {
-		r.MessageIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		r.MessageIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get message_id snowflake.Snowflake")
 		}
@@ -84,7 +84,7 @@ func ReactionFromElementMap(eMap map[string]etfapi.Element) (Reaction, error) {
 
 	e2, ok = eMap["guild_id"]
 	if ok && !e2.IsNil() {
-		r.GuildIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		r.GuildIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}

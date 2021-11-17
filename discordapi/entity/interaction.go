@@ -53,7 +53,7 @@ func InteractionFromElementMap(eMap map[string]etfapi.Element) (Interaction, err
 
 	e2, ok := eMap["id"]
 	if ok {
-		i.IDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		i.IDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not get id snowflake.Snowflake")
 		}
@@ -63,7 +63,7 @@ func InteractionFromElementMap(eMap map[string]etfapi.Element) (Interaction, err
 
 	e2, ok = eMap["application_id"]
 	if ok {
-		i.ApplicationIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		i.ApplicationIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not get application_id snowflake.Snowflake")
 		}
@@ -73,7 +73,7 @@ func InteractionFromElementMap(eMap map[string]etfapi.Element) (Interaction, err
 
 	e2, ok = eMap["channel_id"]
 	if ok && !e2.IsNil() {
-		i.ChannelIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		i.ChannelIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not get channel_id snowflake.Snowflake")
 		}
@@ -82,7 +82,7 @@ func InteractionFromElementMap(eMap map[string]etfapi.Element) (Interaction, err
 
 	e2, ok = eMap["guild_id"]
 	if ok && !e2.IsNil() {
-		i.GuildIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		i.GuildIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return i, errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}
@@ -172,7 +172,7 @@ func InteractionDataFromElement(e etfapi.Element) (InteractionData, error) {
 
 	e2, ok := eMap["id"]
 	if ok {
-		d.IDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		d.IDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return d, errors.Wrap(err, "could not get id snowflake.Snowflake")
 		}
@@ -182,7 +182,7 @@ func InteractionDataFromElement(e etfapi.Element) (InteractionData, error) {
 
 	e2, ok = eMap["target_id"]
 	if ok {
-		d.TargetIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		d.TargetIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return d, errors.Wrap(err, "could not get target_id snowflake.Snowflake")
 		}

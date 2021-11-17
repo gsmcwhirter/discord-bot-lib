@@ -205,7 +205,7 @@ func MessageFromElementMap(eMap map[string]etfapi.Element) (Message, error) {
 
 	e2, ok := eMap["id"]
 	if ok {
-		m.IDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		m.IDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return m, errors.Wrap(err, "could not get message_id snowflake.Snowflake")
 		}
@@ -215,7 +215,7 @@ func MessageFromElementMap(eMap map[string]etfapi.Element) (Message, error) {
 
 	e2, ok = eMap["channel_id"]
 	if ok && !e2.IsNil() {
-		m.ChannelIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		m.ChannelIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return m, errors.Wrap(err, "could not get channel_id snowflake.Snowflake")
 		}

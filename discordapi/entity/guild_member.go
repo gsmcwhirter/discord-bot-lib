@@ -103,7 +103,7 @@ func GuildMemberFromElement(e etfapi.Element) (GuildMember, error) {
 		m.Roles = make([]string, 0, len(el))
 
 		for _, e3 := range el {
-			s, err := etfapi.SnowflakeFromElement(e3)
+			s, err := etfapi.SnowflakeFromUnknownElement(e3)
 			if err != nil {
 				return m, errors.Wrap(err, "could not inflate snowflake for role")
 			}

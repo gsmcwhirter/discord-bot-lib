@@ -133,7 +133,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok := eMap["id"]
 	if ok {
-		c.IDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.IDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get id snowflake.Snowflake")
 		}
@@ -143,7 +143,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok = eMap["guild_id"]
 	if ok && !e2.IsNil() {
-		c.GuildIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.GuildIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}
@@ -153,7 +153,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok = eMap["last_message_id"]
 	if ok && !e2.IsNil() {
-		c.LastMessageIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.LastMessageIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get last_message_id snowflake.Snowflake")
 		}
@@ -163,7 +163,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok = eMap["owner_id"]
 	if ok && !e2.IsNil() {
-		c.OwnerIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.OwnerIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get owner_id snowflake.Snowflake")
 		}
@@ -173,7 +173,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok = eMap["application_id"]
 	if ok && !e2.IsNil() {
-		c.ApplicationIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.ApplicationIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get application_id snowflake.Snowflake")
 		}
@@ -183,7 +183,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok = eMap["parent_id"]
 	if ok && !e2.IsNil() {
-		c.ParentIDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.ParentIDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get parent_id snowflake.Snowflake")
 		}
@@ -193,7 +193,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 
 	e2, ok = eMap["permissions"]
 	if ok && !e2.IsNil() {
-		c.PermissionsSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		c.PermissionsSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return c, errors.Wrap(err, "could not get guild_id snowflake.Snowflake")
 		}
@@ -385,7 +385,7 @@ func PermissionOverwriteFromElement(e etfapi.Element) (PermissionOverwrite, erro
 
 	e2, ok := eMap["id"]
 	if ok {
-		ow.IDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		ow.IDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return ow, errors.Wrap(err, "could not get id snowflake.Snowflake")
 		}
@@ -395,7 +395,7 @@ func PermissionOverwriteFromElement(e etfapi.Element) (PermissionOverwrite, erro
 
 	e2, ok = eMap["allow"]
 	if ok {
-		ow.AllowSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		ow.AllowSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return ow, errors.Wrap(err, "could not get allow snowflake.Snowflake")
 		}
@@ -405,7 +405,7 @@ func PermissionOverwriteFromElement(e etfapi.Element) (PermissionOverwrite, erro
 
 	e2, ok = eMap["deny"]
 	if ok {
-		ow.DenySnowflake, err = etfapi.SnowflakeFromElement(e2)
+		ow.DenySnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return ow, errors.Wrap(err, "could not get deny snowflake.Snowflake")
 		}

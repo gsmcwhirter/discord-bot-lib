@@ -42,7 +42,7 @@ func RoleFromElement(e etfapi.Element) (Role, error) {
 
 	e2, ok := eMap["id"]
 	if ok {
-		r.IDSnowflake, err = etfapi.SnowflakeFromElement(e2)
+		r.IDSnowflake, err = etfapi.SnowflakeFromUnknownElement(e2)
 		if err != nil {
 			return r, errors.Wrap(err, "could not get id snowflake.Snowflake")
 		}
