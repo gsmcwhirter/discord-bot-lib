@@ -83,13 +83,13 @@ func GuildMemberFromElement(e etfapi.Element) (GuildMember, error) {
 	e2 = eMap["deaf"]
 	m.Deaf, err = e2.ToBool()
 	if err != nil {
-		return m, errors.Wrap(err, "could not inflate Deaf")
+		return m, errors.Wrap(err, "could not inflate Deaf", "element_type", e2.Code.String())
 	}
 
 	e2 = eMap["mute"]
 	m.Mute, err = e2.ToBool()
 	if err != nil {
-		return m, errors.Wrap(err, "could not inflate Mute")
+		return m, errors.Wrap(err, "could not inflate Mute", "element_type", e2.Code.String())
 	}
 
 	e2, ok = eMap["roles"]
