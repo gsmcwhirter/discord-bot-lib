@@ -4,6 +4,8 @@ import (
 	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
 
 	"github.com/gsmcwhirter/go-util/v8/json"
+
+	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
 )
 
 type MessageReference struct {
@@ -76,4 +78,12 @@ const (
 type InteractionCallbackMessage struct {
 	Type InteractionCallbackType `json:"type"`
 	Data stdjson.RawMessage      `json:"data"`
+}
+
+type InteractionAutocompleteResponse struct {
+	Choices []entity.ApplicationCommandOptionChoice `json:"choices"`
+}
+
+func (m InteractionAutocompleteResponse) MarshalToJSON() ([]byte, error) {
+	return json.MarshalToBuffer(m)
 }

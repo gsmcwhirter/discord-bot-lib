@@ -169,7 +169,15 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 	return respData, err
 }
 
-func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) (err error) {
+func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) error {
+	return d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeChannelMessage)
+}
+
+func (d *DiscordJSONClient) SendInteractionAutocomplete(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) error {
+	return d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeAutocomplete)
+}
+
+func (d *DiscordJSONClient) sendInteractionResponse(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler, typ InteractionCallbackType) (err error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
 	defer span.End()
 
@@ -183,7 +191,7 @@ func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID sno
 	}
 
 	im := InteractionCallbackMessage{
-		Type: CallbackTypeChannelMessage,
+		Type: typ,
 	}
 	if err := im.Data.UnmarshalJSON(b); err != nil {
 		return errors.Wrap(err, "could not fill InteractionCallbackMessage Data")
