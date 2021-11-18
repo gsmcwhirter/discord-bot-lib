@@ -436,3 +436,43 @@ func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid 
 
 	return resCmds, err
 }
+
+func (d *DiscordJSONClient) BulkOverwriteGuildCommandPermissions(ctx context.Context, aid string, gid snowflake.Snowflake, perms []entity.ApplicationCommandPermissions) (resPerms []entity.ApplicationCommandPermissions, err error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGuildCommandPermissions")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	var b []byte
+
+	level.Debug(logger).Message("starting marshal")
+
+	b, err = json.Marshal(perms)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not marshal permissions as json")
+	}
+
+	level.Debug(logger).Message("body debug", "body", string(b))
+
+	r := bytes.NewReader(b)
+
+	level.Info(logger).Message("overwriting guild command permissions", "aid", aid, "gid", gid, "num_permissions", len(perms))
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	_, err = d.deps.HTTPClient().PutJSON(ctx, fmt.Sprintf("%s/applications/%s/guilds/%d/commands/permissions", d.apiURL, aid, gid), nil, r, &resPerms)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not overwrite guild command permissions", "aid", aid, "gid", gid)
+	}
+
+	for i := range resPerms {
+		if err := resPerms[i].Snowflakify(); err != nil {
+			return nil, errors.Wrap(err, "could not snowflakify command permissions")
+		}
+	}
+
+	return resPerms, err
+}
