@@ -50,7 +50,6 @@ type Config struct {
 
 	UseSlashCommands    bool
 	GlobalSlashCommands []entity.ApplicationCommand
-	GuildSlashCommands  map[snowflake.Snowflake][]entity.ApplicationCommand
 }
 
 // HBReconfig
@@ -112,8 +111,8 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
 	if d.config.UseSlashCommands {
-		if err := d.DiffAndRegisterSlashCommands(ctx); err != nil {
-			return errors.Wrap(err, "could not DiffAndRegisterSlashCommands")
+		if err := d.RegisterGlobalCommands(ctx); err != nil {
+			return errors.Wrap(err, "could not RegisterGlobalCommands")
 		}
 	}
 
@@ -157,12 +156,11 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 
 var ErrDuplicateCommand = errors.New("duplicate command")
 
-func (d *DiscordBot) DiffAndRegisterSlashCommands(ctx context.Context) error {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.DiffAndRegisterSlashCommands")
+func (d *DiscordBot) RegisterGlobalCommands(ctx context.Context) error {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.RegisterGlobalCommands")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
-
 	c := d.deps.DiscordJSONClient()
 
 	level.Debug(logger).Message("starting global command registration")
@@ -170,57 +168,19 @@ func (d *DiscordBot) DiffAndRegisterSlashCommands(ctx context.Context) error {
 		return errors.Wrap(err, "could not BulkOverwriteGlobalCommands")
 	}
 
-	for gid, cmds := range d.config.GuildSlashCommands {
-		level.Debug(logger).Message("starting guild command registration", "gid", gid, "cmds", fmt.Sprintf("%#v", cmds))
-		if _, err := c.BulkOverwriteGuildCommands(ctx, d.config.ClientID, gid, cmds); err != nil {
-			return errors.Wrap(err, "could not BulkOverwriteGuildCommands", "gid", gid.ToString())
-		}
-	}
-
 	return nil
+}
 
-	// level.Info(logger).Message("diffing global commands")
-	// cmds, err := c.GetGlobalCommands(ctx, d.config.ClientID)
-	// if err != nil {
-	// 	return errors.Wrap(err, "could not GetGlobalCommands")
-	// }
+func (d *DiscordBot) RegisterGuildCommands(ctx context.Context, gid snowflake.Snowflake, cmds []entity.ApplicationCommand) ([]entity.ApplicationCommand, error) {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.RegisterGuildCommands", "gid", gid.ToString())
+	defer span.End()
 
-	// existing := map[jsonapi.ApplicationCommandType]map[string]snowflake.Snowflake{}
-	// want := map[jsonapi.ApplicationCommandType]map[string]int{}
+	logger := logging.WithContext(ctx, d.deps.Logger())
+	c := d.deps.DiscordJSONClient()
 
-	// for i, v := range d.config.GlobalSlashCommands {
-	// 	tcmds, ok := want[v.Type]
-	// 	if !ok {
-	// 		tcmds = map[string]int{
-	// 			v.Name: i,
-	// 		}
-	// 	} else {
-	// 		if _, ok := tcmds[v.Name]; ok {
-	// 			return errors.WithDetails(ErrDuplicateCommand, "name", v.Name, "type", v.Type)
-	// 		}
-
-	// 		tcmds[v.Name] = i
-	// 	}
-
-	// 	want[v.Type] = tcmds
-	// }
-
-	// for _, v := range cmds {
-	// 	tcmds, ok := existing[v.Type]
-	// 	if !ok {
-	// 		tcmds = map[string]snowflake.Snowflake{
-	// 			v.Name: v.IDSnowflake,
-	// 		}
-	// 	} else {
-	// 		// don't need to check dupes here b/c discord handles it
-	// 		tcmds[v.Name] = v.IDSnowflake
-	// 	}
-
-	// 	existing[v.Type] = tcmds
-	// }
-
-	// I think bulk overwrite should work, so try that instead of manual diff
-
+	level.Debug(logger).Message("starting guild command registration", "gid", gid, "cmds", fmt.Sprintf("%#v", cmds))
+	learned, err := c.BulkOverwriteGuildCommands(ctx, d.config.ClientID, gid, cmds)
+	return learned, errors.Wrap(err, "could not BulkOverwriteGuildCommands", "gid", gid.ToString())
 }
 
 func (d *DiscordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
