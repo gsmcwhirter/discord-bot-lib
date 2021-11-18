@@ -16,6 +16,7 @@ const (
 	InteractionPing               InteractionType = 1
 	InteractionApplicationCommand InteractionType = 2
 	InteractionMessageComponent   InteractionType = 3
+	InteractionAutocomplete       InteractionType = 4
 )
 
 // InteractionTypeFromElement generates a InteractionType representation from the given

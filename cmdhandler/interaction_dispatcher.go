@@ -17,17 +17,22 @@ type InteractionDispatcher struct {
 type InteractionCommandHandler interface {
 	Command() entity.ApplicationCommand
 	Handler() InteractionHandler
+	AutocompleteHandler() AutocompleteHandler
 }
 
 type interactionCommandHandler struct {
-	command entity.ApplicationCommand
-	handler InteractionHandler
+	command      entity.ApplicationCommand
+	handler      InteractionHandler
+	autocomplete AutocompleteHandler
 }
 
 var _ InteractionCommandHandler = (*interactionCommandHandler)(nil)
 
 func (ich *interactionCommandHandler) Command() entity.ApplicationCommand { return ich.command }
 func (ich *interactionCommandHandler) Handler() InteractionHandler        { return ich.handler }
+func (ich *interactionCommandHandler) AutocompleteHandler() AutocompleteHandler {
+	return ich.autocomplete
+}
 
 func NewInteractionDispatcher(globals []InteractionCommandHandler) (*InteractionDispatcher, error) {
 	ix := &InteractionDispatcher{
@@ -87,7 +92,7 @@ func (i *InteractionDispatcher) LearnGuildCommands(gid snowflake.Snowflake, cmds
 	return nil
 }
 
-func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, []Response, error) {
+func (i *InteractionDispatcher) Dispatch(ix *Interaction) (Response, []Response, error) {
 	if ix.Data == nil {
 		return nil, nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
 	}
@@ -103,4 +108,22 @@ func (i *InteractionDispatcher) Dispatch(ix Interaction) (Response, []Response, 
 	}
 
 	return handler.Handler().HandleInteraction(ix)
+}
+
+func (i *InteractionDispatcher) Autocomplete(ix *Interaction) ([]entity.ApplicationCommandOptionChoice, error) {
+	if ix.Data == nil {
+		return nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
+	}
+
+	handlers := i.guilds[ix.GuildID()]
+	handler, ok := handlers[ix.Data.Name]
+	if !ok {
+		handlers = i.globals
+		handler, ok = handlers[ix.Data.Name]
+		if !ok {
+			return nil, ErrMissingHandler
+		}
+	}
+
+	return handler.AutocompleteHandler().Autocomplete(ix)
 }
