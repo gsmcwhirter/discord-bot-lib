@@ -3,8 +3,8 @@ package cmdhandler
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/entity"
-	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
 )
 
 var ErrMalformedInteraction = errors.New("malformed interaction payload")

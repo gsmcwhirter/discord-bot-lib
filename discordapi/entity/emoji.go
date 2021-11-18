@@ -3,7 +3,7 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
 )
 
 // Emoji is the data about an emoji recevied from the json api

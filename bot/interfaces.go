@@ -3,9 +3,9 @@ package bot
 import (
 	"context"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v22/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/wsapi"
 )
 
 type Logger = interface {

@@ -13,7 +13,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/logging/level"
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v22/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
 )
 
 type dependencies interface {

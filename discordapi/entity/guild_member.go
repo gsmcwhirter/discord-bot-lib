@@ -3,8 +3,8 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v22/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
 )
 
 // GuildMember is the data about a guild member recevied from the json api

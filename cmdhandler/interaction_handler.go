@@ -1,6 +1,6 @@
 package cmdhandler
 
-import "github.com/gsmcwhirter/discord-bot-lib/v22/discordapi/entity"
+import "github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
 
 // InteractionHandlerFunc is the api of a function that handles messages
 type InteractionHandlerFunc func(*Interaction) (Response, []Response, error)

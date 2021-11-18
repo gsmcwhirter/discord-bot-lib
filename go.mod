@@ -1,4 +1,4 @@
-module github.com/gsmcwhirter/discord-bot-lib/v22
+module github.com/gsmcwhirter/discord-bot-lib/v23
 
 go 1.17
 
