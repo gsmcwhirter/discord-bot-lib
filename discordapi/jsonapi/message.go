@@ -77,7 +77,7 @@ const (
 
 type InteractionCallbackMessage struct {
 	Type InteractionCallbackType `json:"type"`
-	Data stdjson.RawMessage      `json:"data"`
+	Data stdjson.RawMessage      `json:"data,omitempty"`
 }
 
 type InteractionAutocompleteResponse struct {

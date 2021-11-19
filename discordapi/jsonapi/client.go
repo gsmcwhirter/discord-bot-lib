@@ -170,11 +170,69 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 }
 
 func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) error {
-	return d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeChannelMessage)
+	err := d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeChannelMessage)
+
+	if err2 := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.InteractionResponsesCount.M(1)}); err2 != nil {
+		logger := logging.WithContext(ctx, d.deps.Logger())
+		level.Error(logger).Err("could not record stat", err)
+	}
+
+	return err
 }
 
 func (d *DiscordJSONClient) SendInteractionAutocomplete(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) error {
-	return d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeAutocomplete)
+	err := d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeAutocomplete)
+
+	if err2 := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.InteractionAutocompletesCount.M(1)}); err2 != nil {
+		logger := logging.WithContext(ctx, d.deps.Logger())
+		level.Error(logger).Err("could not record stat", err)
+	}
+
+	return err
+}
+
+func (d *DiscordJSONClient) DeferInteractionResponse(ctx context.Context, ixID snowflake.Snowflake, ixToken string) error {
+	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
+	defer span.End()
+
+	logger := logging.WithContext(ctx, d.deps.Logger())
+
+	var b []byte
+	var err error
+
+	im := InteractionCallbackMessage{
+		Type: CallbackTypeDeferredChannelMessage,
+	}
+
+	b, err = json.Marshal(im)
+	if err != nil {
+		return errors.Wrap(err, "could not marshal InteractionCallbackMessage")
+	}
+
+	level.Info(logger).Message("sending message", "payload", string(b))
+	r := bytes.NewReader(b)
+
+	err = d.deps.MessageRateLimiter().Wait(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error waiting for rate limiter")
+	}
+
+	header := &http.Header{}
+	header.Set("Content-Type", "application/json")
+	resp, body, err := d.deps.HTTPClient().PostBody(ctx, fmt.Sprintf("%s/interactions/%d/%s/callback", d.apiURL, ixID, ixToken), header, r)
+	if err != nil {
+		return errors.Wrap(err, "could not complete the message send")
+	}
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
+		return errors.Wrap(httpclient.ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
+	}
+
+	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.InteractionDeferralsCount.M(1)}); err != nil {
+		level.Error(logger).Err("could not record stat", err)
+	}
+
+	return err
 }
 
 func (d *DiscordJSONClient) sendInteractionResponse(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler, typ InteractionCallbackType) (err error) {
@@ -219,10 +277,6 @@ func (d *DiscordJSONClient) sendInteractionResponse(ctx context.Context, ixID sn
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		return errors.Wrap(httpclient.ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
-	}
-
-	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
-		level.Error(logger).Err("could not record stat", err)
 	}
 
 	return err

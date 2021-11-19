@@ -6,11 +6,14 @@ import (
 )
 
 var (
-	RawMessageCount      = telemetry.Int64("raw_request_ct", "Raw request count", "1")
-	RawMessagesSentCount = telemetry.Int64("raw_messages_sent_ct", "Raw messages sent count", "1")
-	MessagesPostedCount  = telemetry.Int64("messages_posted_ct", "Messages posted count", "1")
-	RawEventsCount       = telemetry.Int64("raw_events_ct", "Raw events count", "1")
-	OpCodesCount         = telemetry.Int64("opcode_events_ct", "OpCode events count", "1")
+	RawMessageCount               = telemetry.Int64("raw_request_ct", "Raw request count", "1")
+	RawMessagesSentCount          = telemetry.Int64("raw_messages_sent_ct", "Raw messages sent count", "1")
+	MessagesPostedCount           = telemetry.Int64("messages_posted_ct", "Messages posted count", "1")
+	InteractionResponsesCount     = telemetry.Int64("interaction_responses_ct", "Interaction responses count", "1")
+	InteractionAutocompletesCount = telemetry.Int64("interaction_autocompletes_ct", "Interaction autocompletes count", "1")
+	InteractionDeferralsCount     = telemetry.Int64("interaction_deferrals_ct", "Interaction deferrals count", "1")
+	RawEventsCount                = telemetry.Int64("raw_events_ct", "Raw events count", "1")
+	OpCodesCount                  = telemetry.Int64("opcode_events_ct", "OpCode events count", "1")
 )
 
 var (
@@ -43,6 +46,30 @@ var (
 		},
 		Measure:     MessagesPostedCount,
 		Description: "The number of messages posted to discord",
+		Aggregation: telemetry.CountView(),
+	}
+
+	InteractionResponsesCountView = &telemetry.View{
+		Name:        "interaction_responses",
+		TagKeys:     []telemetry.TagKey{},
+		Measure:     InteractionResponsesCount,
+		Description: "The number of interaction responses sent",
+		Aggregation: telemetry.CountView(),
+	}
+
+	InteractionAutocompletesCountView = &telemetry.View{
+		Name:        "interaction_autocompletes",
+		TagKeys:     []telemetry.TagKey{},
+		Measure:     InteractionAutocompletesCount,
+		Description: "The number of interaction autocompletes sent",
+		Aggregation: telemetry.CountView(),
+	}
+
+	InteractionDeferralsCountView = &telemetry.View{
+		Name:        "interaction_deferrals",
+		TagKeys:     []telemetry.TagKey{},
+		Measure:     InteractionDeferralsCount,
+		Description: "The number of interaction deferrals sent",
 		Aggregation: telemetry.CountView(),
 	}
 
@@ -86,6 +113,18 @@ func Register() error {
 
 	if err := telemetry.RegisterView(OpCodesCountView); err != nil {
 		return errors.Wrap(err, "could not register OpCodesCountView")
+	}
+
+	if err := telemetry.RegisterView(InteractionResponsesCountView); err != nil {
+		return errors.Wrap(err, "could not register InteractionResponsesCountView")
+	}
+
+	if err := telemetry.RegisterView(InteractionAutocompletesCountView); err != nil {
+		return errors.Wrap(err, "could not register InteractionAutocompletesCountView")
+	}
+
+	if err := telemetry.RegisterView(InteractionDeferralsCountView); err != nil {
+		return errors.Wrap(err, "could not register InteractionDeferralsCountView")
 	}
 
 	return nil
