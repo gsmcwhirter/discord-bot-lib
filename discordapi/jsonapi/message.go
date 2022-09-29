@@ -5,9 +5,10 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/json"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
 )
 
+// MessageReference contains the information to uniquely point at a discord message
 type MessageReference struct {
 	MessageID string `json:"message_id,omitempty"`
 	ChannelID string `json:"channel_id,omitempty"`
@@ -23,6 +24,7 @@ type Message struct {
 	Flags   int               `json:"flags,omitempty"`
 }
 
+// MarshalToJSON marshals a Message into json
 func (m Message) MarshalToJSON() ([]byte, error) {
 	return json.MarshalToBuffer(m)
 }
@@ -37,6 +39,7 @@ type MessageWithEmbed struct {
 	Flags   int               `json:"flags,omitempty"`
 }
 
+// MarshalToJSON marshals a MessageWithEmbed into json
 func (m MessageWithEmbed) MarshalToJSON() ([]byte, error) {
 	return json.MarshalToBuffer(m)
 }
@@ -64,8 +67,10 @@ type EmbedFooter struct {
 	Text string `json:"text"`
 }
 
+// InteractionCallbackType is the type of an interaction callback
 type InteractionCallbackType int
 
+// These are the InteractionCallbackType values
 const (
 	CallbackTypePong                   InteractionCallbackType = 1
 	CallbackTypeChannelMessage         InteractionCallbackType = 4
@@ -75,15 +80,18 @@ const (
 	CallbackTypeAutocomplete           InteractionCallbackType = 8
 )
 
+// InteractionCallbackMessage is the message from an interaction callback
 type InteractionCallbackMessage struct {
 	Type InteractionCallbackType `json:"type"`
 	Data stdjson.RawMessage      `json:"data,omitempty"`
 }
 
+// InteractionAutocompleteResponse represents an interaction autocomplete response
 type InteractionAutocompleteResponse struct {
 	Choices []entity.ApplicationCommandOptionChoice `json:"choices"`
 }
 
+// MarshalToJSON marshals a InteractionAutocompleteResponse into json
 func (m InteractionAutocompleteResponse) MarshalToJSON() ([]byte, error) {
 	return json.MarshalToBuffer(m)
 }

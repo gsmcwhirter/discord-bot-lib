@@ -7,12 +7,14 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 	"github.com/gsmcwhirter/go-util/v8/json"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
+// ApplicationCommandOptionType represents the type of a command option
 type ApplicationCommandOptionType int
 
+// These are the known ApplicationCommandOptionType values
 const (
 	OptTypeSubCommand      ApplicationCommandOptionType = 1
 	OptTypeSubCommandGroup ApplicationCommandOptionType = 2
@@ -34,8 +36,10 @@ func ApplicationCommandOptionTypeFromElement(e etfapi.Element) (ApplicationComma
 	return t, errors.Wrap(err, "could not unmarshal ApplicationCommandOptionType")
 }
 
+// ApplicationCommandType represents the type of a comand
 type ApplicationCommandType int
 
+// These are the known ApplicationCommandType values
 const (
 	CmdTypeChatInput ApplicationCommandType = 1
 	CmdTypeUser      ApplicationCommandType = 2
@@ -50,8 +54,10 @@ func ApplicationCommandTypeFromElement(e etfapi.Element) (ApplicationCommandType
 	return t, errors.Wrap(err, "could not unmarshal ApplicationCommandType")
 }
 
+// ErrBadOptType represents an error understanding an ApplicationCommandOptionType
 var ErrBadOptType = errors.New("bad option type value")
 
+// ApplicationCommand represents an interaction command
 type ApplicationCommand struct {
 	ID                string                     `json:"id,omitempty"`
 	Type              ApplicationCommandType     `json:"type"`
@@ -69,6 +75,7 @@ type ApplicationCommand struct {
 	VersionSnowflake       snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (c *ApplicationCommand) Snowflakify() error {
 	var err error
 
@@ -106,6 +113,7 @@ func (c *ApplicationCommand) Snowflakify() error {
 	return nil
 }
 
+// ApplicationCommandOption represents an interaction command option
 type ApplicationCommandOption struct {
 	Type         ApplicationCommandOptionType     `json:"type"`
 	Name         string                           `json:"name"`
@@ -117,6 +125,7 @@ type ApplicationCommandOption struct {
 	Autocomplete bool                             `json:"autocomplete,omitempty"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (o *ApplicationCommandOption) Snowflakify() error {
 	var err error
 
@@ -130,6 +139,7 @@ func (o *ApplicationCommandOption) Snowflakify() error {
 	return nil
 }
 
+// ApplicationCommandOptionChoice represents an interaction command select choice
 type ApplicationCommandOptionChoice struct {
 	Name  string             `json:"name"`
 	Value stdjson.RawMessage `json:"value"`
@@ -140,6 +150,7 @@ type ApplicationCommandOptionChoice struct {
 	ValueNumber float64                      `json:"-"`
 }
 
+// MarshalJSON converts an ApplicationCommandOptionChoice to properly formatted json
 func (c *ApplicationCommandOptionChoice) MarshalJSON() ([]byte, error) {
 	var b2 []byte
 	var err error
@@ -182,6 +193,7 @@ func (c *ApplicationCommandOptionChoice) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// ResolveValue unmarshals the option value into the correct type
 func (c *ApplicationCommandOptionChoice) ResolveValue() error {
 	switch c.Type {
 	case OptTypeString:
@@ -195,6 +207,7 @@ func (c *ApplicationCommandOptionChoice) ResolveValue() error {
 	}
 }
 
+// FillValue marshals the option value in the correct manner
 func (c *ApplicationCommandOptionChoice) FillValue() error {
 	var b []byte
 	var err error

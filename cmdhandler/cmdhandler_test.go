@@ -10,6 +10,8 @@ import (
 )
 
 func TestNewCommandHandler(t *testing.T) {
+	t.Parallel()
+
 	p := parser.NewParser(parser.Options{
 		CmdIndicator:  "!",
 		KnownCommands: []string{"foo", "bar"},
@@ -75,7 +77,9 @@ func TestNewCommandHandler(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := NewCommandHandler(tt.args.p, tt.args.opts)
 
 			// hack around storing a function/handler dynamically
@@ -97,6 +101,8 @@ func TestNewCommandHandler(t *testing.T) {
 }
 
 func TestCommandHandler_CommandIndicator(t *testing.T) {
+	t.Parallel()
+
 	defP := parser.NewParser(parser.Options{
 		CmdIndicator:  "!",
 		KnownCommands: []string{"foo", "bar"},
@@ -126,7 +132,9 @@ func TestCommandHandler_CommandIndicator(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.ch.CommandIndicator()
 			assert.Equal(t, tt.want, got)
 		})
@@ -134,6 +142,8 @@ func TestCommandHandler_CommandIndicator(t *testing.T) {
 }
 
 func TestCommandHandler_SetParser(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		p parser.Parser
 	}
@@ -195,7 +205,10 @@ func TestCommandHandler_SetParser(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			assert.Equal(t, "!", tt.ch.CommandIndicator())
 
 			err := tt.ch.SetParser(tt.args.p)
@@ -213,6 +226,7 @@ func TestCommandHandler_SetParser(t *testing.T) {
 }
 
 func TestCommandHandler_showHelp(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		msg Message
 	}
@@ -252,7 +266,9 @@ func TestCommandHandler_showHelp(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tt.ch.showHelp(tt.args.msg)
 
 			if (tt.wantErr && !assert.Error(t, err)) || (!tt.wantErr && !assert.NoError(t, err)) {
@@ -268,6 +284,7 @@ func TestCommandHandler_showHelp(t *testing.T) {
 }
 
 func TestCommandHandler_SetHandler(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		parser                parser.Parser
 		commands              map[string]MessageHandler
@@ -289,7 +306,9 @@ func TestCommandHandler_SetHandler(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ch := &CommandHandler{
 				parser:                tt.fields.parser,
 				commands:              tt.fields.commands,
@@ -305,6 +324,7 @@ func TestCommandHandler_SetHandler(t *testing.T) {
 }
 
 func TestCommandHandler_getHandler(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		parser                parser.Parser
 		commands              map[string]MessageHandler
@@ -327,7 +347,9 @@ func TestCommandHandler_getHandler(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ch := &CommandHandler{
 				parser:                tt.fields.parser,
 				commands:              tt.fields.commands,
@@ -349,6 +371,7 @@ func TestCommandHandler_getHandler(t *testing.T) {
 }
 
 func TestCommandHandler_HandleMessage(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		parser                parser.Parser
 		commands              map[string]MessageHandler
@@ -371,7 +394,9 @@ func TestCommandHandler_HandleMessage(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ch := &CommandHandler{
 				parser:                tt.fields.parser,
 				commands:              tt.fields.commands,

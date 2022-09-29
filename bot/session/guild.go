@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // Guild represents the known data about a discord guild
@@ -84,6 +84,7 @@ func (g *Guild) RoleIsAdministrator(rid snowflake.Snowflake) bool {
 	return r.IsAdmin()
 }
 
+// AllAdministratorRoleIDs gets the role ids of all roles known to be administrators of the guild
 func (g *Guild) AllAdministratorRoleIDs() []snowflake.Snowflake {
 	rids := make([]snowflake.Snowflake, 0, len(g.roles))
 	for _, r := range g.roles {

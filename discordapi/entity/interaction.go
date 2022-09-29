@@ -6,12 +6,14 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 	"github.com/gsmcwhirter/go-util/v8/json"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
+// InteractionType represents the type of an interaction
 type InteractionType int
 
+// These are the known InteractionType values
 const (
 	InteractionPing               InteractionType = 1
 	InteractionApplicationCommand InteractionType = 2
@@ -27,6 +29,7 @@ func InteractionTypeFromElement(e etfapi.Element) (InteractionType, error) {
 	return t, errors.Wrap(err, "could not unmarshal InteractionType", "raw", e.Val)
 }
 
+// Interaction represents a new slash-command usage instance
 type Interaction struct {
 	Type    InteractionType  `json:"type"`
 	Data    *InteractionData `json:"data"`
@@ -146,6 +149,7 @@ func InteractionFromElementMap(eMap map[string]etfapi.Element) (Interaction, err
 	return i, nil
 }
 
+// InteractionData represents the data provided in the interaction
 type InteractionData struct {
 	Name     string
 	Type     ApplicationCommandType
@@ -230,6 +234,7 @@ func InteractionDataFromElement(e etfapi.Element) (InteractionData, error) {
 	return d, nil
 }
 
+// ResolvedData is the resolved references from entities in the InteractionData
 type ResolvedData struct {
 	Users    map[snowflake.Snowflake]User
 	Members  map[snowflake.Snowflake]GuildMember
@@ -322,6 +327,7 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 	return d, nil
 }
 
+// ApplicationCommandInteractionOption represents ?
 type ApplicationCommandInteractionOption struct {
 	Name    string                                `json:"name"`
 	Type    ApplicationCommandOptionType          `json:"type"`
@@ -341,6 +347,7 @@ type ApplicationCommandInteractionOption struct {
 	// TODO: ValueMentionable
 }
 
+// ResolveValue unmarshals the value into the appropriate field
 func (i *ApplicationCommandInteractionOption) ResolveValue() error {
 	var s string
 	var err error
@@ -375,7 +382,7 @@ func (i *ApplicationCommandInteractionOption) ResolveValue() error {
 		i.ValueChannel, err = snowflake.FromString(s)
 		return errors.Wrap(err, "could not snowflakify Channel id string")
 	case OptTypeMentionable:
-		return ErrBadOptType // TODO
+		return ErrBadOptType // TODO: implement
 	case OptTypeNumber:
 		return json.Unmarshal([]byte(i.Value), &i.ValueNumber)
 	default:
@@ -383,6 +390,7 @@ func (i *ApplicationCommandInteractionOption) ResolveValue() error {
 	}
 }
 
+// PackValue marshals the value in the appropriate manner
 func (i *ApplicationCommandInteractionOption) PackValue() error {
 	var b []byte
 	var err error
@@ -405,7 +413,7 @@ func (i *ApplicationCommandInteractionOption) PackValue() error {
 	case OptTypeChannel:
 		b, err = json.Marshal(i.ValueChannel)
 	case OptTypeMentionable:
-		return ErrBadOptType // TODO
+		return ErrBadOptType // TODO: implement
 	case OptTypeNumber:
 		b, err = json.Marshal(i.ValueNumber)
 	default:
@@ -416,6 +424,7 @@ func (i *ApplicationCommandInteractionOption) PackValue() error {
 	return err
 }
 
+// ApplicationCommandInteractionOptionFromElement instantiates an ApplicationCommandInteractionOption from an etf element
 func ApplicationCommandInteractionOptionFromElement(e etfapi.Element) (ApplicationCommandInteractionOption, error) {
 	var o ApplicationCommandInteractionOption
 

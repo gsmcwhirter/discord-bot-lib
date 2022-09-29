@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 func TestUserMentionString(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		uid snowflake.Snowflake
 	}
@@ -26,7 +27,9 @@ func TestUserMentionString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := UserMentionString(tt.args.uid); got != tt.want {
 				t.Errorf("UserMentionString() = %v, want %v", got, tt.want)
 			}
@@ -35,6 +38,7 @@ func TestUserMentionString(t *testing.T) {
 }
 
 func TestIsUserMention(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		v string
 	}
@@ -65,7 +69,9 @@ func TestIsUserMention(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := IsUserMention(tt.args.v); got != tt.want {
 				t.Errorf("IsUserMention() = %v, want %v", got, tt.want)
 			}
@@ -74,6 +80,7 @@ func TestIsUserMention(t *testing.T) {
 }
 
 func TestForceUserNicknameMention(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		v string
 	}
@@ -109,7 +116,9 @@ func TestForceUserNicknameMention(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := ForceUserNicknameMention(tt.args.v)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ForceUserNicknameMention() error = %v, wantErr %v", err, tt.wantErr)
@@ -123,6 +132,7 @@ func TestForceUserNicknameMention(t *testing.T) {
 }
 
 func TestForceUserAccountMention(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		v string
 	}
@@ -158,7 +168,9 @@ func TestForceUserAccountMention(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := ForceUserAccountMention(tt.args.v)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ForceUserAccountMention() error = %v, wantErr %v", err, tt.wantErr)
@@ -172,6 +184,7 @@ func TestForceUserAccountMention(t *testing.T) {
 }
 
 func TestChannelMentionString(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		cid snowflake.Snowflake
 	}
@@ -189,7 +202,9 @@ func TestChannelMentionString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := ChannelMentionString(tt.args.cid); got != tt.want {
 				t.Errorf("ChannelMentionString() = %v, want %v", got, tt.want)
 			}
@@ -198,6 +213,7 @@ func TestChannelMentionString(t *testing.T) {
 }
 
 func TestIsChannelMention(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		v string
 	}
@@ -222,7 +238,9 @@ func TestIsChannelMention(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := IsChannelMention(tt.args.v); got != tt.want {
 				t.Errorf("IsChannelMention() = %v, want %v", got, tt.want)
 			}
@@ -231,6 +249,7 @@ func TestIsChannelMention(t *testing.T) {
 }
 
 func TestRoleMentionString(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		rid snowflake.Snowflake
 	}
@@ -248,7 +267,9 @@ func TestRoleMentionString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := RoleMentionString(tt.args.rid); got != tt.want {
 				t.Errorf("RoleMentionString() = %v, want %v", got, tt.want)
 			}
@@ -257,6 +278,7 @@ func TestRoleMentionString(t *testing.T) {
 }
 
 func TestIsRoleMention(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		v string
 	}
@@ -281,7 +303,9 @@ func TestIsRoleMention(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := IsRoleMention(tt.args.v); got != tt.want {
 				t.Errorf("IsRoleMention() = %v, want %v", got, tt.want)
 			}
@@ -290,6 +314,7 @@ func TestIsRoleMention(t *testing.T) {
 }
 
 func Test_textSplit(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		text   string
 		target int
@@ -338,7 +363,9 @@ func Test_textSplit(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			fmt.Printf("# %s\n", tt.name)
 			if got := textSplit(tt.args.text, tt.args.target, tt.args.delim); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("textSplit() = %#v, want %#v", got, tt.want)

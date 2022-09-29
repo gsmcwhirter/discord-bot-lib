@@ -5,10 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
 )
 
 func TestNewCollectionElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		code etfapi.Code
 		val  []etfapi.Element
@@ -54,7 +56,9 @@ func TestNewCollectionElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewCollectionElement(tt.args.code, tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewCollectionElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -68,6 +72,8 @@ func TestNewCollectionElement(t *testing.T) {
 }
 
 func TestNewBasicElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		code etfapi.Code
 		val  []byte
@@ -101,7 +107,9 @@ func TestNewBasicElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewBasicElement(tt.args.code, tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBasicElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -115,6 +123,8 @@ func TestNewBasicElement(t *testing.T) {
 }
 
 func TestNewNilElement(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		wantE   etfapi.Element
@@ -129,7 +139,9 @@ func TestNewNilElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewNilElement()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewNilElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -143,6 +155,8 @@ func TestNewNilElement(t *testing.T) {
 }
 
 func TestNewBoolElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val bool
 	}
@@ -170,7 +184,9 @@ func TestNewBoolElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewBoolElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBoolElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -184,6 +200,8 @@ func TestNewBoolElement(t *testing.T) {
 }
 
 func TestNewInt8Element(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val int
 	}
@@ -209,7 +227,9 @@ func TestNewInt8Element(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewInt8Element(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewInt8Element() error = %v, wantErr %v", err, tt.wantErr)
@@ -223,6 +243,8 @@ func TestNewInt8Element(t *testing.T) {
 }
 
 func TestNewInt32Element(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val int
 	}
@@ -248,7 +270,9 @@ func TestNewInt32Element(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewInt32Element(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewInt32Element() error = %v, wantErr %v", err, tt.wantErr)
@@ -262,6 +286,8 @@ func TestNewInt32Element(t *testing.T) {
 }
 
 func TestNewSmallBigElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val int64
 	}
@@ -281,7 +307,9 @@ func TestNewSmallBigElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewSmallBigElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewSmallBigElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -295,6 +323,8 @@ func TestNewSmallBigElement(t *testing.T) {
 }
 
 func TestNewBinaryElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val []byte
 	}
@@ -314,7 +344,9 @@ func TestNewBinaryElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewBinaryElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBinaryElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -328,6 +360,8 @@ func TestNewBinaryElement(t *testing.T) {
 }
 
 func TestNewAtomElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val []byte
 	}
@@ -347,7 +381,9 @@ func TestNewAtomElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewAtomElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewAtomElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -361,6 +397,8 @@ func TestNewAtomElement(t *testing.T) {
 }
 
 func TestNewStringElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val string
 	}
@@ -380,7 +418,9 @@ func TestNewStringElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewStringElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewStringElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -394,6 +434,8 @@ func TestNewStringElement(t *testing.T) {
 }
 
 func TestNewMapElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val map[string]etfapi.Element
 	}
@@ -424,7 +466,9 @@ func TestNewMapElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewMapElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewMapElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -438,6 +482,8 @@ func TestNewMapElement(t *testing.T) {
 }
 
 func TestNewListElement(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		val []etfapi.Element
 	}
@@ -475,7 +521,9 @@ func TestNewListElement(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotE, err := etfapi.NewListElement(tt.args.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewListElement() error = %v, wantErr %v", err, tt.wantErr)
@@ -489,6 +537,8 @@ func TestNewListElement(t *testing.T) {
 }
 
 func TestElement_Marshal(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -656,7 +706,9 @@ func TestElement_Marshal(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -675,6 +727,8 @@ func TestElement_Marshal(t *testing.T) {
 }
 
 func TestElement_MarshalTo(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -842,7 +896,9 @@ func TestElement_MarshalTo(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -866,6 +922,8 @@ func TestElement_MarshalTo(t *testing.T) {
 }
 
 func TestElement_ToString(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -910,7 +968,9 @@ func TestElement_ToString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -929,6 +989,8 @@ func TestElement_ToString(t *testing.T) {
 }
 
 func TestElement_ToBytes(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -973,7 +1035,9 @@ func TestElement_ToBytes(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -992,6 +1056,8 @@ func TestElement_ToBytes(t *testing.T) {
 }
 
 func TestElement_ToInt(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1029,7 +1095,9 @@ func TestElement_ToInt(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1048,6 +1116,8 @@ func TestElement_ToInt(t *testing.T) {
 }
 
 func TestElement_ToInt64(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1100,7 +1170,9 @@ func TestElement_ToInt64(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1119,6 +1191,8 @@ func TestElement_ToInt64(t *testing.T) {
 }
 
 func TestElement_ToMap(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1210,7 +1284,9 @@ func TestElement_ToMap(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1229,6 +1305,8 @@ func TestElement_ToMap(t *testing.T) {
 }
 
 func TestElement_ToList(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1292,7 +1370,9 @@ func TestElement_ToList(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1311,6 +1391,8 @@ func TestElement_ToList(t *testing.T) {
 }
 
 func TestElement_IsNumeric(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1365,7 +1447,9 @@ func TestElement_IsNumeric(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1379,6 +1463,8 @@ func TestElement_IsNumeric(t *testing.T) {
 }
 
 func TestElement_IsCollection(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1419,7 +1505,9 @@ func TestElement_IsCollection(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1433,6 +1521,8 @@ func TestElement_IsCollection(t *testing.T) {
 }
 
 func TestElement_IsStringish(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1466,7 +1556,9 @@ func TestElement_IsStringish(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1480,6 +1572,8 @@ func TestElement_IsStringish(t *testing.T) {
 }
 
 func TestElement_IsList(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1513,7 +1607,9 @@ func TestElement_IsList(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1527,6 +1623,8 @@ func TestElement_IsList(t *testing.T) {
 }
 
 func TestElement_IsNil(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1563,7 +1661,9 @@ func TestElement_IsNil(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1577,6 +1677,8 @@ func TestElement_IsNil(t *testing.T) {
 }
 
 func TestElement_IsTrue(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1613,7 +1715,9 @@ func TestElement_IsTrue(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,
@@ -1627,6 +1731,8 @@ func TestElement_IsTrue(t *testing.T) {
 }
 
 func TestElement_IsFalse(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Code etfapi.Code
 		Val  []byte
@@ -1663,7 +1769,9 @@ func TestElement_IsFalse(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := &etfapi.Element{
 				Code: tt.fields.Code,
 				Val:  tt.fields.Val,

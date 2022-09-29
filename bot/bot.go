@@ -14,14 +14,14 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/wsapi"
 )
 
 type dependencies interface {
@@ -30,6 +30,7 @@ type dependencies interface {
 	WSClient() wsapi.WSClient
 	MessageRateLimiter() *rate.Limiter
 	ConnectRateLimiter() *rate.Limiter
+	CommandRegistrationRateLimiter() *rate.Limiter
 	BotSession() *session.Session
 	Dispatcher() Dispatcher
 	ErrReporter() errreport.Reporter
@@ -48,7 +49,6 @@ type Config struct {
 	BotName     string
 	BotPresence string
 
-	UseSlashCommands    bool
 	GlobalSlashCommands []entity.ApplicationCommand
 }
 
@@ -58,6 +58,7 @@ type hbReconfig struct {
 	interval int
 }
 
+// DiscordBot is the actal bot
 type DiscordBot struct {
 	config Config
 	deps   dependencies
@@ -94,26 +95,28 @@ func NewDiscordBot(deps dependencies, conf Config, permissions, intents int) *Di
 	return d
 }
 
+// SetDebug turns on/off debug mode
 func (d *DiscordBot) SetDebug(val bool) {
 	d.debug = val
 }
 
+// Intents returns the combined discord intents
 func (d *DiscordBot) Intents() int {
 	return d.intents
 }
 
+// Dispatcher returns the bot dispatcher
 func (d *DiscordBot) Dispatcher() Dispatcher {
 	return d.deps.Dispatcher()
 }
 
+// AuthenticateAndConnect sets up the bot to run
 func (d *DiscordBot) AuthenticateAndConnect() error {
 	ctx := request.NewRequestContext()
 	logger := logging.WithContext(ctx, d.deps.Logger())
 
-	if d.config.UseSlashCommands {
-		if err := d.RegisterGlobalCommands(ctx); err != nil {
-			return errors.Wrap(err, "could not RegisterGlobalCommands")
-		}
+	if err := d.RegisterGlobalCommands(ctx); err != nil {
+		return errors.Wrap(err, "could not RegisterGlobalCommands")
 	}
 
 	err := d.deps.ConnectRateLimiter().Wait(ctx)
@@ -145,17 +148,16 @@ func (d *DiscordBot) AuthenticateAndConnect() error {
 		return errors.Wrap(err, "could not WSClient().Connect()")
 	}
 
-	scope := "bot"
-	if d.config.UseSlashCommands {
-		scope = "applications.commands%20bot"
-	}
+	scope := "applications.commands%20bot"
 	fmt.Printf("\nTo add to a guild, go to: https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=%s&permissions=%d\n\n", d.config.ClientID, scope, d.permissions)
 
 	return nil
 }
 
+// ErrDuplicateCommand represents having multiple commands with the same name
 var ErrDuplicateCommand = errors.New("duplicate command")
 
+// RegisterGlobalCommands registers the global bot commands with discord
 func (d *DiscordBot) RegisterGlobalCommands(ctx context.Context) error {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.RegisterGlobalCommands")
 	defer span.End()
@@ -171,6 +173,7 @@ func (d *DiscordBot) RegisterGlobalCommands(ctx context.Context) error {
 	return nil
 }
 
+// RegisterGuildCommands registers the guild-specific commands for a guild with discord
 func (d *DiscordBot) RegisterGuildCommands(ctx context.Context, gid snowflake.Snowflake, cmds []entity.ApplicationCommand) ([]entity.ApplicationCommand, error) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.RegisterGuildCommands", "gid", gid.ToString())
 	defer span.End()
@@ -183,6 +186,7 @@ func (d *DiscordBot) RegisterGuildCommands(ctx context.Context, gid snowflake.Sn
 	return learned, errors.Wrap(err, "could not BulkOverwriteGuildCommands", "gid", gid.ToString())
 }
 
+// ReconfigureHeartbeat re-configures the heartbeat ticker
 func (d *DiscordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
 	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.ReconfigureHeartbeat")
 	defer span.End()
@@ -193,15 +197,18 @@ func (d *DiscordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
 	}
 }
 
+// Config returns the bot config
 func (d *DiscordBot) Config() Config {
 	return d.config
 }
 
+// Disconnect stops the bot
 func (d *DiscordBot) Disconnect() error {
 	d.deps.WSClient().Close()
 	return nil
 }
 
+// Run starts handling websocket requests and heartbeats after calling AuthenticateAndConnect
 func (d *DiscordBot) Run(ctx context.Context) error {
 	if err := stats.Register(); err != nil {
 		return errors.Wrap(err, "could not register stats")
@@ -222,6 +229,7 @@ func (d *DiscordBot) Run(ctx context.Context) error {
 	return g.Wait()
 }
 
+// LastSequence is the last sequence number seen
 func (d *DiscordBot) LastSequence() int {
 	d.seqLock.Lock()
 	defer d.seqLock.Unlock()
@@ -229,6 +237,7 @@ func (d *DiscordBot) LastSequence() int {
 	return d.lastSequence
 }
 
+// UpdateSequence updates the sequence number if it is newer
 func (d *DiscordBot) UpdateSequence(seq int) bool {
 	d.seqLock.Lock()
 	defer d.seqLock.Unlock()
@@ -273,7 +282,7 @@ func (d *DiscordBot) heartbeatHandler(ctx context.Context) error {
 				continue
 			}
 
-			reqCtx := req.ctx
+			reqCtx := req.ctx // nolint:contextcheck // not a real issue -- the function context is not per-request
 			if reqCtx == nil {
 				reqCtx = request.NewRequestContextFrom(ctx)
 			}
@@ -307,7 +316,7 @@ func (d *DiscordBot) sendHeartbeat(reqCtx context.Context) error {
 		return errors.Wrap(err, "error generating heartbeat")
 	}
 
-	err = d.deps.MessageRateLimiter().Wait(m.Ctx)
+	err = d.deps.MessageRateLimiter().Wait(reqCtx)
 	if err != nil {
 		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error rate limiting", err)
 		return errors.Wrap(err, "error rate limiting")
@@ -317,6 +326,7 @@ func (d *DiscordBot) sendHeartbeat(reqCtx context.Context) error {
 	return nil
 }
 
+// API returns the DiscordJSONClient
 func (d *DiscordBot) API() *jsonapi.DiscordJSONClient {
 	return d.deps.DiscordJSONClient()
 }

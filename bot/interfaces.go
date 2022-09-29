@@ -3,11 +3,12 @@ package bot
 import (
 	"context"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/wsapi"
 )
 
+// Logger is the interface expected for logging
 type Logger = interface {
 	Log(keyvals ...interface{}) error
 	Message(string, ...interface{})
@@ -15,12 +16,13 @@ type Logger = interface {
 	Printf(string, ...interface{})
 }
 
+// Payload is the interface expected for an etf payload
 type Payload = interface {
 	EventName() string
 	Contents() map[string]etfapi.Element
 }
 
-// DispatcherFunc is the api that a bot expects a handler function to have
+// DispatchHandlerFunc is the api that a bot expects a handler function to have
 type DispatchHandlerFunc = func(Payload, wsapi.WSMessage, chan<- wsapi.WSMessage) snowflake.Snowflake
 
 // Dispatcher is the api that a bot expects a handler manager to have

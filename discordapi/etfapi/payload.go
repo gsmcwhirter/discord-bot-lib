@@ -6,7 +6,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi"
 )
 
 // Payload represents the data in a etf api payload (both for sending and receiving)
@@ -19,9 +19,13 @@ type Payload struct {
 	DataList []Element
 }
 
+// Contents is the data of the payload
 func (p *Payload) Contents() map[string]Element { return p.Data }
-func (p *Payload) EventName() string            { return p.EName }
 
+// EventName is the event name of the payload
+func (p *Payload) EventName() string { return p.EName }
+
+// String provides a string representation of the payload
 func (p Payload) String() string {
 	if p.DataList != nil {
 		return fmt.Sprintf("Payload{OpCode: %v, DataList: %v, SeqNum: %v, EventName: %v}", p.OpCode, p.DataList, p.SeqNum, p.EName)
@@ -29,9 +33,11 @@ func (p Payload) String() string {
 	return fmt.Sprintf("Payload{OpCode: %v, Data: %+v, SeqNum: %v, EventName: %v}", p.OpCode, p.Data, p.SeqNum, p.EName)
 }
 
-var opElement Element
-var dElement Element
-var sElement Element
+var (
+	opElement Element
+	dElement  Element
+	sElement  Element
+)
 
 func init() {
 	var err error
@@ -113,7 +119,6 @@ func (p *Payload) Marshal() ([]byte, error) {
 }
 
 func (p *Payload) unmarshal(key string, val Element) error {
-
 	switch key {
 	case "t":
 		if val.Code != Atom {

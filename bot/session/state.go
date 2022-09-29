@@ -3,8 +3,8 @@ package session
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // state represents the state of a current bot session
@@ -118,7 +118,6 @@ func (s *state) UpsertGuildFromElement(e etfapi.Element) (snowflake.Snowflake, e
 
 // UpsertGuildFromElementMap updates data in the session state for a guild based on the given data
 func (s *state) UpsertGuildFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
-
 	e, ok := eMap["id"]
 	if !ok {
 		return 0, errors.Wrap(ErrMissingData, "UpsertGuildFromElementMap could not find guild id map element")

@@ -15,3 +15,4 @@
 bin/
 
 *.code-workspace
+.vscode

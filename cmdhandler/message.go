@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/parser"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 var quotes = []rune{'"', '“', '”', '«', '»', '„'}
@@ -32,8 +32,10 @@ type simpleMessage struct {
 	contentErr error
 }
 
-var _ Message = (*simpleMessage)(nil)
-var _ logging.Message = (*simpleMessage)(nil)
+var (
+	_ Message         = (*simpleMessage)(nil)
+	_ logging.Message = (*simpleMessage)(nil)
+)
 
 // NewSimpleMessage creates a new Message object
 func NewSimpleMessage(ctx context.Context, userID, guildID, channelID, messageID snowflake.Snowflake, contents string) Message {
@@ -69,6 +71,7 @@ func NewWithTokens(m Message, tokens []string, contentErr error) Message {
 	}
 }
 
+// NewWithContext duplicates a message using the provided context
 func NewWithContext(ctx context.Context, m Message) Message {
 	return &simpleMessage{
 		ctx:        ctx,

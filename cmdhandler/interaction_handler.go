@@ -1,6 +1,6 @@
 package cmdhandler
 
-import "github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
+import "github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
 
 // InteractionHandlerFunc is the api of a function that handles messages
 type InteractionHandlerFunc func(*Interaction) (Response, []Response, error)
@@ -23,8 +23,10 @@ func (lh *interactionHandlerFunc) HandleInteraction(ix *Interaction) (Response, 
 	return lh.handler(ix)
 }
 
+// AutocompleteHandlerFunc is the api of a function that handles autocomplete requests
 type AutocompleteHandlerFunc func(*Interaction) ([]entity.ApplicationCommandOptionChoice, error)
 
+// AutocompleteHandler is the api of an autocomplete handler
 type AutocompleteHandler interface {
 	Autocomplete(*Interaction) ([]entity.ApplicationCommandOptionChoice, error)
 }
@@ -33,6 +35,7 @@ type autocompleteHandlerFunc struct {
 	handler func(*Interaction) ([]entity.ApplicationCommandOptionChoice, error)
 }
 
+// NewAutocompleteHandler wraps an AutocompleteHandlerFunc into a AutocompleteHandler
 func NewAutocompleteHandler(f AutocompleteHandlerFunc) AutocompleteHandler {
 	return &autocompleteHandlerFunc{handler: f}
 }

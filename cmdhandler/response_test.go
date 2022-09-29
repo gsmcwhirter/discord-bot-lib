@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 const longContent = `"""
@@ -52,6 +52,8 @@ in effect as of now will be a weekly vote for your saturday raids! pick your fav
 """`
 
 func TestSimpleResponseSplit(t *testing.T) {
+	t.Parallel()
+
 	r := SimpleResponse{
 		To:        "test",
 		Content:   longContent,
@@ -69,6 +71,8 @@ func TestSimpleResponseSplit(t *testing.T) {
 }
 
 func TestSimpleEmbedResponseSplit(t *testing.T) {
+	t.Parallel()
+
 	r := SimpleEmbedResponse{
 		To:          "test",
 		Title:       "test title",
@@ -96,6 +100,8 @@ func TestSimpleEmbedResponseSplit(t *testing.T) {
 }
 
 func TestEmbedResponseSplit(t *testing.T) {
+	t.Parallel()
+
 	r := EmbedResponse{
 		To:          "test",
 		Title:       "test title",

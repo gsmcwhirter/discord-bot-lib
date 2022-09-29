@@ -5,8 +5,8 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // MessageType represents the type of message received in a discord channel
@@ -32,6 +32,7 @@ func MessageTypeFromElement(e etfapi.Element) (MessageType, error) {
 	return t, errors.Wrap(err, "could not unmarshal MessageType")
 }
 
+// String provides a string representation of the MessageType
 func (t MessageType) String() string {
 	switch t {
 	case DefaultMessage:
@@ -91,6 +92,7 @@ type Message struct {
 	MentionRoles []snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (m *Message) Snowflakify() error {
 	var err error
 

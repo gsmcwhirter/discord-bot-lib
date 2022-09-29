@@ -6,6 +6,8 @@ import (
 )
 
 func TestApplicationCommandOptionChoice_MarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Name        string
 		Type        ApplicationCommandOptionType
@@ -51,7 +53,9 @@ func TestApplicationCommandOptionChoice_MarshalJSON(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			c := &ApplicationCommandOptionChoice{
 				Name:        tt.fields.Name,
 				Type:        tt.fields.Type,

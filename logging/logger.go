@@ -5,10 +5,11 @@ import (
 
 	log "github.com/gsmcwhirter/go-util/v8/logging"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/request"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/request"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
+// Message is the expected interface of a message
 type Message interface {
 	Context() context.Context
 	UserID() snowflake.Snowflake

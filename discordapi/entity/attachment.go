@@ -3,7 +3,7 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // Attachment is the data about an attachment recevied from the json api
@@ -19,6 +19,7 @@ type Attachment struct {
 	IDSnowflake snowflake.Snowflake
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (ar *Attachment) Snowflakify() error {
 	var err error
 	if ar.IDSnowflake, err = snowflake.FromString(ar.ID); err != nil {

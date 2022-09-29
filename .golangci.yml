@@ -20,7 +20,7 @@ run:
 # Run "golangci-lint linters" for a list of available linters.  Don't enable
 # any linters here, or they can't be disabled on the commandline.
 linters:
-  disable-all: false
+  disable-all: true
   fast: false
 
 # all available settings of specific linters
@@ -29,8 +29,6 @@ linters-settings:
     list-type: blacklist
     include-go-root: true
     packages:
-      # don't use work stuff by accident
-      - go.zr.org
       # Use github.com/gsmcwhirter/go-util/vN/errors instead
       - errors
       - github.com/pkg/errors
@@ -100,10 +98,6 @@ issues:
     # errcheck: Ignoring errors on these functions is often okay
     - Error return value of .(.*\.(Close|Log)|os.Setenv|os.Remove(All)?). is not checked
 
-    # golint: We don't require comments, only that they be properly formatted
-    - comment on exported type
-    - should have( a package)? comment
-
     # govet: Allow the most common form of shadowing
     - declaration of .err. shadows declaration
 
@@ -115,21 +109,6 @@ issues:
 
     # gosec: All URLs are variable in our code; this isn't useful
     - G107. Potential HTTP request made with variable url
-
-    # gosec: Complaining about every exec.Command() is annoying; we'll audit them
-    - G204. Subprocess launching should be audited
-    - G204. Subprocess launched with variable
-
-    # gosec: Too many false positives for legit uses of files and directories
-    - G301. Expect directory permissions to be 0750 or less
-    - G302. Expect file permissions to be 0600 or less
-
-    # gosec: False positive is triggered by 'src, err := ioutil.ReadFile(filename)'
-    - G304. Potential file inclusion via variable
-
-    # gosec: We're allowing SHA1 for now, but MD5, DES, and RC4 need to be audited
-    - G401. Use of weak cryptographic primitive
-    - G505. Blacklisted import .crypto/sha1.. weak cryptographic primitive
 
   # Independently from option `exclude` we use default exclude patterns,
   # it can be disabled by this option. To list all

@@ -3,8 +3,8 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // GuildMember is the data about a guild member recevied from the json api
@@ -20,6 +20,7 @@ type GuildMember struct {
 	RoleSnowflakes []snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (gmr *GuildMember) Snowflakify() error {
 	sfs := make([]snowflake.Snowflake, 0, len(gmr.Roles))
 	for _, r := range gmr.Roles {
@@ -35,6 +36,7 @@ func (gmr *GuildMember) Snowflakify() error {
 	return nil
 }
 
+// HasRole determines if the guild member is currently known to have the requested role
 func (gmr GuildMember) HasRole(rid snowflake.Snowflake) bool {
 	for _, r := range gmr.RoleSnowflakes {
 		if r == rid {
@@ -45,6 +47,7 @@ func (gmr GuildMember) HasRole(rid snowflake.Snowflake) bool {
 	return false
 }
 
+// GuildMemberFromElement instantiates a GuildMember from an etf element
 func GuildMemberFromElement(e etfapi.Element) (GuildMember, error) {
 	var m GuildMember
 

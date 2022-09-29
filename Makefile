@@ -17,10 +17,8 @@ build-stress: version generate
 	$Q GOPROXY=$(GOPROXY) go build -v -ldflags "-X main.AppName=$(APP_NAME) -X main.BuildVersion=$(VERSION) -X main.BuildSHA=$(GIT_SHA) -X main.BuildDate=$(BUILD_DATE)" -o bin/$(APP_NAME) -race $(PROJECT)/cmd/$(APP_NAME)
 
 deps:  ## download dependencies
-	$Q GOPROXY=$(GOPROXY) go mod download
-	$Q GOPROXY=$(GOPROXY) go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
-	$Q GOPROXY=$(GOPROXY) go install golang.org/x/tools/cmd/stringer
-	$Q GOPROXY=$(GOPROXY) go install golang.org/x/tools/cmd/goimports
+	$Q GOPROXY=$(GOPROXY) go mod tidy
+	$Q GOPROXY=$(GOPROXY) go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
 
 generate:  ## run a go generate
 	$Q GOPROXY=$(GOPROXY) go generate ./...
@@ -40,8 +38,9 @@ version:  ## Print the version string and git sha that would be recorded if a re
 vet: deps generate ## run various linters and vetters
 	$Q bash -c 'for d in $$(go list -f {{.Dir}} ./...); do gofmt -s -w $$d/*.go; done'
 	$Q bash -c 'for d in $$(go list -f {{.Dir}} ./...); do goimports -w -local $(PROJECT) $$d/*.go; done'
-	$Q golangci-lint run -E revive,gosimple,staticcheck ./...
-	$Q golangci-lint run -E deadcode,depguard,errcheck,gocritic,gofmt,goimports,gosec,govet,ineffassign,nakedret,prealloc,structcheck,typecheck,unconvert,varcheck ./...
+	$Q golangci-lint run -c .golangci.yml -E revive,gosimple,staticcheck ./...
+	$Q golangci-lint run -c .golangci.yml -E asciicheck,contextcheck,depguard,durationcheck,errcheck,errname,gocritic,gofumpt,goimports,gosec,govet,ineffassign,nakedret,paralleltest,prealloc,predeclared,typecheck,unconvert,unused,whitespace ./...
+	$Q golangci-lint run -c .golangci.yml -E godox ./... || true
 
 help:  ## Show the help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' ./Makefile

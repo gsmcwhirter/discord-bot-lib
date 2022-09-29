@@ -3,17 +3,20 @@ package cmdhandler
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/entity"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
+// ErrMalformedInteraction is returned when an interaction payload is malformed
 var ErrMalformedInteraction = errors.New("malformed interaction payload")
 
+// InteractionDispatcher is responsible for dispatching interaction requests to handlers
 type InteractionDispatcher struct {
 	globals map[string]InteractionCommandHandler
 	guilds  map[snowflake.Snowflake]map[string]InteractionCommandHandler
 }
 
+// InteractionCommandHandler is the interface for an interaction handler
 type InteractionCommandHandler interface {
 	Command() entity.ApplicationCommand
 	Handler() InteractionHandler
@@ -34,6 +37,7 @@ func (ich *interactionCommandHandler) AutocompleteHandler() AutocompleteHandler 
 	return ich.autocomplete
 }
 
+// NewInteractionDispatcher creates a new interaction dispatcher
 func NewInteractionDispatcher(globals []InteractionCommandHandler) (*InteractionDispatcher, error) {
 	ix := &InteractionDispatcher{
 		globals: make(map[string]InteractionCommandHandler, len(globals)),
@@ -47,6 +51,7 @@ func NewInteractionDispatcher(globals []InteractionCommandHandler) (*Interaction
 	return ix, nil
 }
 
+// GlobalCommands returns the global commands for the InteractionDispatcher
 func (i *InteractionDispatcher) GlobalCommands() []entity.ApplicationCommand {
 	cmds := make([]entity.ApplicationCommand, 0, len(i.globals))
 	for _, ich := range i.globals {
@@ -56,6 +61,7 @@ func (i *InteractionDispatcher) GlobalCommands() []entity.ApplicationCommand {
 	return cmds
 }
 
+// GuildCommands returns the guild commands for the InteractionDispatcher
 func (i *InteractionDispatcher) GuildCommands() map[snowflake.Snowflake][]entity.ApplicationCommand {
 	cmds := make(map[snowflake.Snowflake][]entity.ApplicationCommand, len(i.guilds))
 
@@ -69,6 +75,7 @@ func (i *InteractionDispatcher) GuildCommands() map[snowflake.Snowflake][]entity
 	return cmds
 }
 
+// LearnGlobalCommands inserts the povided global commands into the dispatch table
 func (i *InteractionDispatcher) LearnGlobalCommands(cmds []InteractionCommandHandler) error {
 	for _, ich := range cmds {
 		i.globals[ich.Command().Name] = ich
@@ -77,6 +84,7 @@ func (i *InteractionDispatcher) LearnGlobalCommands(cmds []InteractionCommandHan
 	return nil
 }
 
+// LearnGuildCommands inserts the provided guild commands into the dispatch table
 func (i *InteractionDispatcher) LearnGuildCommands(gid snowflake.Snowflake, cmds []InteractionCommandHandler) error {
 	gcmds, ok := i.guilds[gid]
 	if !ok {
@@ -92,6 +100,7 @@ func (i *InteractionDispatcher) LearnGuildCommands(gid snowflake.Snowflake, cmds
 	return nil
 }
 
+// Dispatch sends the interaction to the appropriate dispatcher
 func (i *InteractionDispatcher) Dispatch(ix *Interaction) (Response, []Response, error) {
 	if ix.Data == nil {
 		return nil, nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")
@@ -110,6 +119,7 @@ func (i *InteractionDispatcher) Dispatch(ix *Interaction) (Response, []Response,
 	return handler.Handler().HandleInteraction(ix)
 }
 
+// Autocomplete returns autocomplete information for the command
 func (i *InteractionDispatcher) Autocomplete(ix *Interaction) ([]entity.ApplicationCommandOptionChoice, error) {
 	if ix.Data == nil {
 		return nil, errors.WithDetails(ErrMalformedInteraction, "reason", "nil Data")

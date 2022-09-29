@@ -3,9 +3,10 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
+// ApplicationCommandPermissions represents the permission sets for a command
 type ApplicationCommandPermissions struct {
 	IDString            string                         `json:"id"`
 	ApplicationIDString string                         `json:"application_id"`
@@ -17,6 +18,7 @@ type ApplicationCommandPermissions struct {
 	GuildIDSnowflake       snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (p *ApplicationCommandPermissions) Snowflakify() error {
 	var err error
 
@@ -47,13 +49,16 @@ func (p *ApplicationCommandPermissions) Snowflakify() error {
 	return nil
 }
 
+// CommandPermissionType is the type of a permission
 type CommandPermissionType int
 
+// These are the possible CommandPermissionType values
 const (
 	CommandPermissionRole CommandPermissionType = 1
 	CommandPermissionUser CommandPermissionType = 2
 )
 
+// ApplicationCommandPermission represents an individual permission for a command
 type ApplicationCommandPermission struct {
 	IDString   string                `json:"id"`
 	Type       CommandPermissionType `json:"type"`
@@ -62,6 +67,7 @@ type ApplicationCommandPermission struct {
 	IDSnowflake snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (p *ApplicationCommandPermission) Snowflakify() error {
 	var err error
 

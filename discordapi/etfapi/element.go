@@ -7,7 +7,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // Element is a container for arbitrary etf-formatted data
@@ -17,9 +17,11 @@ type Element struct {
 	Vals []Element
 }
 
-var trueB = []byte("true")
-var falseB = []byte("false")
-var nilB = []byte("nil")
+var (
+	trueB  = []byte("true")
+	falseB = []byte("false")
+	nilB   = []byte("nil")
+)
 
 // NewCollectionElement generates a new Element to hold data for collection types.
 func NewCollectionElement(code Code, val []Element) (Element, error) {
@@ -47,7 +49,6 @@ func NewBasicElement(code Code, val []byte) (Element, error) {
 	e.Val = val
 
 	return e, nil
-
 }
 
 // NewNilElement generates a new Element representing "nil"

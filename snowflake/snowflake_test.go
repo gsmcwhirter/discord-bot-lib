@@ -7,6 +7,7 @@ import (
 )
 
 func TestSnowflake(t *testing.T) {
+	t.Parallel()
 	var s Snowflake
 
 	assert.Equal(t, "0", s.ToString())
@@ -14,5 +15,4 @@ func TestSnowflake(t *testing.T) {
 	if assert.Nil(t, err) {
 		assert.Equal(t, Snowflake(12345), s)
 	}
-
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/logging/level"
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
 )
 
 type dependencies interface {
@@ -22,6 +21,7 @@ type dependencies interface {
 	HTTPDoer() Doer
 }
 
+// Logger is the interface expected for logging
 type Logger = interface {
 	Log(keyvals ...interface{}) error
 	Message(string, ...interface{})
@@ -32,6 +32,7 @@ type Logger = interface {
 // ErrResponse is the error that is wrapped and returned when there is a non-200 api response
 var ErrResponse = errors.New("error response")
 
+// HTTPClient is a wrapped http client for interacting with discord
 type HTTPClient struct {
 	deps    dependencies
 	headers *http.Header
@@ -56,6 +57,7 @@ func addHeaders(to *http.Header, from http.Header) {
 	}
 }
 
+// SetDebug turns on/off debug mode
 func (c *HTTPClient) SetDebug(val bool) {
 	c.debug = val
 }
@@ -94,10 +96,12 @@ func (c *HTTPClient) doRequest(ctx context.Context, logger Logger, method, url s
 	return resp, nil
 }
 
+// SetHeaders adds the provided headers to the set to be included in all requests
 func (c *HTTPClient) SetHeaders(h http.Header) {
 	addHeaders(c.headers, h)
 }
 
+// Get performs an http GET
 func (c *HTTPClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Get")
 	defer span.End()
@@ -116,6 +120,7 @@ func (c *HTTPClient) Get(ctx context.Context, url string, headers *http.Header) 
 	return resp, nil
 }
 
+// GetBody performs an http GET an returns the response body
 func (c *HTTPClient) GetBody(ctx context.Context, url string, headers *http.Header) (*http.Response, []byte, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.GetBody")
 	defer span.End()
@@ -131,11 +136,12 @@ func (c *HTTPClient) GetBody(ctx context.Context, url string, headers *http.Head
 		defer resp.Body.Close() //nolint:errcheck // not a real issue here
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 
 	return resp, body, err
 }
 
+// GetJSON performs an http GET and unmarshals the response body into the provided target
 func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Header, t interface{}) (*http.Response, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.GetJSON")
 	defer span.End()
@@ -154,7 +160,7 @@ func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Head
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		var body []byte
 		var err error
-		body, err = ioutil.ReadAll(resp.Body)
+		body, err = io.ReadAll(resp.Body)
 		if err != nil {
 			err = errors.WithDetails(ErrResponse, "read_error", err.Error())
 		} else {
@@ -167,6 +173,7 @@ func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Head
 	return resp, errors.Wrap(err, "could not unmarshal json")
 }
 
+// Post performs an http POST
 func (c *HTTPClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Post")
 	defer span.End()
@@ -185,6 +192,7 @@ func (c *HTTPClient) Post(ctx context.Context, url string, headers *http.Header,
 	return resp, nil
 }
 
+// PostBody performs an http POST and returns the response body
 func (c *HTTPClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PostBody")
 	defer span.End()
@@ -200,11 +208,12 @@ func (c *HTTPClient) PostBody(ctx context.Context, url string, headers *http.Hea
 		defer resp.Body.Close() //nolint:errcheck // not a real issue here
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 
 	return resp, respBody, err
 }
 
+// PostJSON performs an http POST and unmarshals the response body into the provided target
 func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Header, body io.Reader, t interface{}) (*http.Response, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PostBody")
 	defer span.End()
@@ -231,7 +240,7 @@ func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Hea
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		var body []byte
 		var err error
-		body, err = ioutil.ReadAll(resp.Body)
+		body, err = io.ReadAll(resp.Body)
 		if err != nil {
 			err = errors.WithDetails(ErrResponse, "read_error", err.Error())
 		} else {
@@ -244,6 +253,7 @@ func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Hea
 	return resp, errors.Wrap(err, "could not unmarshal json")
 }
 
+// Put performs an http PUT
 func (c *HTTPClient) Put(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Put")
 	defer span.End()
@@ -262,6 +272,7 @@ func (c *HTTPClient) Put(ctx context.Context, url string, headers *http.Header, 
 	return resp, nil
 }
 
+// PutBody performs an http PUT and returns the response body
 func (c *HTTPClient) PutBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PutBody")
 	defer span.End()
@@ -277,11 +288,12 @@ func (c *HTTPClient) PutBody(ctx context.Context, url string, headers *http.Head
 		defer resp.Body.Close() //nolint:errcheck // not a real issue here
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 
 	return resp, respBody, err
 }
 
+// PutJSON performs an http PUT and unmarshals the response body into the provided target
 func (c *HTTPClient) PutJSON(ctx context.Context, url string, headers *http.Header, body io.Reader, t interface{}) (*http.Response, error) {
 	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PutJSON")
 	defer span.End()
@@ -308,7 +320,7 @@ func (c *HTTPClient) PutJSON(ctx context.Context, url string, headers *http.Head
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		var body []byte
 		var err error
-		body, err = ioutil.ReadAll(resp.Body)
+		body, err = io.ReadAll(resp.Body)
 		if err != nil {
 			err = errors.WithDetails(ErrResponse, "read_error", err.Error())
 		} else {

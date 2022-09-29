@@ -7,6 +7,7 @@ import (
 
 func TestIdentifyPayload_Payload(t *testing.T) {
 	t.Skip()
+	t.Parallel()
 
 	type fields struct {
 		Token          string
@@ -50,7 +51,9 @@ func TestIdentifyPayload_Payload(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ip := IdentifyPayload{
 				Token:          tt.fields.Token,
 				Intents:        tt.fields.Intents,

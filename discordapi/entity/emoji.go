@@ -3,7 +3,7 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // Emoji is the data about an emoji recevied from the json api
@@ -20,6 +20,7 @@ type Emoji struct {
 	IDSnowflake snowflake.Snowflake
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (er *Emoji) Snowflakify() error {
 	var err error
 

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// RateLimit is a parameterized limit set that a RateLimiter uses
 type RateLimit struct {
 	Bucket       string
 	Limit        int
@@ -13,29 +14,31 @@ type RateLimit struct {
 	ResetAt      time.Time
 }
 
+// RateLimiter is a rate limiting feature that accepts outside input dynamically for limits per time
 type RateLimiter struct {
-	sync.Mutex
+	mu sync.Mutex
 
 	buckets map[string]RateLimit
 }
 
+// Wait waits until there is sufficient limit room to continue
 func (r *RateLimiter) Wait(ctx context.Context, b string) error {
-	r.Lock()
+	r.mu.Lock()
 
 	bk, ok := r.buckets[b]
 	if !ok {
-		r.Unlock()
+		r.mu.Unlock()
 		return nil
 	}
 
 	if bk.Limit > 0 {
 		bk.Limit--
 		r.buckets[b] = bk
-		r.Unlock()
+		r.mu.Unlock()
 		return nil
 	}
 
-	r.Unlock()
+	r.mu.Unlock()
 	waitTime := time.Until(bk.ResetAt)
 	select {
 	case <-time.After(waitTime):
@@ -45,9 +48,10 @@ func (r *RateLimiter) Wait(ctx context.Context, b string) error {
 	}
 }
 
+// Report tunes the bucket's limit
 func (r *RateLimiter) Report(b string, limit int, reset, at time.Time) {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	bk, ok := r.buckets[b]
 	if !ok {

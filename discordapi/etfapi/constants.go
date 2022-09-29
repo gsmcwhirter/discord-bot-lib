@@ -2,6 +2,7 @@ package etfapi
 
 import "fmt"
 
+// Code is the etf object type code
 type Code int
 
 // See https://github.com/discordapp/erlpack/blob/master/cpp/discordapi.h
@@ -21,6 +22,7 @@ const (
 	LargeBig  Code = 111
 )
 
+// String provides a string representation of the Code
 func (c Code) String() string {
 	switch c {
 	case Map:

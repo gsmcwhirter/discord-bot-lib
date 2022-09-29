@@ -9,6 +9,7 @@ type MessageReaction struct {
 	Emoji Emoji `json:"emoji"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (rr *MessageReaction) Snowflakify() error {
 	if err := rr.Emoji.Snowflakify(); err != nil {
 		return errors.Wrap(err, "could not snowflakify Emoji")

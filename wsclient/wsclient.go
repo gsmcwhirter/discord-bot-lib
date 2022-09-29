@@ -14,11 +14,11 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/wsapi"
 )
 
 type dependencies interface {
@@ -28,6 +28,7 @@ type dependencies interface {
 	Census() *telemetry.Census
 }
 
+// Logger is the interface expected for logging
 type Logger = interface {
 	Log(keyvals ...interface{}) error
 	Message(string, ...interface{})
@@ -35,6 +36,7 @@ type Logger = interface {
 	Printf(string, ...interface{})
 }
 
+// WSClient is a websocket client. It should be instantiated by NewWSClient
 type WSClient struct {
 	deps dependencies
 
@@ -78,10 +80,12 @@ func NewWSClient(deps dependencies, options Options) *WSClient {
 	return c
 }
 
+// SetDebug turns on debug mode for the websocket client
 func (c *WSClient) SetDebug(val bool) {
 	c.debug = val
 }
 
+// Connect creates a connection to the gateway
 func (c *WSClient) Connect(gatewayURL, token string) error {
 	var err error
 	ctx := request.NewRequestContext()
@@ -120,6 +124,7 @@ func (c *WSClient) Connect(gatewayURL, token string) error {
 	return nil
 }
 
+// Close closes the client
 func (c *WSClient) Close() {
 	c.pool.Wait()
 	if c.conn != nil {
@@ -140,6 +145,7 @@ func (c *WSClient) gracefulClose() {
 	_ = c.conn.SetReadDeadline(time.Now())
 }
 
+// HandleRequests starts various goroutines to read and write to the websocket
 func (c *WSClient) HandleRequests(ctx context.Context, handler wsapi.MessageHandler) error {
 	controls, ctx := errgroup.WithContext(ctx)
 
@@ -183,7 +189,6 @@ func (c *WSClient) readMessages(ctx context.Context) error {
 	})
 
 	return reader.Wait()
-
 }
 
 func (c *WSClient) doReads(ctx context.Context) error {
@@ -290,7 +295,7 @@ func (c *WSClient) handleResponses(ctx context.Context) error {
 		case <-ctx.Done(): // time to stop
 			level.Info(c.deps.Logger()).Message("handleResponses shutting down")
 
-			defer func() {
+			defer func() { //nolint:gocritic // not a leak
 				level.Info(c.deps.Logger()).Message("gracefully closing the socket")
 				err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				if err != nil {
@@ -358,6 +363,7 @@ func (c *WSClient) processResponse(resp wsapi.WSMessage) {
 	}
 }
 
+// SendMessage queues a message to be sent to the websocket
 func (c *WSClient) SendMessage(msg wsapi.WSMessage) {
 	ctx, span := c.deps.Census().StartSpan(msg.Ctx, "WSClient.SendMessage")
 	defer span.End()

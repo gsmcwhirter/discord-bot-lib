@@ -10,14 +10,14 @@ import (
 	"github.com/gsmcwhirter/go-util/v8/telemetry"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/stats"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/wsapi"
 )
 
 type dependencies interface {
@@ -25,10 +25,9 @@ type dependencies interface {
 	BotSession() *session.Session
 	MessageRateLimiter() *rate.Limiter
 	Census() *telemetry.Census
-
-	MessageHandlerRecorder() *stats.ActivityRecorder
 }
 
+// Logger is the interface expected for logging
 type Logger = interface {
 	Log(keyvals ...interface{}) error
 	Message(string, ...interface{})
@@ -36,6 +35,7 @@ type Logger = interface {
 	Printf(string, ...interface{})
 }
 
+// Dispatcher is the op-code dispatcher
 type Dispatcher struct {
 	deps           dependencies
 	bot            *bot.DiscordBot
@@ -89,14 +89,17 @@ func NewDispatcher(deps dependencies) *Dispatcher {
 	return c
 }
 
+// SetDebug turns on/off debug mode
 func (c *Dispatcher) SetDebug(val bool) {
 	c.debug = val
 }
 
+// ConnectToBot attaches this dispatcher to a bot instance
 func (c *Dispatcher) ConnectToBot(b *bot.DiscordBot) {
 	c.bot = b
 }
 
+// GenerateHeartbeat prepares a heartbeat message to be sent
 func (c *Dispatcher) GenerateHeartbeat(reqCtx context.Context, seqNum int) (wsapi.WSMessage, error) {
 	reqCtx, span := c.deps.Census().StartSpan(reqCtx, "Dispatcher.GenerateHeartbeat")
 	defer span.End()
@@ -111,7 +114,7 @@ func (c *Dispatcher) GenerateHeartbeat(reqCtx context.Context, seqNum int) (wsap
 		return m, errors.Wrap(err, "error formatting heartbeat")
 	}
 
-	err = c.deps.MessageRateLimiter().Wait(m.Ctx)
+	err = c.deps.MessageRateLimiter().Wait(reqCtx)
 	if err != nil {
 		level.Error(logging.WithContext(reqCtx, c.deps.Logger())).Err("error rate limiting", err)
 		return m, errors.Wrap(err, "error rate limiting")
@@ -120,6 +123,7 @@ func (c *Dispatcher) GenerateHeartbeat(reqCtx context.Context, seqNum int) (wsap
 	return m, nil
 }
 
+// AddHandler adds a new event handler to the dispatch table
 func (c *Dispatcher) AddHandler(event string, handler DispatchHandlerFunc) {
 	c.dispatcherLock.Lock()
 	defer c.dispatcherLock.Unlock()
@@ -128,12 +132,11 @@ func (c *Dispatcher) AddHandler(event string, handler DispatchHandlerFunc) {
 	c.eventDispatch[event] = append(handlers, handler)
 }
 
+// HandleRequest dispatches a message and queues a response, if there is one
 func (c *Dispatcher) HandleRequest(req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
 	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.HandleRequest")
 	defer span.End()
 	req.Ctx = ctx
-
-	c.deps.MessageHandlerRecorder().Incr(1)
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 	// level.Info(logger).Message("discordapi dispatching request")

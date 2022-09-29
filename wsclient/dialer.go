@@ -10,6 +10,7 @@ type dialerWrapper struct {
 	*websocket.Dialer
 }
 
+// Dial creates a connection
 func (d *dialerWrapper) Dial(url string, h http.Header) (Conn, *http.Response, error) {
 	return d.Dialer.Dial(url, h)
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 func writeLength16(b io.Writer, n int) error {
@@ -271,7 +271,6 @@ func intToInt32Slice(v int) ([]byte, error) {
 }
 
 func int64ToInt64Slice(v int64) ([]byte, error) {
-
 	data := make([]byte, 9)
 	if v < 0 {
 		v = -v

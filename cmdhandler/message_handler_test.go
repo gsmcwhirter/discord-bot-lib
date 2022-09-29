@@ -6,6 +6,8 @@ import (
 )
 
 func TestNewMessageHandler(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		f MessageHandlerFunc
 	}
@@ -17,7 +19,9 @@ func TestNewMessageHandler(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := NewMessageHandler(tt.args.f); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewMessageHandler() = %v, want %v", got, tt.want)
 			}
@@ -26,6 +30,8 @@ func TestNewMessageHandler(t *testing.T) {
 }
 
 func Test_msgHandlerFunc_HandleMessage(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		handler func(Message) (Response, error)
 	}
@@ -42,7 +48,9 @@ func Test_msgHandlerFunc_HandleMessage(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			lh := &msgHandlerFunc{
 				handler: tt.fields.handler,
 			}

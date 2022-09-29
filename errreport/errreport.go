@@ -9,8 +9,14 @@ type Reporter interface {
 	Notify(context.Context, error)
 }
 
+// NopReporter is a Reporter that does nothing (useful for testing)
 type NopReporter struct{}
 
-func (r NopReporter) AutoNotify(ctx context.Context)        {}
-func (r NopReporter) Recover(ctx context.Context)           { _ = recover() }
+// AutoNotify is a placeholder that does nothing
+func (r NopReporter) AutoNotify(ctx context.Context) {}
+
+// Recover is a placeholder that just does a recover
+func (r NopReporter) Recover(ctx context.Context) { _ = recover() }
+
+// Notify is a placeholder that does nothing
 func (r NopReporter) Notify(ctx context.Context, err error) {}

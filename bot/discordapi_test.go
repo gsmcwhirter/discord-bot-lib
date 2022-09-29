@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -14,15 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/bot"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/bot/session"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/dispatcher"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/errreport"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/httpclient"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/stats"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/wsapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/wsclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/bot"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/bot/session"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/dispatcher"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/errreport"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/httpclient"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/wsapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/wsclient"
 )
 
 type nopLogger struct{}
@@ -35,9 +34,16 @@ func (l nopLogger) Printf(f string, a ...interface{})        {}
 type mockHTTPDoer struct{}
 
 func (d *mockHTTPDoer) Do(req *http.Request) (*http.Response, error) {
+	if req.URL.Path == "/applications/test id/commands" {
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(bytes.NewReader([]byte("[]"))),
+		}, nil
+	}
+
 	return &http.Response{
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewReader([]byte("{}"))),
+		Body:       io.NopCloser(bytes.NewReader([]byte("{}"))),
 	}, nil
 }
 
@@ -48,12 +54,12 @@ func (c *mockWSConn) SetReadDeadline(time.Time) error { return nil }
 func (c *mockWSConn) ReadMessage() (int, []byte, error) {
 	return 0, nil, nil
 }
+
 func (c *mockWSConn) WriteMessage(int, []byte) error {
 	return nil
 }
 
-type mockWSDialer struct {
-}
+type mockWSDialer struct{}
 
 func (d *mockWSDialer) Dial(string, http.Header) (wsclient.Conn, *http.Response, error) {
 	return &mockWSConn{}, &http.Response{StatusCode: 200}, nil
@@ -84,29 +90,31 @@ type mockdeps struct {
 	ws      *wsclient.WSClient
 	msgrl   *rate.Limiter
 	cnxrl   *rate.Limiter
+	cregrl  *rate.Limiter
 	session *session.Session
 	mh      bot.Dispatcher
 	rep     errreport.Reporter
 	census  *telemetry.Census
-	actRec  *stats.ActivityRecorder
 	jsc     *jsonapi.DiscordJSONClient
 }
 
-func (d *mockdeps) Logger() bot.Logger                              { return d.logger }
-func (d *mockdeps) HTTPDoer() httpclient.Doer                       { return d.doer }
-func (d *mockdeps) HTTPClient() jsonapi.HTTPClient                  { return d.http }
-func (d *mockdeps) WSDialer() wsclient.Dialer                       { return d.wsd }
-func (d *mockdeps) WSClient() wsapi.WSClient                        { return d.ws }
-func (d *mockdeps) MessageRateLimiter() *rate.Limiter               { return d.msgrl }
-func (d *mockdeps) ConnectRateLimiter() *rate.Limiter               { return d.cnxrl }
-func (d *mockdeps) BotSession() *session.Session                    { return d.session }
-func (d *mockdeps) Dispatcher() bot.Dispatcher                      { return d.mh }
-func (d *mockdeps) ErrReporter() errreport.Reporter                 { return d.rep }
-func (d *mockdeps) Census() *telemetry.Census                       { return d.census }
-func (d *mockdeps) MessageHandlerRecorder() *stats.ActivityRecorder { return d.actRec }
-func (d *mockdeps) DiscordJSONClient() *jsonapi.DiscordJSONClient   { return d.jsc }
+func (d *mockdeps) Logger() bot.Logger                            { return d.logger }
+func (d *mockdeps) HTTPDoer() httpclient.Doer                     { return d.doer }
+func (d *mockdeps) HTTPClient() jsonapi.HTTPClient                { return d.http }
+func (d *mockdeps) WSDialer() wsclient.Dialer                     { return d.wsd }
+func (d *mockdeps) WSClient() wsapi.WSClient                      { return d.ws }
+func (d *mockdeps) MessageRateLimiter() *rate.Limiter             { return d.msgrl }
+func (d *mockdeps) ConnectRateLimiter() *rate.Limiter             { return d.cnxrl }
+func (d *mockdeps) CommandRegistrationRateLimiter() *rate.Limiter { return d.cregrl }
+func (d *mockdeps) BotSession() *session.Session                  { return d.session }
+func (d *mockdeps) Dispatcher() bot.Dispatcher                    { return d.mh }
+func (d *mockdeps) ErrReporter() errreport.Reporter               { return d.rep }
+func (d *mockdeps) Census() *telemetry.Census                     { return d.census }
+func (d *mockdeps) DiscordJSONClient() *jsonapi.DiscordJSONClient { return d.jsc }
 
 func TestDiscordBot(t *testing.T) {
+	t.Parallel()
+
 	conf := bot.Config{
 		ClientID:     "test id",
 		ClientSecret: "test secret",
@@ -124,9 +132,9 @@ func TestDiscordBot(t *testing.T) {
 		wsd:     &mockWSDialer{},
 		msgrl:   rate.NewLimiter(rate.Every(60*time.Second), 120),
 		cnxrl:   rate.NewLimiter(rate.Every(5*time.Second), 1),
+		cregrl:  rate.NewLimiter(rate.Every(1*time.Second), 2),
 		session: session.NewSession(),
 		rep:     errreport.NopReporter{},
-		actRec:  stats.NewActivityRecorder(30.0),
 	}
 
 	deps.census = telemetry.NewCensus(telemetry.Options{
@@ -144,7 +152,7 @@ func TestDiscordBot(t *testing.T) {
 
 	b := bot.NewDiscordBot(deps, conf, 0, 0)
 	err := b.AuthenticateAndConnect()
-	if assert.Nil(t, err) {
+	if assert.NoError(t, err) {
 		defer deferutil.CheckDefer(b.Disconnect)
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()

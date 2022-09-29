@@ -5,13 +5,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/jsonapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/jsonapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
-const maxLen = 1024
-const maxEmbedLen = 5900
-const ctn = "\n\n(continued...)"
+const (
+	maxLen      = 1024
+	maxEmbedLen = 5900
+	ctn         = "\n\n(continued...)"
+)
 
 // Response is the interface that should be returned from a command handler
 type Response interface {
@@ -49,6 +51,7 @@ type SimpleResponse struct {
 // ensure that SimpleResponse is a Response
 var _ Response = (*SimpleResponse)(nil)
 
+// SetReplyTo sets the ReplyTo parameters
 func (r *SimpleResponse) SetReplyTo(m Message) {
 	r.ReplyTo = &ReplyTo{
 		MessageID: m.MessageID(),
@@ -159,6 +162,7 @@ func (r *SimpleResponse) Split() []Response {
 	return resps
 }
 
+// MessageReactions returns the set of reactions for the response
 func (r *SimpleResponse) MessageReactions() []string {
 	return r.Reactions
 }
@@ -182,6 +186,7 @@ type SimpleEmbedResponse struct {
 // ensure that SimpleEmbedResponse is a Response
 var _ Response = (*SimpleEmbedResponse)(nil)
 
+// SetReplyTo sets the ReplyTo parameters
 func (r *SimpleEmbedResponse) SetReplyTo(m Message) {
 	r.ReplyTo = &ReplyTo{
 		MessageID: m.MessageID(),
@@ -339,6 +344,7 @@ func (r *SimpleEmbedResponse) Split() []Response {
 	return resps
 }
 
+// MessageReactions returns the set of reactions for the response
 func (r *SimpleEmbedResponse) MessageReactions() []string {
 	return r.Reactions
 }
@@ -370,6 +376,7 @@ type EmbedResponse struct {
 // ensure that EmbedResponse is a response
 var _ Response = (*EmbedResponse)(nil)
 
+// SetReplyTo sets the ReplyTo parameters
 func (r *EmbedResponse) SetReplyTo(m Message) {
 	r.ReplyTo = &ReplyTo{
 		MessageID: m.MessageID(),
@@ -510,7 +517,6 @@ func (r *EmbedResponse) ToMessage() JSONMarshaler {
 
 // Split separates the current response into possibly-several to account for response length limits
 func (r *EmbedResponse) Split() []Response {
-
 	// TODO: handle limit on number of EmbedFields
 
 	if len(r.ToString()) < maxLen {
@@ -647,6 +653,7 @@ func (r *EmbedResponse) fillResps(resps []Response, nextField int, nextFieldSpli
 	return newResps, resp
 }
 
+// MessageReactions returns the set of reactions for the response
 func (r *EmbedResponse) MessageReactions() []string {
 	return r.Reactions
 }

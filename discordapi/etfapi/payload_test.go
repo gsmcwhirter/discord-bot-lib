@@ -4,11 +4,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
 )
 
 func TestPayload_Marshal(t *testing.T) {
+	t.Parallel()
+
 	s := new(int)
 	*s = 3
 
@@ -42,7 +44,9 @@ func TestPayload_Marshal(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			p := &etfapi.Payload{
 				OpCode:   tt.fields.OpCode,
 				SeqNum:   tt.fields.SeqNum,
@@ -63,6 +67,8 @@ func TestPayload_Marshal(t *testing.T) {
 }
 
 func TestUnmarshal(t *testing.T) {
+	t.Parallel()
+
 	s := new(int)
 	*s = 3
 
@@ -91,7 +97,9 @@ func TestUnmarshal(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := etfapi.Unmarshal(tt.args.raw)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Unmarshal() error = %v, wantErr %v", err, tt.wantErr)

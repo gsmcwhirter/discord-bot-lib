@@ -8,9 +8,9 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/request"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/cmdhandler"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/logging"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/cmdhandler"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 type mockLogger struct {
@@ -38,6 +38,7 @@ func (l *mockLogger) Printf(f string, args ...interface{}) {
 }
 
 func TestWithMessage(t *testing.T) {
+	t.Parallel()
 	mock := &mockLogger{}
 
 	ctx := request.NewRequestContext()
@@ -63,5 +64,4 @@ func TestWithMessage(t *testing.T) {
 		}
 		assert.Equal(t, []string{"request_id", rid, "user_id", "1", "channel_id", "3", "guild_id", "2", "message_id", "4", "message", "foo"}, callArgs)
 	}
-
 }

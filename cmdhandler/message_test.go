@@ -5,10 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 func TestNewSimpleMessage(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		ctx       context.Context
 		userID    snowflake.Snowflake
@@ -25,7 +27,9 @@ func TestNewSimpleMessage(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := NewSimpleMessage(tt.args.ctx, tt.args.userID, tt.args.guildID, tt.args.channelID, tt.args.messageID, tt.args.contents); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewSimpleMessage() = %v, want %v", got, tt.want)
 			}
@@ -34,6 +38,8 @@ func TestNewSimpleMessage(t *testing.T) {
 }
 
 func TestNewWithContents(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		m        Message
 		contents string
@@ -46,7 +52,9 @@ func TestNewWithContents(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := NewWithContents(tt.args.m, tt.args.contents); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewWithContents() = %v, want %v", got, tt.want)
 			}
@@ -55,6 +63,8 @@ func TestNewWithContents(t *testing.T) {
 }
 
 func TestNewWithTokens(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		m          Message
 		tokens     []string
@@ -68,7 +78,9 @@ func TestNewWithTokens(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := NewWithTokens(tt.args.m, tt.args.tokens, tt.args.contentErr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewWithTokens() = %v, want %v", got, tt.want)
 			}
@@ -77,6 +89,8 @@ func TestNewWithTokens(t *testing.T) {
 }
 
 func TestNewWithContext(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		ctx context.Context
 		m   Message
@@ -89,7 +103,9 @@ func TestNewWithContext(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := NewWithContext(tt.args.ctx, tt.args.m); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewWithContext() = %v, want %v", got, tt.want)
 			}
@@ -98,6 +114,8 @@ func TestNewWithContext(t *testing.T) {
 }
 
 func Test_simpleMessage_Context(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -115,7 +133,10 @@ func Test_simpleMessage_Context(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,
@@ -133,6 +154,8 @@ func Test_simpleMessage_Context(t *testing.T) {
 }
 
 func Test_simpleMessage_UserID(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -150,7 +173,9 @@ func Test_simpleMessage_UserID(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,
@@ -168,6 +193,8 @@ func Test_simpleMessage_UserID(t *testing.T) {
 }
 
 func Test_simpleMessage_GuildID(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -185,7 +212,9 @@ func Test_simpleMessage_GuildID(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,
@@ -203,6 +232,8 @@ func Test_simpleMessage_GuildID(t *testing.T) {
 }
 
 func Test_simpleMessage_ChannelID(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -220,7 +251,9 @@ func Test_simpleMessage_ChannelID(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,
@@ -238,6 +271,8 @@ func Test_simpleMessage_ChannelID(t *testing.T) {
 }
 
 func Test_simpleMessage_MessageID(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -255,7 +290,9 @@ func Test_simpleMessage_MessageID(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,
@@ -273,6 +310,8 @@ func Test_simpleMessage_MessageID(t *testing.T) {
 }
 
 func Test_simpleMessage_Contents(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -290,7 +329,9 @@ func Test_simpleMessage_Contents(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,
@@ -308,6 +349,8 @@ func Test_simpleMessage_Contents(t *testing.T) {
 }
 
 func Test_simpleMessage_ContentErr(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		ctx        context.Context
 		userID     snowflake.Snowflake
@@ -325,7 +368,9 @@ func Test_simpleMessage_ContentErr(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m := &simpleMessage{
 				ctx:        tt.fields.ctx,
 				userID:     tt.fields.userID,

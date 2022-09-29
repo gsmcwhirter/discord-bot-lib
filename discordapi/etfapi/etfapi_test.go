@@ -6,6 +6,8 @@ import (
 )
 
 func TestPayload_Marshal(t *testing.T) {
+	t.Parallel()
+
 	// var one = 1
 	tests := []struct {
 		name    string
@@ -43,7 +45,9 @@ func TestPayload_Marshal(t *testing.T) {
 		// },
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tt.p.Marshal()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Unmarshal() error = %v, wantErr %v", err, tt.wantErr)
@@ -58,6 +62,8 @@ func TestPayload_Marshal(t *testing.T) {
 }
 
 func TestUnmarshal(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		raw []byte
 	}
@@ -180,7 +186,9 @@ func TestUnmarshal(t *testing.T) {
 		// },
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := Unmarshal(tt.args.raw)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Unmarshal() error = %v, wantErr %v", err, tt.wantErr)

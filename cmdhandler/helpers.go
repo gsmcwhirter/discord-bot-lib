@@ -7,15 +7,17 @@ import (
 
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // ErrNotUserMention is the error returned when a user mention string is required but not provided
 var ErrNotUserMention = errors.New("not a user mention")
 
-var userMentionRe = regexp.MustCompile(`^<@!?(\d+)>$`)
-var channelMentionRe = regexp.MustCompile(`^<#\d+>$`)
-var roleMentionRe = regexp.MustCompile(`^<@&\d+>|@everyone|@here$`)
+var (
+	userMentionRe    = regexp.MustCompile(`^<@!?(\d+)>$`)
+	channelMentionRe = regexp.MustCompile(`^<#\d+>$`)
+	roleMentionRe    = regexp.MustCompile(`^<@&\d+>|@everyone|@here$`)
+)
 
 // UserMentionString generates a string that discord interprets as a mention of a user
 // by their server nickname
@@ -82,7 +84,6 @@ func textSplit(text string, target int, delim string) []string {
 
 	var current string
 	for i, line := range lines {
-
 		if i < len(lines)-1 && delim == "\n" {
 			line += "\n"
 		}
@@ -126,7 +127,6 @@ func textSplit(text string, target int, delim string) []string {
 			current += "\n"
 		}
 		continue
-
 	}
 
 	if current != "" {

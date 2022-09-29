@@ -3,8 +3,8 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
 // Role is the data about a role recevied from the json api
@@ -22,6 +22,7 @@ type Role struct {
 	PermissionsSnowflake snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (rr *Role) Snowflakify() error {
 	var err error
 

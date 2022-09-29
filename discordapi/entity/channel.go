@@ -3,12 +3,14 @@ package entity
 import (
 	"github.com/gsmcwhirter/go-util/v8/errors"
 
-	"github.com/gsmcwhirter/discord-bot-lib/v23/discordapi/etfapi"
-	"github.com/gsmcwhirter/discord-bot-lib/v23/snowflake"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
+	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
 )
 
+// ChannelType represents the type of a server channel
 type ChannelType int
 
+// These are the known ChannelType values
 const (
 	ChannelGuildText          ChannelType = 0
 	ChannelDM                 ChannelType = 1
@@ -31,6 +33,7 @@ func ChannelTypeFromElement(e etfapi.Element) (ChannelType, error) {
 	return t, errors.Wrap(err, "could not unmarshal ChannelType")
 }
 
+// Channel represents a discord channel
 type Channel struct {
 	IDString            string `json:"id"`
 	GuildIDString       string `json:"guild_id"`
@@ -65,6 +68,7 @@ type Channel struct {
 	PermissionsSnowflake   snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (c *Channel) Snowflakify() error {
 	var err error
 
@@ -123,6 +127,7 @@ func (c *Channel) Snowflakify() error {
 	return nil
 }
 
+// ChannelFromElement creates a channel from an etf element
 func ChannelFromElement(e etfapi.Element) (Channel, error) {
 	var c Channel
 
@@ -342,6 +347,7 @@ func ChannelFromElement(e etfapi.Element) (Channel, error) {
 	return c, nil
 }
 
+// PermissionOverwrite represents a permissions override on a channel
 type PermissionOverwrite struct {
 	IDString    string `json:"id"`
 	Type        int    `json:"type"`
@@ -353,6 +359,7 @@ type PermissionOverwrite struct {
 	DenySnowflake  snowflake.Snowflake `json:"-"`
 }
 
+// Snowflakify converts snowflake strings into real sowflakes
 func (ow *PermissionOverwrite) Snowflakify() error {
 	var err error
 
@@ -375,6 +382,7 @@ func (ow *PermissionOverwrite) Snowflakify() error {
 	return nil
 }
 
+// PermissionOverwriteFromElement instantiates a PermissionOverwrite from an etf element
 func PermissionOverwriteFromElement(e etfapi.Element) (PermissionOverwrite, error) {
 	var ow PermissionOverwrite
 
