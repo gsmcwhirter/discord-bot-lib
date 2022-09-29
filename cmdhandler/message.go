@@ -3,7 +3,7 @@ package cmdhandler
 import (
 	"context"
 
-	"github.com/gsmcwhirter/go-util/v8/parser"
+	"github.com/gsmcwhirter/go-util/v10/parser"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"

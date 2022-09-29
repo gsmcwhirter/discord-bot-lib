@@ -2,10 +2,9 @@ package entity
 
 import (
 	"bytes"
-	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
 
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/json"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/json"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
@@ -141,8 +140,8 @@ func (o *ApplicationCommandOption) Snowflakify() error {
 
 // ApplicationCommandOptionChoice represents an interaction command select choice
 type ApplicationCommandOptionChoice struct {
-	Name  string             `json:"name"`
-	Value stdjson.RawMessage `json:"value"`
+	Name  string          `json:"name"`
+	Value json.RawMessage `json:"value"`
 
 	Type        ApplicationCommandOptionType `json:"-"`
 	ValueString string                       `json:"-"`

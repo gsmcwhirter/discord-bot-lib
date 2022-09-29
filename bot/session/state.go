@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v10/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
@@ -276,17 +276,17 @@ func (s *state) UpsertChannelFromElement(e etfapi.Element) (snowflake.Snowflake,
 }
 
 // UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
-func (s *state) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
+func (s *state) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, snowflake.Snowflake, error) {
 	var id snowflake.Snowflake
 
 	e, ok := eMap["id"]
 	if !ok {
-		return 0, errors.Wrap(ErrMissingData, "UpsertChannelFromElementMap could not find channel id map element")
+		return 0, 0, errors.Wrap(ErrMissingData, "UpsertChannelFromElementMap could not find channel id map element")
 	}
 
 	id, err := etfapi.SnowflakeFromElement(e)
 	if err != nil {
-		return 0, errors.Wrap(err, "UpsertChannelFromElementMap could not find channel id")
+		return 0, 0, errors.Wrap(err, "UpsertChannelFromElementMap could not find channel id")
 	}
 
 	gidE, ok := eMap["guild_id"]
@@ -295,48 +295,48 @@ func (s *state) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (sno
 		if !found {
 			s.privateChannels[id], err = ChannelFromElementMap(eMap)
 			if err != nil {
-				return 0, errors.Wrap(err, "could not insert channel into the session")
+				return 0, 0, errors.Wrap(err, "could not insert channel into the session")
 			}
-			return 0, nil
+			return 0, 0, nil
 		}
 
 		err = c.UpdateFromElementMap(eMap)
 		if err != nil {
-			return 0, errors.Wrap(err, "could not update channel into the session")
+			return 0, 0, errors.Wrap(err, "could not update channel into the session")
 		}
 		s.privateChannels[id] = c
 
-		return 0, nil
+		return 0, 0, nil
 	}
 
 	gid, err := etfapi.SnowflakeFromElement(gidE)
 	if err != nil {
-		return 0, errors.Wrap(err, "could not get guild_id from element")
+		return 0, 0, errors.Wrap(err, "could not get guild_id from element")
 	}
 
 	g, ok := s.guilds[gid]
 	if !ok {
-		return gid, errors.Wrap(ErrNotFound, "could not find the guild_id")
+		return gid, id, errors.Wrap(ErrNotFound, "could not find the guild_id")
 	}
 
 	c, ok := g.channels[id]
 	if !ok { // new channel
 		g.channels[id], err = ChannelFromElementMap(eMap)
 		if err != nil {
-			return gid, errors.Wrap(err, "could not insert channel into the session")
+			return gid, id, errors.Wrap(err, "could not insert channel into the session")
 		}
 
 		s.guilds[gid] = g
-		return gid, nil
+		return gid, id, nil
 	}
 
 	if err = c.UpdateFromElementMap(eMap); err != nil {
-		return gid, errors.Wrap(err, "could not update channel into the session")
+		return gid, id, errors.Wrap(err, "could not update channel into the session")
 	}
 	g.channels[id] = c
 	s.guilds[gid] = g
 
-	return gid, nil
+	return gid, id, nil
 }
 
 // GuildOfChannel returns the id of the guild that owns the channel with the provided id, if one is known

@@ -3,7 +3,7 @@ package logging
 import (
 	"context"
 
-	log "github.com/gsmcwhirter/go-util/v8/logging"
+	log "github.com/gsmcwhirter/go-util/v10/logging"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/request"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"

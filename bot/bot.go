@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/logging/level"
-	"github.com/gsmcwhirter/go-util/v8/request"
-	"github.com/gsmcwhirter/go-util/v8/telemetry"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/logging/level"
+	"github.com/gsmcwhirter/go-util/v10/request"
+	"github.com/gsmcwhirter/go-util/v10/telemetry"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
@@ -20,7 +20,6 @@ import (
 	"github.com/gsmcwhirter/discord-bot-lib/v24/errreport"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
-	"github.com/gsmcwhirter/discord-bot-lib/v24/stats"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/wsapi"
 )
 
@@ -34,7 +33,7 @@ type dependencies interface {
 	BotSession() *session.Session
 	Dispatcher() Dispatcher
 	ErrReporter() errreport.Reporter
-	Census() *telemetry.Census
+	Telemetry() *telemetry.Telemeter
 }
 
 // Config is the set of configuration options for creating a DiscordBot with NewDiscordBot
@@ -159,7 +158,7 @@ var ErrDuplicateCommand = errors.New("duplicate command")
 
 // RegisterGlobalCommands registers the global bot commands with discord
 func (d *DiscordBot) RegisterGlobalCommands(ctx context.Context) error {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.RegisterGlobalCommands")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "bot", "RegisterGlobalCommands")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -175,7 +174,7 @@ func (d *DiscordBot) RegisterGlobalCommands(ctx context.Context) error {
 
 // RegisterGuildCommands registers the guild-specific commands for a guild with discord
 func (d *DiscordBot) RegisterGuildCommands(ctx context.Context, gid snowflake.Snowflake, cmds []entity.ApplicationCommand) ([]entity.ApplicationCommand, error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.RegisterGuildCommands", "gid", gid.ToString())
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "bot", "RegisterGuildCommands", telemetry.WithAttributes(telemetry.KVString("gid", gid.ToString())))
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -188,7 +187,7 @@ func (d *DiscordBot) RegisterGuildCommands(ctx context.Context, gid snowflake.Sn
 
 // ReconfigureHeartbeat re-configures the heartbeat ticker
 func (d *DiscordBot) ReconfigureHeartbeat(ctx context.Context, interval int) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.ReconfigureHeartbeat")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "bot", "ReconfigureHeartbeat")
 	defer span.End()
 
 	d.heartbeats <- hbReconfig{
@@ -210,10 +209,6 @@ func (d *DiscordBot) Disconnect() error {
 
 // Run starts handling websocket requests and heartbeats after calling AuthenticateAndConnect
 func (d *DiscordBot) Run(ctx context.Context) error {
-	if err := stats.Register(); err != nil {
-		return errors.Wrap(err, "could not register stats")
-	}
-
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
@@ -306,19 +301,19 @@ func (d *DiscordBot) heartbeatHandler(ctx context.Context) error {
 	}
 }
 
-func (d *DiscordBot) sendHeartbeat(reqCtx context.Context) error {
-	reqCtx, span := d.deps.Census().StartSpan(reqCtx, "discordBot.sendHeartbeat")
+func (d *DiscordBot) sendHeartbeat(ctx context.Context) error {
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "bot", "sendHeartbeat")
 	defer span.End()
 
-	m, err := d.deps.Dispatcher().GenerateHeartbeat(reqCtx, d.lastSequence)
+	m, err := d.deps.Dispatcher().GenerateHeartbeat(ctx, d.lastSequence)
 	if err != nil {
-		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error generating heartbeat", err)
+		level.Error(logging.WithContext(ctx, d.deps.Logger())).Err("error generating heartbeat", err)
 		return errors.Wrap(err, "error generating heartbeat")
 	}
 
-	err = d.deps.MessageRateLimiter().Wait(reqCtx)
+	err = d.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
-		level.Error(logging.WithContext(reqCtx, d.deps.Logger())).Err("error rate limiting", err)
+		level.Error(logging.WithContext(ctx, d.deps.Logger())).Err("error rate limiting", err)
 		return errors.Wrap(err, "error rate limiting")
 	}
 	d.deps.WSClient().SendMessage(m)

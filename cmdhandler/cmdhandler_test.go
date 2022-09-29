@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gsmcwhirter/go-util/v8/parser"
+	"github.com/gsmcwhirter/go-util/v10/parser"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,7 +1,7 @@
 package cmdhandler
 
 import (
-	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v10/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"

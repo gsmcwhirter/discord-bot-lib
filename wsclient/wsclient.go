@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/logging/level"
-	"github.com/gsmcwhirter/go-util/v8/request"
-	"github.com/gsmcwhirter/go-util/v8/telemetry"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/logging/level"
+	"github.com/gsmcwhirter/go-util/v10/request"
+	"github.com/gsmcwhirter/go-util/v10/telemetry"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/errreport"
@@ -25,7 +25,7 @@ type dependencies interface {
 	Logger() Logger
 	WSDialer() Dialer
 	ErrReporter() errreport.Reporter
-	Census() *telemetry.Census
+	Telemetry() *telemetry.Telemeter
 }
 
 // Logger is the interface expected for logging
@@ -219,7 +219,7 @@ func (c *WSClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	defer c.deps.ErrReporter().Recover(ctx)
 	defer c.pool.Done()
 
-	ctx, span := c.deps.Census().StartSpan(ctx, "WSClient.handleMessageRead")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "wsclient", "handleMessageRead")
 	defer span.End()
 
 	reqCtx := request.NewRequestContextFrom(ctx)
@@ -231,7 +231,7 @@ func (c *WSClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	}
 
 	logger := logging.WithContext(reqCtx, c.deps.Logger())
-	if err := c.deps.Census().Record(ctx, []telemetry.Measurement{stats.RawMessageCount.M(1)}); err != nil {
+	if err := stats.IncCounter(ctx, c.deps.Telemetry(), "wsclient", stats.RawMessageCount, 1); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -254,11 +254,11 @@ func (c *WSClient) handleMessageRead(ctx context.Context, msgType int, msg []byt
 	}
 
 	gid := c.handleRequest(wsMsg)
-	span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 }
 
 func (c *WSClient) handleRequest(req wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "WSClient.handleRequest")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "wsclient", "handleRequest")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -280,7 +280,7 @@ func (c *WSClient) handleRequest(req wsapi.WSMessage) snowflake.Snowflake {
 			level.Info(logger).Message("handleRequest dispatching request")
 		}
 		gid := c.handler.HandleRequest(req, c.responses)
-		span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
+		span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 		return gid
 	}
 }
@@ -324,13 +324,13 @@ func (c *WSClient) handleResponses(ctx context.Context) error {
 			return ctx.Err()
 
 		case resp := <-c.responses: // handle pending responses
-			c.processResponse(resp)
+			c.processResponse(resp) //nolint:contextcheck // context comes from the response
 		}
 	}
 }
 
 func (c *WSClient) processResponse(resp wsapi.WSMessage) {
-	ctx, span := c.deps.Census().StartSpan(resp.Ctx, "WSClient.processResponse")
+	ctx, span := c.deps.Telemetry().StartSpan(resp.Ctx, "wsclient", "processResponse")
 	defer span.End()
 	resp.Ctx = ctx
 
@@ -343,7 +343,7 @@ func (c *WSClient) processResponse(resp wsapi.WSMessage) {
 		)
 	}
 
-	if err := c.deps.Census().Record(resp.Ctx, []telemetry.Measurement{stats.RawMessagesSentCount.M(1)}); err != nil {
+	if err := stats.IncCounter(ctx, c.deps.Telemetry(), "wsclient", stats.RawMessagesSentCount, 1); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -365,7 +365,7 @@ func (c *WSClient) processResponse(resp wsapi.WSMessage) {
 
 // SendMessage queues a message to be sent to the websocket
 func (c *WSClient) SendMessage(msg wsapi.WSMessage) {
-	ctx, span := c.deps.Census().StartSpan(msg.Ctx, "WSClient.SendMessage")
+	ctx, span := c.deps.Telemetry().StartSpan(msg.Ctx, "wsclient", "SendMessage")
 	defer span.End()
 	msg.Ctx = ctx
 

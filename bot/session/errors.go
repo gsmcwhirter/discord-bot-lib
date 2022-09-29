@@ -1,6 +1,6 @@
 package session
 
-import "github.com/gsmcwhirter/go-util/v8/errors"
+import "github.com/gsmcwhirter/go-util/v10/errors"
 
 // ErrBadData is the error returned when upserting State elements if data is an incorrect type or invalid value
 var ErrBadData = errors.New("bad data")

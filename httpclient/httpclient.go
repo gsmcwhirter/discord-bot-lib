@@ -7,17 +7,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/json"
-	"github.com/gsmcwhirter/go-util/v8/logging/level"
-	"github.com/gsmcwhirter/go-util/v8/telemetry"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/json"
+	"github.com/gsmcwhirter/go-util/v10/logging/level"
+	"github.com/gsmcwhirter/go-util/v10/telemetry"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/logging"
 )
 
 type dependencies interface {
 	Logger() Logger
-	Census() *telemetry.Census
+	Telemetry() *telemetry.Telemeter
 	HTTPDoer() Doer
 }
 
@@ -103,7 +103,7 @@ func (c *HTTPClient) SetHeaders(h http.Header) {
 
 // Get performs an http GET
 func (c *HTTPClient) Get(ctx context.Context, url string, headers *http.Header) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Get")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "Get")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -122,7 +122,7 @@ func (c *HTTPClient) Get(ctx context.Context, url string, headers *http.Header) 
 
 // GetBody performs an http GET an returns the response body
 func (c *HTTPClient) GetBody(ctx context.Context, url string, headers *http.Header) (*http.Response, []byte, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.GetBody")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "GetBody")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -143,7 +143,7 @@ func (c *HTTPClient) GetBody(ctx context.Context, url string, headers *http.Head
 
 // GetJSON performs an http GET and unmarshals the response body into the provided target
 func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Header, t interface{}) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.GetJSON")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "GetJSON")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -175,7 +175,7 @@ func (c *HTTPClient) GetJSON(ctx context.Context, url string, headers *http.Head
 
 // Post performs an http POST
 func (c *HTTPClient) Post(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Post")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "Post")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -194,7 +194,7 @@ func (c *HTTPClient) Post(ctx context.Context, url string, headers *http.Header,
 
 // PostBody performs an http POST and returns the response body
 func (c *HTTPClient) PostBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PostBody")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "PostBody")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -215,7 +215,7 @@ func (c *HTTPClient) PostBody(ctx context.Context, url string, headers *http.Hea
 
 // PostJSON performs an http POST and unmarshals the response body into the provided target
 func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Header, body io.Reader, t interface{}) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PostBody")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "PostJSON")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -255,7 +255,7 @@ func (c *HTTPClient) PostJSON(ctx context.Context, url string, headers *http.Hea
 
 // Put performs an http PUT
 func (c *HTTPClient) Put(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.Put")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "Put")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -274,7 +274,7 @@ func (c *HTTPClient) Put(ctx context.Context, url string, headers *http.Header, 
 
 // PutBody performs an http PUT and returns the response body
 func (c *HTTPClient) PutBody(ctx context.Context, url string, headers *http.Header, body io.Reader) (*http.Response, []byte, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PutBody")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "PutBody")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())
@@ -295,7 +295,7 @@ func (c *HTTPClient) PutBody(ctx context.Context, url string, headers *http.Head
 
 // PutJSON performs an http PUT and unmarshals the response body into the provided target
 func (c *HTTPClient) PutJSON(ctx context.Context, url string, headers *http.Header, body io.Reader, t interface{}) (*http.Response, error) {
-	ctx, span := c.deps.Census().StartSpan(ctx, "HTTPClient.PutJSON")
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "httpclient", "PutJSON")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, c.deps.Logger())

@@ -1,6 +1,6 @@
 package entity
 
-import "github.com/gsmcwhirter/go-util/v8/errors"
+import "github.com/gsmcwhirter/go-util/v10/errors"
 
 // MessageReaction is the data about a reaction received from the json api
 type MessageReaction struct {

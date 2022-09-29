@@ -9,10 +9,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/json"
-	"github.com/gsmcwhirter/go-util/v8/logging/level"
-	"github.com/gsmcwhirter/go-util/v8/telemetry"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/json"
+	"github.com/gsmcwhirter/go-util/v10/logging/level"
+	"github.com/gsmcwhirter/go-util/v10/telemetry"
 	"golang.org/x/time/rate"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
@@ -24,7 +24,7 @@ import (
 
 type dependencies interface {
 	Logger() Logger
-	Census() *telemetry.Census
+	Telemetry() *telemetry.Telemeter
 	MessageRateLimiter() *rate.Limiter
 	CommandRegistrationRateLimiter() *rate.Limiter
 	HTTPClient() HTTPClient
@@ -81,7 +81,7 @@ func (d *DiscordJSONClient) SetDebug(val bool) {
 
 // GetGuildMember retrieves information about a guild memeber
 func (d *DiscordJSONClient) GetGuildMember(ctx context.Context, gid, uid snowflake.Snowflake) (respData entity.GuildMember, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildMember")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "GetGuildMember", telemetry.WithAttributes(telemetry.KVString("gid", gid.ToString()), telemetry.KVString("uid", uid.ToString())))
 	defer span.End()
 
 	// logger := logging.WithContext(ctx, d.deps.Logger())
@@ -110,7 +110,7 @@ var Err = errors.New("error response")
 
 // GetGateway retrieves information about the gateway
 func (d *DiscordJSONClient) GetGateway(ctx context.Context) (entity.Gateway, error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGateway")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "GetGateway")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -136,7 +136,7 @@ func (d *DiscordJSONClient) GetGateway(ctx context.Context) (entity.Gateway, err
 
 // SendMessage sends a message to a channel
 func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowflake, m marshaler) (respData entity.Message, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "SendMessage", telemetry.WithAttributes(telemetry.KVString("cid", cid.ToString())))
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -165,7 +165,7 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 		return respData, errors.Wrap(err, "could not complete the message send")
 	}
 
-	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.MessagesPostedCount.M(1)}, telemetry.Tag{Key: stats.TagStatus, Val: fmt.Sprintf("%d", resp.StatusCode)}); err != nil {
+	if err := stats.IncCounter(ctx, d.deps.Telemetry(), "jsonapi", stats.MessagesPostedCount, 1, telemetry.KVInt(stats.TagStatus, resp.StatusCode)); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -181,7 +181,7 @@ func (d *DiscordJSONClient) SendMessage(ctx context.Context, cid snowflake.Snowf
 func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) error {
 	err := d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeChannelMessage)
 
-	if err2 := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.InteractionResponsesCount.M(1)}); err2 != nil {
+	if err := stats.IncCounter(ctx, d.deps.Telemetry(), "jsonapi", stats.InteractionResponsesCount, 1); err != nil {
 		logger := logging.WithContext(ctx, d.deps.Logger())
 		level.Error(logger).Err("could not record stat", err)
 	}
@@ -193,7 +193,7 @@ func (d *DiscordJSONClient) SendInteractionMessage(ctx context.Context, ixID sno
 func (d *DiscordJSONClient) SendInteractionAutocomplete(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler) error {
 	err := d.sendInteractionResponse(ctx, ixID, ixToken, m, CallbackTypeAutocomplete)
 
-	if err2 := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.InteractionAutocompletesCount.M(1)}); err2 != nil {
+	if err := stats.IncCounter(ctx, d.deps.Telemetry(), "jsonapi", stats.InteractionAutocompletesCount, 1); err != nil {
 		logger := logging.WithContext(ctx, d.deps.Logger())
 		level.Error(logger).Err("could not record stat", err)
 	}
@@ -203,7 +203,7 @@ func (d *DiscordJSONClient) SendInteractionAutocomplete(ctx context.Context, ixI
 
 // DeferInteractionResponse sends a deferral for an interaction response
 func (d *DiscordJSONClient) DeferInteractionResponse(ctx context.Context, ixID snowflake.Snowflake, ixToken string) error {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "DeferInteractionResponse")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -239,7 +239,7 @@ func (d *DiscordJSONClient) DeferInteractionResponse(ctx context.Context, ixID s
 		return errors.Wrap(httpclient.ErrResponse, "non-200 response", "status_code", resp.StatusCode, "response_body", string(body))
 	}
 
-	if err := d.deps.Census().Record(ctx, []telemetry.Measurement{stats.InteractionDeferralsCount.M(1)}); err != nil {
+	if err := stats.IncCounter(ctx, d.deps.Telemetry(), "jsonapi", stats.InteractionDeferralsCount, 1); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -247,7 +247,7 @@ func (d *DiscordJSONClient) DeferInteractionResponse(ctx context.Context, ixID s
 }
 
 func (d *DiscordJSONClient) sendInteractionResponse(ctx context.Context, ixID snowflake.Snowflake, ixToken string, m marshaler, typ InteractionCallbackType) (err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.SendMessage")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "sendInteractionResponse")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -295,7 +295,7 @@ func (d *DiscordJSONClient) sendInteractionResponse(ctx context.Context, ixID sn
 
 // GetInteractionResponse retrieves an interaction response
 func (d *DiscordJSONClient) GetInteractionResponse(ctx context.Context, aid snowflake.Snowflake, ixToken string) (respData entity.Message, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "GetInteractionResponse")
 	defer span.End()
 
 	// logger := logging.WithContext(ctx, d.deps.Logger())
@@ -321,7 +321,7 @@ func (d *DiscordJSONClient) GetInteractionResponse(ctx context.Context, aid snow
 
 // GetMessage retrieves information about a discord message
 func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.Snowflake) (respData entity.Message, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "GetMessage", telemetry.WithAttributes(telemetry.KVString("cid", cid.ToString())))
 	defer span.End()
 
 	// logger := logging.WithContext(ctx, d.deps.Logger())
@@ -347,7 +347,7 @@ func (d *DiscordJSONClient) GetMessage(ctx context.Context, cid, mid snowflake.S
 
 // CreateReaction adds a reaction to a message
 func (d *DiscordJSONClient) CreateReaction(ctx context.Context, cid, mid snowflake.Snowflake, emoji string) (resp *http.Response, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetMessage")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "CreateReaction", telemetry.WithAttributes(telemetry.KVString("cid", cid.ToString())))
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -375,7 +375,7 @@ func (d *DiscordJSONClient) CreateReaction(ctx context.Context, cid, mid snowfla
 
 // GetGlobalCommands gets the registered global commands
 func (d *DiscordJSONClient) GetGlobalCommands(ctx context.Context, aid string) (cmds []entity.ApplicationCommand, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGlobalCommands")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "GetGlobalCommands")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -402,7 +402,7 @@ func (d *DiscordJSONClient) GetGlobalCommands(ctx context.Context, aid string) (
 
 // BulkOverwriteGlobalCommands overwrites the global commands
 func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid string, cmds []entity.ApplicationCommand) (resCmds []entity.ApplicationCommand, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGlobalCommands")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "BulkOverwriteGlobalCommands")
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -443,7 +443,7 @@ func (d *DiscordJSONClient) BulkOverwriteGlobalCommands(ctx context.Context, aid
 
 // GetGuildCommands gets the currently registered guild commands
 func (d *DiscordJSONClient) GetGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake) (cmds []entity.ApplicationCommand, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.GetGuildCommands")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "GetGuildCommands", telemetry.WithAttributes(telemetry.KVString("gid", gid.ToString())))
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -470,7 +470,7 @@ func (d *DiscordJSONClient) GetGuildCommands(ctx context.Context, aid string, gi
 
 // BulkOverwriteGuildCommands overwrites the guild commands
 func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid string, gid snowflake.Snowflake, cmds []entity.ApplicationCommand) (resCmds []entity.ApplicationCommand, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGuildCommands")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "BulkOverwriteGuildCommands", telemetry.WithAttributes(telemetry.KVString("gid", gid.ToString())))
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())
@@ -511,7 +511,7 @@ func (d *DiscordJSONClient) BulkOverwriteGuildCommands(ctx context.Context, aid 
 
 // BulkOverwriteGuildCommandPermissions overwrites the guild command permissions
 func (d *DiscordJSONClient) BulkOverwriteGuildCommandPermissions(ctx context.Context, aid string, gid snowflake.Snowflake, perms []entity.ApplicationCommandPermissions) (resPerms []entity.ApplicationCommandPermissions, err error) {
-	ctx, span := d.deps.Census().StartSpan(ctx, "DiscordBot.BulkOverwriteGuildCommandPermissions")
+	ctx, span := d.deps.Telemetry().StartSpan(ctx, "jsonapi", "BulkOverwriteGuildCommandPermissions", telemetry.WithAttributes(telemetry.KVString("gid", gid.ToString())))
 	defer span.End()
 
 	logger := logging.WithContext(ctx, d.deps.Logger())

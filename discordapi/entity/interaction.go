@@ -1,10 +1,8 @@
 package entity
 
 import (
-	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
-
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/json"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/json"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
@@ -331,7 +329,7 @@ func ResolvedDataFromElement(e etfapi.Element) (ResolvedData, error) {
 type ApplicationCommandInteractionOption struct {
 	Name    string                                `json:"name"`
 	Type    ApplicationCommandOptionType          `json:"type"`
-	Value   stdjson.RawMessage                    `json:"value"`
+	Value   json.RawMessage                       `json:"value"`
 	Options []ApplicationCommandInteractionOption `json:"options"`
 	Focused bool                                  `json:"focused,omitempty"`
 
@@ -420,7 +418,7 @@ func (i *ApplicationCommandInteractionOption) PackValue() error {
 		return ErrBadOptType
 	}
 
-	i.Value = stdjson.RawMessage(b)
+	i.Value = json.RawMessage(b)
 	return err
 }
 

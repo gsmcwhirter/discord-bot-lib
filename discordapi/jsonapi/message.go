@@ -1,9 +1,7 @@
 package jsonapi
 
 import (
-	stdjson "encoding/json" //nolint:depguard // we need this for RawMessage
-
-	"github.com/gsmcwhirter/go-util/v8/json"
+	"github.com/gsmcwhirter/go-util/v10/json"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/entity"
 )
@@ -83,7 +81,7 @@ const (
 // InteractionCallbackMessage is the message from an interaction callback
 type InteractionCallbackMessage struct {
 	Type InteractionCallbackType `json:"type"`
-	Data stdjson.RawMessage      `json:"data,omitempty"`
+	Data json.RawMessage         `json:"data,omitempty"`
 }
 
 // InteractionAutocompleteResponse represents an interaction autocomplete response

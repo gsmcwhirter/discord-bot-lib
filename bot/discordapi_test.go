@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gsmcwhirter/go-util/v8/deferutil"
-	"github.com/gsmcwhirter/go-util/v8/telemetry"
+	"github.com/gsmcwhirter/go-util/v10/deferutil"
+	"github.com/gsmcwhirter/go-util/v10/telemetry"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/metric/nonrecording"
 	"golang.org/x/time/rate"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/bot"
@@ -65,37 +66,36 @@ func (d *mockWSDialer) Dial(string, http.Header) (wsclient.Conn, *http.Response,
 	return &mockWSConn{}, &http.Response{StatusCode: 200}, nil
 }
 
-type customTraceExporter struct{}
+type testSpanExporter struct{}
 
-func (ce *customTraceExporter) ExportSpan(sd *telemetry.SpanData) {
-	fmt.Printf("Name: %s\nTraceID: %x\nSpanID: %x\nParentSpanID: %x\nStartTime: %s\nEndTime: %s\nAnnotations: %+v\n\n",
-		sd.Name, sd.TraceID, sd.SpanID, sd.ParentSpanID, sd.StartTime, sd.EndTime, sd.Annotations)
+var _ telemetry.SpanExporter = (*testSpanExporter)(nil)
+
+func (ce *testSpanExporter) ExportSpans(ctx context.Context, spans []telemetry.ReadOnlySpan) error {
+	for _, sd := range spans {
+		fmt.Printf("Name: %s\nAttributes: %+v\nStatus: %v\nStartTime: %s\nEndTime: %s\n\n",
+			sd.Name(), sd.Attributes(), sd.Status(), sd.StartTime(), sd.EndTime())
+	}
+	return nil
 }
 
-type customMetricsExporter struct{}
-
-func (ce *customMetricsExporter) ExportView(vd *telemetry.ViewData) {
-	fmt.Printf("vd.View: %+v\n%#v\n", vd.View, vd.Rows)
-	for i, row := range vd.Rows {
-		fmt.Printf("\tRow: %d: %#v\n", i, row)
-	}
-	fmt.Printf("StartTime: %s EndTime: %s\n\n", vd.Start.Round(0), vd.End.Round(0))
+func (ce *testSpanExporter) Shutdown(ctx context.Context) error {
+	return nil
 }
 
 type mockdeps struct {
-	logger  bot.Logger
-	doer    httpclient.Doer
-	http    *httpclient.HTTPClient
-	wsd     wsclient.Dialer
-	ws      *wsclient.WSClient
-	msgrl   *rate.Limiter
-	cnxrl   *rate.Limiter
-	cregrl  *rate.Limiter
-	session *session.Session
-	mh      bot.Dispatcher
-	rep     errreport.Reporter
-	census  *telemetry.Census
-	jsc     *jsonapi.DiscordJSONClient
+	logger    bot.Logger
+	doer      httpclient.Doer
+	http      *httpclient.HTTPClient
+	wsd       wsclient.Dialer
+	ws        *wsclient.WSClient
+	msgrl     *rate.Limiter
+	cnxrl     *rate.Limiter
+	cregrl    *rate.Limiter
+	session   *session.Session
+	mh        bot.Dispatcher
+	rep       errreport.Reporter
+	telemeter *telemetry.Telemeter
+	jsc       *jsonapi.DiscordJSONClient
 }
 
 func (d *mockdeps) Logger() bot.Logger                            { return d.logger }
@@ -109,7 +109,7 @@ func (d *mockdeps) CommandRegistrationRateLimiter() *rate.Limiter { return d.cre
 func (d *mockdeps) BotSession() *session.Session                  { return d.session }
 func (d *mockdeps) Dispatcher() bot.Dispatcher                    { return d.mh }
 func (d *mockdeps) ErrReporter() errreport.Reporter               { return d.rep }
-func (d *mockdeps) Census() *telemetry.Census                     { return d.census }
+func (d *mockdeps) Telemetry() *telemetry.Telemeter               { return d.telemeter }
 func (d *mockdeps) DiscordJSONClient() *jsonapi.DiscordJSONClient { return d.jsc }
 
 func TestDiscordBot(t *testing.T) {
@@ -137,10 +137,7 @@ func TestDiscordBot(t *testing.T) {
 		rep:     errreport.NopReporter{},
 	}
 
-	deps.census = telemetry.NewCensus(telemetry.Options{
-		StatsExporter: new(customMetricsExporter),
-		TraceExporter: new(customTraceExporter),
-	})
+	deps.telemeter = telemetry.NewTelemeter("test", "test", "test", new(testSpanExporter), nonrecording.NewNoopMeterProvider(), 1.0)
 
 	deps.ws = wsclient.NewWSClient(deps, wsclient.Options{
 		MaxConcurrentHandlers: conf.NumWorkers,

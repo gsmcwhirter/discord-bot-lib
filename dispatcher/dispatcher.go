@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gsmcwhirter/go-util/v8/errors"
-	"github.com/gsmcwhirter/go-util/v8/logging/level"
-	"github.com/gsmcwhirter/go-util/v8/telemetry"
+	"github.com/gsmcwhirter/go-util/v10/errors"
+	"github.com/gsmcwhirter/go-util/v10/logging/level"
+	"github.com/gsmcwhirter/go-util/v10/telemetry"
 	"golang.org/x/time/rate"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/bot"
@@ -24,7 +24,7 @@ type dependencies interface {
 	Logger() Logger
 	BotSession() *session.Session
 	MessageRateLimiter() *rate.Limiter
-	Census() *telemetry.Census
+	Telemetry() *telemetry.Telemeter
 }
 
 // Logger is the interface expected for logging
@@ -100,23 +100,23 @@ func (c *Dispatcher) ConnectToBot(b *bot.DiscordBot) {
 }
 
 // GenerateHeartbeat prepares a heartbeat message to be sent
-func (c *Dispatcher) GenerateHeartbeat(reqCtx context.Context, seqNum int) (wsapi.WSMessage, error) {
-	reqCtx, span := c.deps.Census().StartSpan(reqCtx, "Dispatcher.GenerateHeartbeat")
+func (c *Dispatcher) GenerateHeartbeat(ctx context.Context, seqNum int) (wsapi.WSMessage, error) {
+	ctx, span := c.deps.Telemetry().StartSpan(ctx, "dispatcher", "GenerateHeartbeat")
 	defer span.End()
 
 	var m wsapi.WSMessage
 
-	m, err := ETFPayloadToMessage(reqCtx, &etfapi.HeartbeatPayload{
+	m, err := ETFPayloadToMessage(ctx, &etfapi.HeartbeatPayload{
 		Sequence: seqNum,
 	})
 	if err != nil {
-		level.Error(logging.WithContext(reqCtx, c.deps.Logger())).Err("error formatting heartbeat", err)
+		level.Error(logging.WithContext(ctx, c.deps.Logger())).Err("error formatting heartbeat", err)
 		return m, errors.Wrap(err, "error formatting heartbeat")
 	}
 
-	err = c.deps.MessageRateLimiter().Wait(reqCtx)
+	err = c.deps.MessageRateLimiter().Wait(ctx)
 	if err != nil {
-		level.Error(logging.WithContext(reqCtx, c.deps.Logger())).Err("error rate limiting", err)
+		level.Error(logging.WithContext(ctx, c.deps.Logger())).Err("error rate limiting", err)
 		return m, errors.Wrap(err, "error rate limiting")
 	}
 
@@ -134,7 +134,7 @@ func (c *Dispatcher) AddHandler(event string, handler DispatchHandlerFunc) {
 
 // HandleRequest dispatches a message and queues a response, if there is one
 func (c *Dispatcher) HandleRequest(req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.HandleRequest")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "HandleRequest")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -158,7 +158,7 @@ func (c *Dispatcher) HandleRequest(req wsapi.WSMessage, resp chan<- wsapi.WSMess
 		return 0
 	}
 
-	if err := c.deps.Census().Record(ctx, []telemetry.Measurement{stats.OpCodesCount.M(1)}, telemetry.Tag{Key: stats.TagOpCode, Val: p.OpCode.String()}); err != nil {
+	if err := stats.IncCounter(ctx, c.deps.Telemetry(), "dispatcher", stats.OpCodesCount, 1, telemetry.KVString(stats.TagOpCode, p.OpCode.String())); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -188,7 +188,7 @@ func (c *Dispatcher) HandleRequest(req wsapi.WSMessage, resp chan<- wsapi.WSMess
 }
 
 func (c *Dispatcher) handleHello(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleHello")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleHello")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -283,7 +283,7 @@ func (c *Dispatcher) handleHello(p Payload, req wsapi.WSMessage, resp chan<- wsa
 }
 
 func (c *Dispatcher) handleHeartbeat(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleHeartbeat")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleHeartbeat")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -304,7 +304,7 @@ func (c *Dispatcher) handleHeartbeat(p Payload, req wsapi.WSMessage, resp chan<-
 }
 
 func (c *Dispatcher) handleDispatch(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleDispatch")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleDispatch")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -316,7 +316,7 @@ func (c *Dispatcher) handleDispatch(p Payload, req wsapi.WSMessage, resp chan<- 
 
 	logger := logging.WithContext(req.Ctx, c.deps.Logger())
 
-	if err := c.deps.Census().Record(ctx, []telemetry.Measurement{stats.RawEventsCount.M(1)}, telemetry.Tag{Key: stats.TagEventName, Val: p.EventName()}); err != nil {
+	if err := stats.IncCounter(ctx, c.deps.Telemetry(), "dispatcher", stats.RawEventsCount, 1, telemetry.KVString(stats.TagEventName, p.EventName())); err != nil {
 		level.Error(logger).Err("could not record stat", err)
 	}
 
@@ -340,7 +340,7 @@ func (c *Dispatcher) handleDispatch(p Payload, req wsapi.WSMessage, resp chan<- 
 	level.Info(logger).Message("processing event", "event_name", p.EventName())
 	for _, eventHandler := range eventHandlers {
 		if gid := eventHandler(p, req, resp); gid != 0 {
-			span.AddAttributes(telemetry.StringAttribute("guild_id", gid.ToString()))
+			span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 			guildID = gid
 		}
 	}
@@ -349,7 +349,7 @@ func (c *Dispatcher) handleDispatch(p Payload, req wsapi.WSMessage, resp chan<- 
 }
 
 func (c *Dispatcher) handleReady(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleReady")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleReady")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -370,7 +370,7 @@ func (c *Dispatcher) handleReady(p Payload, req wsapi.WSMessage, resp chan<- wsa
 }
 
 func (c *Dispatcher) handleGuildCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildCreate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildCreate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -392,12 +392,13 @@ func (c *Dispatcher) handleGuildCreate(p Payload, req wsapi.WSMessage, resp chan
 	if err != nil {
 		level.Error(logger).Err("error processing guild create", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildUpdate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -417,12 +418,13 @@ func (c *Dispatcher) handleGuildUpdate(p Payload, req wsapi.WSMessage, resp chan
 	if err != nil {
 		level.Error(logger).Err("error processing guild update", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildDelete")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildDelete")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -442,12 +444,13 @@ func (c *Dispatcher) handleGuildDelete(p Payload, req wsapi.WSMessage, resp chan
 	if err != nil {
 		level.Error(logger).Err("error processing guild delete", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleChannelCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleChannelCreate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleChannelCreate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -462,17 +465,18 @@ func (c *Dispatcher) handleChannelCreate(p Payload, req wsapi.WSMessage, resp ch
 	if c.debug {
 		level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", data), "event_name", "CHANNEL_CREATE")
 	}
-	gid, err := c.deps.BotSession().UpsertChannelFromElementMap(data)
-	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_CREATE", "channel_id_elem", fmt.Sprintf("%+v", data["id"]), "guild_id", gid)
+	gid, cid, err := c.deps.BotSession().UpsertChannelFromElementMap(data)
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_CREATE", "channel_id_elem", fmt.Sprintf("%+v", data["id"]), "guild_id", gid, "channel_id", cid)
 	if err != nil {
 		level.Error(logger).Err("error processing channel create", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()), telemetry.KVString("cid", cid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleChannelUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleChannelUpdate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleChannelUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -487,17 +491,18 @@ func (c *Dispatcher) handleChannelUpdate(p Payload, req wsapi.WSMessage, resp ch
 	if c.debug {
 		level.Debug(logger).Message("upserting channel debug", "pdata", fmt.Sprintf("%+v", data), "event_name", "CHANNEL_UPDATE")
 	}
-	gid, err := c.deps.BotSession().UpsertChannelFromElementMap(data)
-	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_UPDATE", "channel_id_elem", fmt.Sprintf("%+v", data["id"]), "guild_id", gid)
+	gid, cid, err := c.deps.BotSession().UpsertChannelFromElementMap(data)
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_UPDATE", "channel_id_elem", fmt.Sprintf("%+v", data["id"]), "guild_id", gid, "channel_id", cid)
 	if err != nil {
 		level.Error(logger).Err("error processing channel update", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()), telemetry.KVString("cid", cid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleChannelDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleChannelDelete")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleChannelDelete")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -512,17 +517,18 @@ func (c *Dispatcher) handleChannelDelete(p Payload, req wsapi.WSMessage, resp ch
 	if c.debug {
 		level.Debug(logger).Message("deleting channel debug", "pdata", fmt.Sprintf("%+v", data), "event_name", "CHANNEL_DELETE")
 	}
-	gid, err := c.deps.BotSession().UpsertChannelFromElementMap(data)
-	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_DELETE", "channel_id_elem", fmt.Sprintf("%+v", data["id"]), "guild_id", gid)
+	gid, cid, err := c.deps.BotSession().UpsertChannelFromElementMap(data)
+	level.Info(logger).Message("upserting channel", "event_name", "CHANNEL_DELETE", "channel_id_elem", fmt.Sprintf("%+v", data["id"]), "guild_id", gid, "channel_id", cid)
 	if err != nil {
 		level.Error(logger).Err("error processing channel delete", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()), telemetry.KVString("cid", cid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildMemberCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildMemberCreate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildMemberCreate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -542,12 +548,13 @@ func (c *Dispatcher) handleGuildMemberCreate(p Payload, req wsapi.WSMessage, res
 	if err != nil {
 		level.Error(logger).Err("error processing guild member create", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildMemberUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildMemberUpdate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildMemberUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -567,12 +574,13 @@ func (c *Dispatcher) handleGuildMemberUpdate(p Payload, req wsapi.WSMessage, res
 	if err != nil {
 		level.Error(logger).Err("error processing guild member update", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildMemberDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildMemberDelete")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildMemberDelete")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -592,12 +600,13 @@ func (c *Dispatcher) handleGuildMemberDelete(p Payload, req wsapi.WSMessage, res
 	if err != nil {
 		level.Error(logger).Err("error processing guild member delete", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildRoleCreate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildRoleCreate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildRoleCreate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -617,12 +626,13 @@ func (c *Dispatcher) handleGuildRoleCreate(p Payload, req wsapi.WSMessage, resp 
 	if err != nil {
 		level.Error(logger).Err("error processing guild role create", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildRoleUpdate(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildRoleUpdate")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildRoleUpdate")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -642,12 +652,13 @@ func (c *Dispatcher) handleGuildRoleUpdate(p Payload, req wsapi.WSMessage, resp 
 	if err != nil {
 		level.Error(logger).Err("error processing guild role update", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }
 
 func (c *Dispatcher) handleGuildRoleDelete(p Payload, req wsapi.WSMessage, resp chan<- wsapi.WSMessage) snowflake.Snowflake {
-	ctx, span := c.deps.Census().StartSpan(req.Ctx, "Dispatcher.handleGuildRoleDelete")
+	ctx, span := c.deps.Telemetry().StartSpan(req.Ctx, "dispatcher", "handleGuildRoleDelete")
 	defer span.End()
 	req.Ctx = ctx
 
@@ -667,6 +678,7 @@ func (c *Dispatcher) handleGuildRoleDelete(p Payload, req wsapi.WSMessage, resp 
 	if err != nil {
 		level.Error(logger).Err("error processing guild role delete", err)
 	}
+	span.SetAttributes(telemetry.KVString("gid", gid.ToString()))
 
 	return gid
 }

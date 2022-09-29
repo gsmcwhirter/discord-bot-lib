@@ -3,7 +3,7 @@ package session
 import (
 	"sync"
 
-	"github.com/gsmcwhirter/go-util/v8/errors"
+	"github.com/gsmcwhirter/go-util/v10/errors"
 
 	"github.com/gsmcwhirter/discord-bot-lib/v24/discordapi/etfapi"
 	"github.com/gsmcwhirter/discord-bot-lib/v24/snowflake"
@@ -131,7 +131,7 @@ func (s *Session) UpsertChannelFromElement(e etfapi.Element) (snowflake.Snowflak
 }
 
 // UpsertChannelFromElementMap updates data in the session state for a channel based on the given data
-func (s *Session) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, error) {
+func (s *Session) UpsertChannelFromElementMap(eMap map[string]etfapi.Element) (snowflake.Snowflake, snowflake.Snowflake, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
